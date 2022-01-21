@@ -49,6 +49,12 @@ function main()
     /bootstrap.sh ${FABRIC_VERSION} ${CA_VERSION} -b -s
     # Major version is 1.x or earlier (assumption is 1.4.x only)
     cd /fabric-samples/fabcar/
+
+    # PATCH
+    # This will change endorsment policy on fabcar chaincode.
+    # cactus-plugin-ledger-connector-fabric-socketio supports only single peer endorsment at the moment.
+    sed -i "s/AND('Org1MSP.member','Org2MSP.member')/OR('Org1MSP.member','Org2MSP.member')/g" ./startFabric.sh
+
     ./startFabric.sh
   fi
 
