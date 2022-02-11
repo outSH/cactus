@@ -29,10 +29,6 @@ import { ProposalRequest } from "fabric-client";
 const path = require("path");
 const { FileSystemWallet, Gateway } = require("fabric-network");
 const fs = require("fs");
-const ccpPath = path.resolve(__dirname, "connection.json");
-const ccpJSON = fs.readFileSync(ccpPath, "utf8");
-const ccp = JSON.parse(ccpJSON);
-const walletPath = path.resolve(__dirname, "wallet");
 const connUserName = SplugConfig.fabric.connUserName;
 
 // Cryptographic for fabric
@@ -327,9 +323,8 @@ async function Invoke(reqBody) {
     const args = reqBody.args;
 
     // Create a new file system based wallet for managing identities.
-    //const walletPath = path.join(process.cwd(), 'wallet');
-    const wallet = new FileSystemWallet(walletPath);
-    console.log(`Wallet path: ${walletPath}`);
+    const wallet = new FileSystemWallet(SplugConfig.fabric.keystore);
+    console.log(`Wallet path: ${SplugConfig.fabric.keystore}`);
 
     // Check to see if we've already enrolled the user.
     const userExists = await wallet.exists(connUserName);
@@ -341,8 +336,12 @@ async function Invoke(reqBody) {
     }
 
     // Create a new gateway for connecting to our peer node.
+    // TODO - Allow both cactus config and fabric connection.json profile
+    let { client } = await getClientAndChannel(reqBody.channelName);
+    await getSubmitterAndEnroll(client);
+
     const gateway = new Gateway();
-    await gateway.connect(ccp, {
+    await gateway.connect(client, {
       wallet,
       identity: connUserName,
       discovery: { enabled: false },
@@ -392,10 +391,9 @@ async function InvokeSync(reqBody) {
       const args = reqBody.args;
 
       // Create a new file system based wallet for managing identities.
-      //const walletPath = path.join(process.cwd(), 'wallet');
       // logger.debug(`##InvokeSync(B)`);
-      const wallet = new FileSystemWallet(walletPath);
-      console.log(`Wallet path: ${walletPath}`);
+      const wallet = new FileSystemWallet(SplugConfig.fabric.keystore);
+      console.log(`Wallet path: ${SplugConfig.fabric.keystore}`);
 
       // Check to see if we've already enrolled the user.
       // logger.debug(`##InvokeSync(C)`);
@@ -410,9 +408,12 @@ async function InvokeSync(reqBody) {
       }
 
       // Create a new gateway for connecting to our peer node.
-      // logger.debug(`##InvokeSync(D)`);
+      // TODO - Allow both cactus config and fabric connection.json profile
+      let { client } = await getClientAndChannel(reqBody.channelName);
+      await getSubmitterAndEnroll(client);
+
       const gateway = new Gateway();
-      await gateway.connect(ccp, {
+      await gateway.connect(client, {
         wallet,
         identity: connUserName,
         discovery: { enabled: false },
