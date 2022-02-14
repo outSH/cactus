@@ -5,12 +5,12 @@
  * BalanceManagement.ts
  */
 
-import { LPInfoHolder } from "../../packages/cactus-cmd-socketio-server/src/main/typescript/routing-interface/util/LPInfoHolder";
-import { Verifier } from "../../packages/cactus-cmd-socketio-server/src/main/typescript/verifier/Verifier";
-import { ConfigUtil } from "../../packages/cactus-cmd-socketio-server/src/main/typescript/routing-interface/util/ConfigUtil";
+import {
+  LPInfoHolder,
+  Verifier,
+  ConfigUtil,
+} from "@hyperledger/cactus-cmd-socket-server";
 
-const fs = require("fs");
-const path = require("path");
 const config: any = ConfigUtil.getConfig();
 import { getLogger } from "log4js";
 const moduleName = "BalanceManagement";
@@ -41,7 +41,6 @@ export class BalanceManagement {
       // for Neo
       const contract = {}; // NOTE: Since contract does not need to be specified, specify an empty object.
       const method = { type: "web3Eth", command: "getBalance" };
-      const template = "default";
       const args = { args: [account] };
       // const method = "default";
       // const args = {"method": {type: "web3Eth", command: "getBalance"}, "args": {"args": [account]}};
