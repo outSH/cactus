@@ -48,11 +48,7 @@ export class TransactionManagement implements VerifierEventListener {
     logger.info(`tradeID: ${tradeID}`);
 
     // object judgment
-    if (
-      businessLogicID === "guks32pf" ||
-      businessLogicID === "h40Q9eMD" ||
-      businessLogicID === "j71S9gLN"
-    ) {
+    if (this.blpRegistry.getBusinessLogicIDList().includes(businessLogicID)) {
       const blp = getTargetBLPInstance(businessLogicID);
       if (blp === null) {
         logger.warn(
@@ -63,10 +59,10 @@ export class TransactionManagement implements VerifierEventListener {
 
       logger.debug("created instance");
 
-      // Start BusinessLogicCartrade
+      // Start BLP
       this.setTradeIDMapInfo(tradeID, businessLogicID);
       blp.startTransaction(req, businessLogicID, tradeID);
-      logger.debug("start cartrade");
+      logger.debug("start BLP");
     }
 
     return tradeID;
