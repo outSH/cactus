@@ -22,7 +22,7 @@
 - **From 0.20.0 to 1.5.2**
 - Required in light of incompatibility when using Raft (v 1.0.0 -beta 55 or higher should be fine).
 - It seems to have been confirmed that the SD book is incompatible with the v1 system, so it needs to be confirmed with an actual machine.
-- You might want to use web3js-quorum (I'm worried about the lack of official documentation) - https://github.com/ConsenSys/web3js-quorum
+- Don't use web3js-quorum if possible.
 
 ## 2. Implement `sendSyncRequest()` and `sendAsyncRequest()` in Quorum ApiClient
 - These are verifier functions used to call generic function on the validator.
@@ -48,13 +48,13 @@
   ): Promise<any>;
 ```
 
-### 2a. Implement web3Eth
+## 3. Implement web3Eth
 - This is exactly the same as `web3Eth` in `packages/cactus-plugin-ledger-connector-go-ethereum-socketio/src/main/typescript/connector/ServerPlugin.ts`
 - Can be copy-pasted
 - Used to call any `web3.eth` function through this generic function.
 - See the go-ethereum implementation for more details.
 
-#### Call signature
+### Call signature
 ``` typescript
 sendSyncRequest(
     contract: {}, // ignored
@@ -70,7 +70,7 @@ sendSyncRequest(
 )
 ```
 
-### 2b. Implement web3EthContract
+## 4. Implement web3EthContract
 - Used as generic interface to execute contract on Quorum.
 - Very similar to ` contract(args)` function from `packages/cactus-plugin-ledger-connector-go-ethereum-socketio/src/main/typescript/connector/ServerPlugin.ts`
 - Should wrap `web3.js` contract method call (see example - https://web3js.readthedocs.io/en/v1.2.11/web3-eth-contract.html#id32)
@@ -82,7 +82,7 @@ sendSyncRequest(
     - `{from: '...', privateFor=...}` are command arguments from `args.args`
 - **No need for explicit private transaction support**, this is a matter of including `privateFor` in client side call. This should be tested though.
 
-#### Call signature
+### Call signature
 ``` typescript
 send(A)SyncRequest(
   contract: {
@@ -111,13 +111,13 @@ send(A)SyncRequest(
 )
 ```
 
-## 3. Implement watchBlocksV1
+## 5. Implement watchBlocksV1
 - `ApiClient` with `watchBlocksV1` can be used by common Verifier to provide requested `startMonitor` and `stopMonitor` function.
 - Implement `watchBlocksV1` just like it's implemented in `BesuApiClient` (`packages/cactus-plugin-ledger-connector-besu/src/main/typescript/api-client/besu-api-client.ts`)
 - Code for monitoring should be similar to the one in go-ethereum validator.
 - Secondary: replace deprecated `web3.eth.filter` and `filter.stopWatching` with  `web3.eth.subscribe` and `subscription.unSubscribe` calls.
 
-## 4. Optional
+## 6. Optional
 - These function are optional, to be confirmed by FJR.
 - Ignore for now.
 
