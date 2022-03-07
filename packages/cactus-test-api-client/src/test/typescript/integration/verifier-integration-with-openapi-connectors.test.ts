@@ -18,7 +18,6 @@ import {
   Web3SigningCredentialType,
   PluginLedgerConnectorBesu,
   ReceiptType,
-  BesuApiClient,
   WatchBlocksV1Progress,
 } from "@hyperledger/cactus-plugin-ledger-connector-besu";
 import { PluginKeychainMemory } from "@hyperledger/cactus-plugin-keychain-memory";
@@ -39,11 +38,11 @@ import { Constants } from "@hyperledger/cactus-core-api";
 import express from "express";
 import http from "http";
 import { AddressInfo } from "net";
-import { BesuApiClientOptions } from "@hyperledger/cactus-plugin-ledger-connector-besu";
 import {
-  Verifier,
   IVerifierEventListener,
   LedgerEvent,
+  VerifierFactory,
+  VerifierFactoryConfig,
 } from "@hyperledger/cactus-verifier-client";
 
 // Unit Test logger setup
@@ -53,14 +52,16 @@ const log: Logger = LoggerProvider.getOrCreate({
 });
 log.info("Test started");
 
-describe("Verifier integration with openapi connectors tests", () => {
+describe("Verifier and VerifierFactory integration with openapi connectors tests", () => {
+  const besuValidatorId = "besu_openapi_connector_id";
   let besuTestLedger: BesuTestLedger;
   let server: http.Server;
   let connector: PluginLedgerConnectorBesu;
-  let apiClient: BesuApiClient;
   let sourceEthAccountPubKey: string;
   let sourceEthAccountPrivKey: { privateKey: string };
   let targetEthAccount: Account;
+  let verifierFactory: VerifierFactory;
+  const ledgerPluginInfo: VerifierFactoryConfig = [];
 
   //////////////////////////////////
   // Environment Setup
@@ -136,11 +137,18 @@ describe("Verifier integration with openapi connectors tests", () => {
     await connector.getOrCreateWebServices();
     await connector.registerWebServices(expressApp, wsApi);
 
-    log.info("Create BesuApiClientOptions...");
-    const besuApiClientOptions = new BesuApiClientOptions({
+    // Add connector to VerifierFactory configuration
+    ledgerPluginInfo.push({
+      validatorID: besuValidatorId,
+      validatorType: "BESU_2X",
       basePath: apiHost,
+      ledgerInfo: {
+        ledgerAbstract: "Besu-OpenAPI Ledger",
+      },
+      apiInfo: [],
     });
-    apiClient = new BesuApiClient(besuApiClientOptions);
+
+    verifierFactory = new VerifierFactory(ledgerPluginInfo, sutLogLevel);
   });
 
   afterAll(async () => {
@@ -160,8 +168,8 @@ describe("Verifier integration with openapi connectors tests", () => {
   //////////////////////////////////
 
   test("Verifier is constructed on BesuApiClient", async () => {
-    const sut = new Verifier("BESU_2X", apiClient, sutLogLevel);
-    expect(sut.ledgerApi).toBe(apiClient);
+    const sut = verifierFactory.getVerifier(besuValidatorId, "BESU_2X");
+    expect(sut.ledgerApi.className).toBe("BesuApiClient");
   });
 
   function sendTransactionOnBesuLedger() {
@@ -187,8 +195,9 @@ describe("Verifier integration with openapi connectors tests", () => {
 
   test("Sanity check that BesuApiClient watchBlocksV1 works", async () => {
     const newBlock = new Promise<WatchBlocksV1Progress>((resolve, reject) => {
-      const subscription = apiClient
-        .watchBlocksV1()
+      const subscription = verifierFactory
+        .getVerifier(besuValidatorId, "BESU_2X")
+        .ledgerApi.watchBlocksV1()
         .subscribe((res: WatchBlocksV1Progress) => {
           log.debug("Received block number", res.blockHeader.number);
           if (!res.blockHeader) {
@@ -206,7 +215,7 @@ describe("Verifier integration with openapi connectors tests", () => {
   test("Verifier works with BesuApiClient", () => {
     const newBlock = new Promise<WatchBlocksV1Progress>((resolve, reject) => {
       const appId = "testMonitor";
-      const sut = new Verifier("BESU_2X", apiClient, sutLogLevel);
+      const sut = verifierFactory.getVerifier(besuValidatorId, "BESU_2X");
 
       const monitor: IVerifierEventListener<WatchBlocksV1Progress> = {
         onEvent(ledgerEvent: LedgerEvent<WatchBlocksV1Progress>): void {
