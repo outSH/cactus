@@ -237,3 +237,9 @@ jobs:
 
     - name: Print Disk Usage Reports
       run: df ; echo "" ; docker system df
+
+    - name: ghcr.io/hyperledger/geth-testnet
+      run: DOCKER_BUILDKIT=1 docker build ./tools/docker/geth-testnet/ -f ./tools/docker/geth-testnet/Dockerfile
+
+    - name: Print Disk Usage Reports
+      run: df ; echo "" ; docker system df
