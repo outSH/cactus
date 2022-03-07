@@ -16,7 +16,7 @@
 	```
 - If the following containers appear when you display the container list with the command `docker ps`, it will be fine.
 	```
-	CONTAINER ID        IMAGE                                                                                                    COMMAND                  CREATED              STATUS              PORTS                                                    NAMES
-	ec57c9f78d0d        ethereum/client-go:v1.8.27                                                                               "geth --rpc --networ…"   2 minutes ago        Up 2 minutes        8546/tcp, 0.0.0.0:8545->8545/tcp, 30303/tcp, 30303/udp   geth1
+	CONTAINER ID   IMAGE          COMMAND                  CREATED          STATUS         PORTS                                                                       NAMES
+	5d7b115557aa   geth-testnet   "geth --rpc --networ…"   36 minutes ago   Up 3 minutes   8546/tcp, 0.0.0.0:8545->8545/tcp, :::8545->8545/tcp, 30303/tcp, 30303/udp   geth1
 	```
 
