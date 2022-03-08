@@ -101,7 +101,7 @@ RUN apk add --no-cache ncurses
 COPY healthcheck.sh /healthcheck.sh
 COPY supervisord.conf /etc/supervisord.conf
 
-# # Extend the parent image's entrypoint
+# # Extend the parent image entrypoint
 # # https://superuser.com/questions/1459466/can-i-add-an-additional-docker-entrypoint-script
 ENTRYPOINT ["/usr/bin/supervisord"]
 CMD ["--configuration", "/etc/supervisord.conf", "--nodaemon"]

@@ -1,5 +1,7 @@
 import { Server } from "http";
 import { Server as SecureServer } from "https";
+import type { Server as SocketIoServer } from "socket.io";
+import type { Socket as SocketIoSocket } from "socket.io";
 
 import { Express } from "express";
 import Web3 from "web3";
@@ -50,11 +52,13 @@ import {
   Web3SigningCredentialCactusKeychainRef,
   Web3SigningCredentialPrivateKeyHex,
   Web3SigningCredentialType,
+  WatchBlocksV1,
 } from "./generated/openapi/typescript-axios/";
 
 import { RunTransactionEndpoint } from "./web-services/run-transaction-endpoint";
 import { InvokeContractEndpoint } from "./web-services/invoke-contract-endpoint";
 import { InvokeContractJsonObjectEndpoint } from "./web-services/invoke-contract-endpoint-json-object";
+import { WatchBlocksV1Endpoint } from "./web-services/watch-blocks-v1-endpoint";
 import { isWeb3SigningCredentialNone } from "./model-type-guards";
 
 import { PrometheusExporter } from "./prometheus-exporter/prometheus-exporter";
@@ -66,6 +70,7 @@ import {
 export interface IPluginLedgerConnectorQuorumOptions
   extends ICactusPluginOptions {
   rpcApiHttpHost: string;
+  rpcApiWsHost?: string;
   logLevel?: LogLevelDesc;
   prometheusExporter?: PrometheusExporter;
   pluginRegistry: PluginRegistry;
@@ -95,6 +100,15 @@ export class PluginLedgerConnectorQuorum
     return PluginLedgerConnectorQuorum.CLASS_NAME;
   }
 
+  private getWeb3Provider() {
+    // TODO - handle HttpProvider in watchBlocks
+    if (!this.options.rpcApiWsHost) {
+      return new Web3.providers.HttpProvider(this.options.rpcApiHttpHost);
+    }
+
+    return new Web3.providers.WebsocketProvider(this.options.rpcApiWsHost);
+  }
+
   constructor(public readonly options: IPluginLedgerConnectorQuorumOptions) {
     const fnTag = `${this.className}#constructor()`;
     Checks.truthy(options, `${fnTag} arg options`);
@@ -106,10 +120,7 @@ export class PluginLedgerConnectorQuorum
     const label = this.className;
     this.log = LoggerProvider.getOrCreate({ level, label });
 
-    const web3Provider = new Web3.providers.HttpProvider(
-      this.options.rpcApiHttpHost,
-    );
-    this.web3 = new Web3(web3Provider);
+    this.web3 = new Web3(this.getWeb3Provider());
     this.instanceId = options.instanceId;
     this.pluginRegistry = options.pluginRegistry as PluginRegistry;
     this.prometheusExporter =
@@ -149,12 +160,24 @@ export class PluginLedgerConnectorQuorum
     return;
   }
 
-  async registerWebServices(app: Express): Promise<IWebServiceEndpoint[]> {
+  async registerWebServices(
+    app: Express,
+    wsApi: SocketIoServer,
+  ): Promise<IWebServiceEndpoint[]> {
+    const { web3 } = this;
+    const { logLevel } = this.options;
     const webServices = await this.getOrCreateWebServices();
     await Promise.all(webServices.map((ws) => ws.registerExpress(app)));
+
+    wsApi.on("connection", (socket: SocketIoSocket) => {
+      this.log.debug(`New Socket connected. ID=${socket.id}`);
+
+      socket.on(WatchBlocksV1.Subscribe, () => {
+        new WatchBlocksV1Endpoint({ web3, socket, logLevel }).subscribe();
+      });
+    });
     return webServices;
   }
-
   public async getOrCreateWebServices(): Promise<IWebServiceEndpoint[]> {
     if (Array.isArray(this.endpoints)) {
       return this.endpoints;
