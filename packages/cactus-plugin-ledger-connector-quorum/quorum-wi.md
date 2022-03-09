@@ -5,8 +5,8 @@
 - [x] Implement `ApiClient.sendSyncRequest()` and `ApiClient.sendAsyncRequest()`
     - [x] Implement web3Eth
     - [x] Test web3Eth
-    - [ ] Implement web3EthContract
-    - [ ] Test web3EthContract
+    - [x] Implement web3EthContract
+    - [x] Test web3EthContract
 - [x] Implement `ApiClient.watchBlocksV1()`
     - [x] Test watchBlocksV1
 - [ ] Optional Functions
@@ -16,7 +16,7 @@
     - [ ] Implement getNonce
     - [ ] Implement toHex
     - [ ] Implement sendRawTransaction
-- [ ] Common Verifier / VerifierFactory integration test.
+- [x] Common Verifier / VerifierFactory integration test.
 
 ## 1. web3.js upgrade
 - **From 0.20.0 to 1.5.2**

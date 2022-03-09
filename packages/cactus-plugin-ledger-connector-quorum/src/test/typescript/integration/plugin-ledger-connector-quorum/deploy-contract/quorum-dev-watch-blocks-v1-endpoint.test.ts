@@ -311,99 +311,16 @@ describe("Quorum Monitoring", () => {
     expect(results.data > 100);
   });
 
-  // test("web3EthContract manual test", async () => {
-  //   const res = await privateContract.methods
-  //     .retrieve()
-  //     .call({ from: sourceEthAccountPubKey });
-  //   expect(res).toEqual("0");
+  test("web3EthContract manual test", async () => {
+    const res = await privateContract.methods
+      .retrieve()
+      .call({ from: sourceEthAccountPubKey });
+    expect(res).toEqual("0");
 
-  //   const reqAbi = await privateContract.methods.store(125).encodeABI();
+    const reqAbi = await privateContract.methods.store(125).encodeABI();
 
-  //   var tx = {
-  //     data: reqAbi,
-  //     from: sourceEthAccountPubKey,
-  //     nonce: await web3.eth.getTransactionCount(sourceEthAccountPubKey),
-  //     to: privateContract.options.address,
-  //     privateFor: [targetTMKey],
-  //     gasLimit: "0x24A222",
-  //   };
-
-  //   const signedTx = await web3.eth.accounts.signTransaction(
-  //     tx,
-  //     sourceEthAccountPrivKey.privateKey,
-  //   );
-
-  //   const sendRes = await web3.eth.sendSignedTransaction(
-  //     signedTx.rawTransaction as string,
-  //   );
-  //   log.warn(sendRes);
-  //   log.warn(await web3.eth.getTransaction(sendRes.transactionHash));
-
-  //   const getAfterRes = await privateContract.methods
-  //     .retrieve()
-  //     .call({ from: targetEthAccount });
-  //   expect(getAfterRes).toEqual("125");
-
-  //   // should be not visible??
-  //   const web33 = new Web3("http://localhost:20004");
-  //   const anotherContractInstance = new web33.eth.Contract(
-  //     abi as any,
-  //     privateContract.options.address,
-  //   );
-  //   const getAfterResOtherGuy = await anotherContractInstance.methods
-  //     .retrieve()
-  //     .call({ from: otherEthAccount });
-  //   log.warn(getAfterResOtherGuy);
-  //   expect(getAfterResOtherGuy).toEqual("125");
-  // });
-
-  test("web3EthContract test", async () => {
-    //////////////////////////////////////
-    // 1 - GET INITIAL STATUS
-
-    const contract = {
-      abi: abi,
-      address: privateContract.options.address,
-    };
-    const methodGet = {
-      type: "web3EthContract",
-      command: "call",
-      function: "retrieve",
-      params: { from: sourceEthAccountPubKey },
-    };
-    const argsGet = { args: [] };
-
-    const results = await apiClient.sendSyncRequest(
-      contract,
-      methodGet,
-      argsGet,
-    );
-    expect(results.status).toEqual(200);
-    expect(results.data).toEqual("0");
-
-    //////////////////////////////////////
-    // 2 - SEND TRANSACTION
-
-    // 2a - encodeABI
-    const methodStore = {
-      type: "web3EthContract",
-      command: "encodeABI",
-      function: "store",
-      params: { from: sourceEthAccountPubKey },
-    };
-    const argsStore = { args: [777] };
-
-    const resultsEncode = await apiClient.sendSyncRequest(
-      contract,
-      methodStore,
-      argsStore,
-    );
-    expect(resultsEncode.status).toEqual(200);
-    expect(resultsEncode.data.length).toBeGreaterThan(5);
-
-    // 2b - prepare transaction
-    const txStore = {
-      data: resultsEncode.data,
+    var tx = {
+      data: reqAbi,
       from: sourceEthAccountPubKey,
       nonce: await web3.eth.getTransactionCount(sourceEthAccountPubKey),
       to: privateContract.options.address,
@@ -411,36 +328,119 @@ describe("Quorum Monitoring", () => {
       gasLimit: "0x24A222",
     };
 
-    // 2c - sign transaction
-    const signedStoreTx = await web3.eth.accounts.signTransaction(
-      txStore,
+    const signedTx = await web3.eth.accounts.signTransaction(
+      tx,
       sourceEthAccountPrivKey.privateKey,
     );
 
-    // 2d - send signed transaction
-    const contractSendSigned = {};
-    const methodSendSigned = {
-      type: "web3Eth",
-      command: "sendSignedTransaction",
-    };
-    const argsSendSigned = { args: [signedStoreTx.rawTransaction] };
-
-    const resultsSendSigned = await apiClient.sendSyncRequest(
-      contractSendSigned,
-      methodSendSigned,
-      argsSendSigned,
+    const sendRes = await web3.eth.sendSignedTransaction(
+      signedTx.rawTransaction as string,
     );
-    expect(resultsSendSigned.status).toEqual(200);
-    expect(resultsSendSigned.data.status).toBeTrue();
+    log.warn(sendRes);
+    log.warn(await web3.eth.getTransaction(sendRes.transactionHash));
 
-    //////////////////////////////////////
-    // 1 - GET INITIAL STATUS
-    const resultsGetAfter = await apiClient.sendSyncRequest(
-      contract,
-      methodGet,
-      argsGet,
+    const getAfterRes = await privateContract.methods
+      .retrieve()
+      .call({ from: targetEthAccount });
+    expect(getAfterRes).toEqual("125");
+
+    // should be not visible??
+    const web33 = new Web3("http://localhost:20004");
+    const anotherContractInstance = new web33.eth.Contract(
+      abi as any,
+      privateContract.options.address,
     );
-    expect(resultsGetAfter.status).toEqual(200);
-    expect(resultsGetAfter.data).toEqual("777");
+    const getAfterResOtherGuy = await anotherContractInstance.methods
+      .retrieve()
+      .call({ from: otherEthAccount });
+    log.warn(getAfterResOtherGuy);
+    expect(getAfterResOtherGuy).toEqual("125");
   });
+
+  // test("web3EthContract test", async () => {
+  //   //////////////////////////////////////
+  //   // 1 - GET INITIAL STATUS
+
+  //   const contract = {
+  //     abi: abi,
+  //     address: privateContract.options.address,
+  //   };
+  //   const methodGet = {
+  //     type: "web3EthContract",
+  //     command: "call",
+  //     function: "retrieve",
+  //     params: { from: sourceEthAccountPubKey },
+  //   };
+  //   const argsGet = { args: [] };
+
+  //   const results = await apiClient.sendSyncRequest(
+  //     contract,
+  //     methodGet,
+  //     argsGet,
+  //   );
+  //   expect(results.status).toEqual(200);
+  //   expect(results.data).toEqual("0");
+
+  //   //////////////////////////////////////
+  //   // 2 - SEND TRANSACTION
+
+  //   // 2a - encodeABI
+  //   const methodStore = {
+  //     type: "web3EthContract",
+  //     command: "encodeABI",
+  //     function: "store",
+  //     params: { from: sourceEthAccountPubKey },
+  //   };
+  //   const argsStore = { args: [777] };
+
+  //   const resultsEncode = await apiClient.sendSyncRequest(
+  //     contract,
+  //     methodStore,
+  //     argsStore,
+  //   );
+  //   expect(resultsEncode.status).toEqual(200);
+  //   expect(resultsEncode.data.length).toBeGreaterThan(5);
+
+  //   // 2b - prepare transaction
+  //   const txStore = {
+  //     data: resultsEncode.data,
+  //     from: sourceEthAccountPubKey,
+  //     nonce: await web3.eth.getTransactionCount(sourceEthAccountPubKey),
+  //     to: privateContract.options.address,
+  //     privateFor: [targetTMKey],
+  //     gasLimit: "0x24A222",
+  //   };
+
+  //   // 2c - sign transaction
+  //   const signedStoreTx = await web3.eth.accounts.signTransaction(
+  //     txStore,
+  //     sourceEthAccountPrivKey.privateKey,
+  //   );
+
+  //   // 2d - send signed transaction
+  //   const contractSendSigned = {};
+  //   const methodSendSigned = {
+  //     type: "web3Eth",
+  //     command: "sendSignedTransaction",
+  //   };
+  //   const argsSendSigned = { args: [signedStoreTx.rawTransaction] };
+
+  //   const resultsSendSigned = await apiClient.sendSyncRequest(
+  //     contractSendSigned,
+  //     methodSendSigned,
+  //     argsSendSigned,
+  //   );
+  //   expect(resultsSendSigned.status).toEqual(200);
+  //   expect(resultsSendSigned.data.status).toBeTrue();
+
+  //   //////////////////////////////////////
+  //   // 1 - GET INITIAL STATUS
+  //   const resultsGetAfter = await apiClient.sendSyncRequest(
+  //     contract,
+  //     methodGet,
+  //     argsGet,
+  //   );
+  //   expect(resultsGetAfter.status).toEqual(200);
+  //   expect(resultsGetAfter.data).toEqual("777");
+  // });
 });
