@@ -157,6 +157,7 @@ describe("Quorum Monitoring", () => {
   });
 
   afterAll(async () => {
+    await connector.shutdown();
     log.info("Shutdown the server...");
     if (server) {
       await Servers.shutdown(server);
@@ -201,23 +202,34 @@ describe("Quorum Monitoring", () => {
   //   expect(1).toBe(1);
   // });
 
-  test("Sanity check that QuorumApiClient watchBlocksV1 works", async () => {
-    const newBlock = new Promise<WatchBlocksV1Progress>((resolve, reject) => {
-      log.info("Call watchBlocksV1()...");
+  // test("Sanity check that QuorumApiClient watchBlocksV1 works", async () => {
+  //   const newBlock = new Promise<WatchBlocksV1Progress>((resolve, reject) => {
+  //     log.info("Call watchBlocksV1()...");
 
-      const subscription = apiClient
-        .watchBlocksV1()
-        .subscribe((res: WatchBlocksV1Progress) => {
-          log.debug("Received block number", res.blockHeader.number);
-          if (!res.blockHeader) {
-            reject("Empty block received");
-          }
-          subscription.unsubscribe();
-          resolve(res);
-        });
-    });
+  //     const subscription = apiClient
+  //       .watchBlocksV1()
+  //       .subscribe((res: WatchBlocksV1Progress) => {
+  //         log.debug("Received block number", res.blockHeader.number);
+  //         if (!res.blockHeader) {
+  //           reject("Empty block received");
+  //         }
+  //         subscription.unsubscribe();
+  //         resolve(res);
+  //       });
+  //   });
 
-    await sendTransactionOnBesuLedger();
-    return expect(newBlock).toResolve();
+  //   await sendTransactionOnBesuLedger();
+  //   return expect(newBlock).toResolve();
+  // });
+
+  test("web3Eth test", async () => {
+    const contract = {};
+    const method = { type: "web3Eth", command: "getBalance" };
+    const args = { args: [sourceEthAccountPubKey] };
+
+    apiClient.sendAsyncRequest(contract, method, args);
+
+    const results = await apiClient.sendSyncRequest(contract, method, args);
+    expect(results.data > 100);
   });
 });

@@ -59,6 +59,8 @@ import { RunTransactionEndpoint } from "./web-services/run-transaction-endpoint"
 import { InvokeContractEndpoint } from "./web-services/invoke-contract-endpoint";
 import { InvokeContractJsonObjectEndpoint } from "./web-services/invoke-contract-endpoint-json-object";
 import { WatchBlocksV1Endpoint } from "./web-services/watch-blocks-v1-endpoint";
+import { ValidatorRequest } from "./web-services/validator-request-endpoint";
+
 import { isWeb3SigningCredentialNone } from "./model-type-guards";
 
 import { PrometheusExporter } from "./prometheus-exporter/prometheus-exporter";
@@ -154,7 +156,13 @@ export class PluginLedgerConnectorQuorum
   }
 
   public async shutdown(): Promise<void> {
-    this.log.info(`Shutting down ${this.className}...`);
+    this.log.error(`Shutting down ${this.className}...`);
+    const provider = this.web3.currentProvider;
+    if (provider && typeof provider == "object") {
+      if ("disconnect" in provider) {
+        provider.disconnect(1000, "shutdown");
+      }
+    }
   }
 
   public async onPluginInit(): Promise<unknown> {
@@ -175,6 +183,10 @@ export class PluginLedgerConnectorQuorum
 
       socket.on(WatchBlocksV1.Subscribe, () => {
         new WatchBlocksV1Endpoint({ web3, socket, logLevel }).subscribe();
+      });
+
+      socket.on("validator-request", function (data) {
+        new ValidatorRequest(web3).onRequest(socket, data);
       });
     });
     return webServices;
