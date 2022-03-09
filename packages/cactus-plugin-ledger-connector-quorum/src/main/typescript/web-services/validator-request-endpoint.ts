@@ -1,6 +1,7 @@
 import { LoggerProvider } from "@hyperledger/cactus-common";
 import { Socket as SocketIoSocket } from "socket.io";
 import Web3 from "web3";
+import { AbiItem } from "web3-utils";
 
 const level = "debug";
 const label = "send-requests-endpoint";
@@ -30,6 +31,20 @@ export class ValidatorRequest {
     if (methodType === "web3Eth") {
       // Can be called with Server plugin function name.
       this.web3Eth(args)
+        .then((respObj) => {
+          logger.info("*** RESPONSE ***");
+          logger.info("Client ID :" + socket.id);
+          logger.info("Response  :" + JSON.stringify(respObj));
+          socket.emit("response", respObj);
+        })
+        .catch((errObj) => {
+          logger.error("*** ERROR ***");
+          logger.error("Client ID :" + socket.id);
+          logger.error("Detail    :" + JSON.stringify(errObj));
+          socket.emit("connector_error", errObj);
+        });
+    } else if (methodType === "web3EthContract") {
+      this.web3EthContract(args)
         .then((respObj) => {
           logger.info("*** RESPONSE ***");
           logger.info("Client ID :" + socket.id);
@@ -86,7 +101,7 @@ export class ValidatorRequest {
         } else {
           result = await (this.web3.eth as any)[sendFunction]();
         }
-        // TODO - compare returns
+
         retObj = {
           resObj: {
             status: 200,
@@ -96,7 +111,9 @@ export class ValidatorRequest {
         if (reqID !== undefined) {
           retObj["id"] = reqID;
         }
+
         logger.debug(`##web3Eth: retObj: ${JSON.stringify(retObj)}`);
+
         return resolve(retObj);
       } catch (e) {
         retObj = {
@@ -111,6 +128,114 @@ export class ValidatorRequest {
           retObj["id"] = reqID;
         }
         logger.debug(`##web3Eth: retObj: ${JSON.stringify(retObj)}`);
+
+        return reject(retObj);
+      }
+    });
+  }
+
+  web3EthContract(args: {
+    contract: {
+      abi: Record<string, any>;
+      address: string;
+    };
+    method: {
+      type: "web3EthContract";
+      command: "call" | "encodeABI" | "estimateGas"; // no send, use web3Eth to send signed transaction?
+      function: string;
+      params: any;
+    };
+    args: { args: any };
+    reqID: string;
+  }): Promise<any> {
+    return new Promise(async (resolve, reject) => {
+      logger.info("web3EthContract start");
+
+      let retObj: any = {};
+      const sendCommand = args.method.command;
+      const sendFunction = args.method.function;
+      const sendParams = args.method.params;
+      const sendArgs = args.args.args;
+      const reqID = args["reqID"];
+
+      logger.info("sendCommand  :" + sendCommand);
+      logger.info("sendFunction  :" + sendFunction);
+      logger.info("sendParams  :" + sendParams);
+      logger.info("sendArgs  :" + JSON.stringify(sendArgs));
+
+      // Handle the exception once to absorb the difference of interest.
+      try {
+        const contract = new this.web3.eth.Contract(
+          args.contract.abi as AbiItem,
+          args.contract.address,
+        );
+
+        let result: any = null;
+        switch (sendArgs.length) {
+          case 0:
+            logger.debug(`##web3EthContract: No args.`);
+            result = await contract.methods[sendFunction]()[sendCommand](
+              sendParams,
+            );
+            break;
+          case 1:
+            logger.debug(`##web3EthContract: One arg.`);
+            result = await contract.methods[sendFunction](sendArgs[0])[
+              sendCommand
+            ](sendParams);
+            break;
+          case 2:
+            logger.debug(`##web3EthContract: Two args.`);
+            result = await contract.methods[sendFunction](
+              sendArgs[0],
+              sendArgs[1],
+            )[sendCommand](sendParams);
+            break;
+          case 3:
+            logger.debug(`##web3EthContract: Three args.`);
+            result = await contract.methods[sendFunction](
+              sendArgs[0],
+              sendArgs[1],
+              sendArgs[2],
+            )[sendCommand](sendParams);
+            break;
+          case 4:
+            logger.debug(`##web3EthContract: Three args.`);
+            result = await contract.methods[sendFunction](
+              sendArgs[0],
+              sendArgs[1],
+              sendArgs[2],
+              sendArgs[3],
+            )[sendCommand](sendParams);
+            break;
+        }
+        logger.debug(`##web3EthContract: result: ${result}`);
+
+        retObj = {
+          resObj: {
+            status: 200,
+            data: { result: result },
+          },
+        };
+        if (reqID !== undefined) {
+          retObj["id"] = reqID;
+        }
+
+        logger.debug(`##web3EthContract: retObj: ${JSON.stringify(retObj)}`);
+        return resolve(retObj);
+      } catch (e) {
+        retObj = {
+          resObj: {
+            status: 504,
+            errorDetail: "Something happened",
+          },
+        };
+        logger.error(e);
+
+        if (reqID !== undefined) {
+          retObj["id"] = reqID;
+        }
+        logger.debug(`##web3EthContract: retObj: ${JSON.stringify(retObj)}`);
 
         return reject(retObj);
       }
