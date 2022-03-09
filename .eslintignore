@@ -9,4 +9,4 @@ packages/cactus-plugin-ledger-connector-sawtooth-socketio/**
 packages/cactus-plugin-ledger-connector-go-ethereum-socketio/**
 packages/cactus-plugin-ledger-connector-*-socketio/**
 
-packages/cactus-plugin-ledger-connector-quorum/src/test/typescript/integration/plugin-ledger-connector-quorum/deploy-contract/hodor-watch-blocks-v1-endpoint.test.ts
+packages/cactus-plugin-ledger-connector-quorum/src/test/typescript/integration/plugin-ledger-connector-quorum/deploy-contract/quorum-dev-watch-blocks-v1-endpoint.test.ts
