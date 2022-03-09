@@ -10,3 +10,4 @@ packages/cactus-plugin-ledger-connector-go-ethereum-socketio/**
 packages/cactus-plugin-ledger-connector-*-socketio/**
 
 packages/cactus-plugin-ledger-connector-quorum/src/test/typescript/integration/plugin-ledger-connector-quorum/deploy-contract/quorum-dev-watch-blocks-v1-endpoint.test.ts
+packages/cactus-test-api-client/src/test/typescript/integration/quorum-dev-verifier.test.ts
