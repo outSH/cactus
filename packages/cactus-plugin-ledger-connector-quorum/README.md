@@ -263,5 +263,28 @@ Please review [CONTIRBUTING.md](../../CONTRIBUTING.md) to get started.
 
 This distribution is published under the Apache License Version 2.0 found in the [LICENSE](../../LICENSE) file.
 
-## Acknowledgments 
+## Acknowledgments
+
+# Standalone Docker
+
+## Build
+``` sh
+docker build . -t quorum_lp_docker
+```
+
+## Run
+- Examples assume host network for simplicity, you can change it to separate docker network and adjust quorum ledger RPC endpoints
+``` sh
+# With defaults
+docker run --rm --network=host quorum_lp_docker
+
+# Change WS RPC
+docker run --rm --network=host --env QUORUM_RPC_WS_HOST=ws://localhost:8546 quorum_lp_docker
+```
+
+## Env Variables
+``` sh
+QUORUM_LOG_LEVEL="debug"
+QUORUM_RPC_HTTP_HOST="http://localhost:8545"
+QUORUM_RPC_WS_HOST="ws://localhost:8546"
 ```

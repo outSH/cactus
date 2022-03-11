@@ -182,44 +182,38 @@ describe("Quorum Monitoring", () => {
     log.debug(senderAccount.address == sourceEthAccountPubKey);
 
     log.info("Create PluginLedgerConnectorQuorum...");
-    const keychainPlugin = new PluginKeychainMemory({
-      instanceId: uuidv4(),
-      keychainId: uuidv4(),
-      // pre-provision keychain with mock backend holding the private key of the
-      // test account that we'll reference while sending requests with the
-      // signing credential pointing to this keychain entry.
-      backend: new Map(),
-    });
 
-    connector = new PluginLedgerConnectorQuorum({
-      rpcApiHttpHost,
-      rpcApiWsHost,
-      logLevel: sutLogLevel,
-      instanceId: uuidv4(),
-      pluginRegistry: new PluginRegistry({ plugins: [keychainPlugin] }),
-    });
+    // connector = new PluginLedgerConnectorQuorum({
+    //   rpcApiHttpHost,
+    //   rpcApiWsHost,
+    //   logLevel: sutLogLevel,
+    //   instanceId: uuidv4(),
+    //   pluginRegistry: new PluginRegistry(),
+    // });
 
-    log.info("Start HTTP and WS servers...");
-    const expressApp = express();
-    expressApp.use(express.json({ limit: "250mb" }));
-    server = http.createServer(expressApp);
-    const wsApi = new SocketIoServer(server, {
-      path: Constants.SocketIoConnectionPathV1,
-    });
+    // log.info("Start HTTP and WS servers...");
+    // const expressApp = express();
+    // expressApp.use(express.json({ limit: "250mb" }));
+    // server = http.createServer(expressApp);
+    // const wsApi = new SocketIoServer(server, {
+    //   path: Constants.SocketIoConnectionPathV1,
+    // });
 
-    const listenOptions: IListenOptions = {
-      hostname: "localhost",
-      port: 0,
-      server,
-    };
-    const addressInfo = (await Servers.listen(listenOptions)) as AddressInfo;
-    const { address, port } = addressInfo;
-    const apiHost = `http://${address}:${port}`;
-    log.info(
-      `Metrics URL: ${apiHost}/api/v1/plugins/@hyperledger/cactus-plugin-ledger-connector-besu/get-prometheus-exporter-metrics`,
-    );
-    await connector.getOrCreateWebServices();
-    await connector.registerWebServices(expressApp, wsApi);
+    // const listenOptions: IListenOptions = {
+    //   hostname: "localhost",
+    //   port: 0,
+    //   server,
+    // };
+    // const addressInfo = (await Servers.listen(listenOptions)) as AddressInfo;
+    // const { address, port } = addressInfo;
+    // const apiHost = `http://${address}:${port}`;
+    // log.info(
+    //   `Metrics URL: ${apiHost}/api/v1/plugins/@hyperledger/cactus-plugin-ledger-connector-besu/get-prometheus-exporter-metrics`,
+    // );
+    // await connector.getOrCreateWebServices();
+    // await connector.registerWebServices(expressApp, wsApi);
+
+    const apiHost = `http://localhost:9113`;
 
     log.info("Create QuorumApiClientOptions...");
     apiClient = new QuorumApiClient({
@@ -235,11 +229,11 @@ describe("Quorum Monitoring", () => {
   });
 
   afterAll(async () => {
-    await connector.shutdown();
-    log.info("Shutdown the server...");
-    if (server) {
-      await Servers.shutdown(server);
-    }
+    // await connector.shutdown();
+    // log.info("Shutdown the server...");
+    // if (server) {
+    //   await Servers.shutdown(server);
+    // }
     log.info("Stop and destroy the test ledger...");
     // await besuTestLedger.stop();
     // await besuTestLedger.destroy();
@@ -296,7 +290,7 @@ describe("Quorum Monitoring", () => {
         });
     });
 
-    await sendTransactionOnBesuLedger();
+    //await sendTransactionOnBesuLedger();
     return expect(newBlock).toResolve();
   });
 
