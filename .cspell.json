@@ -130,7 +130,9 @@
         "uuidv",
         "vscc",
         "wasm",
-        "Xdai"
+        "Xdai",
+        "goquorum",
+        "outsh"
     ],
     "dictionaries": [
         "typescript,node,npm,go,rust"
