@@ -53,6 +53,7 @@
     "@hyperledger/cactus-common": "1.0.0-rc.3",
     "@hyperledger/cactus-core-api": "1.0.0-rc.3",
     "@hyperledger/cactus-plugin-ledger-connector-besu": "1.0.0-rc.3",
+    "@hyperledger/cactus-plugin-ledger-connector-quorum": "1.0.0-rc.3",
     "jest-extended": "0.11.5",
     "rxjs": "7.3.0"
   }
