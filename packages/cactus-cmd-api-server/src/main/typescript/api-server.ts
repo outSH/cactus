@@ -57,6 +57,7 @@ import { WatchHealthcheckV1Endpoint } from "./web-services/watch-healthcheck-v1-
 import * as default_service from "./generated/proto/protoc-gen-ts/services/default_service";
 import { GrpcServerApiServer } from "./web-services/grpc/grpc-server-api-server";
 import { determineAddressFamily } from "./common/determine-address-family";
+import { AuthorizationProtocol } from "./public-api";
 
 export interface IApiServerConstructorOptions {
   readonly pluginManagerOptions?: { pluginsPath: string };
@@ -721,14 +722,15 @@ export class ApiServer {
 
     this.wsApi.attach(this.httpServerApi, wsOptions);
 
-    const socketIoAuthorizer = authorizeSocket({
-      ...authzConf.socketIoJwtOptions,
-      onAuthentication: (decodedToken) => {
-        this.log.debug("Socket authorized OK: %o", decodedToken);
-      },
-    });
-
-    this.wsApi.use(socketIoAuthorizer as never);
+    if (authzProtocol != AuthorizationProtocol.NONE) {
+      const socketIoAuthorizer = authorizeSocket({
+        ...authzConf.socketIoJwtOptions,
+        onAuthentication: (decodedToken) => {
+          this.log.debug("Socket authorized OK: %o", decodedToken);
+        },
+      });
+      this.wsApi.use(socketIoAuthorizer as never);
+    }
 
     return addressInfo;
   }
