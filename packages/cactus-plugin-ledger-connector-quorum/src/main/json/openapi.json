@@ -757,6 +757,14 @@
                     "Complete"
                 ]
             },
+            "WatchBlocksV1Options": {
+                "type": "object",
+                "properties": {
+                    "includeBlockData": {
+                        "type": "boolean"
+                    }
+                }
+            },
             "Web3BlockHeader": {
                 "type": "object",
                 "required": [
@@ -794,13 +802,19 @@
                     "logsBloom": {
                         "type": "string"
                     },
-                    "transactionRoot": {
+                    "transactionsRoot": {
                         "type": "string"
                     },
                     "stateRoot": {
                         "type": "string"
                     },
-                    "receiptRoot": {
+                    "receiptsRoot": {
+                        "type": "string"
+                    },
+                    "difficulty": {
+                        "type": "string"
+                    },
+                    "mixHash": {
                         "type": "string"
                     },
                     "miner": {
@@ -827,12 +841,100 @@
                     }
                 }
             },
+            "Web3Transaction": {
+                "type": "object",
+                "required": [
+                    "hash",
+                    "nonce",
+                    "from",
+                    "value",
+                    "gasPrice",
+                    "gas",
+                    "input"
+                ],
+                "properties": {
+                    "hash": {
+                        "type": "string"
+                    },
+                    "nonce": {
+                        "type": "number"
+                    },
+                    "blockHash": {
+                        "type": "string"
+                    },
+                    "blockNumber": {
+                        "type": "number"
+                    },
+                    "transactionIndex": {
+                        "type": "number"
+                    },
+                    "from": {
+                        "type": "string"
+                    },
+                    "to": {
+                        "type": "string"
+                    },
+                    "value": {
+                        "type": "string"
+                    },
+                    "gasPrice": {
+                        "type": "string"
+                    },
+                    "gas": {
+                        "type": "number"
+                    },
+                    "input": {
+                        "type": "string"
+                    },
+                    "v": {
+                        "type": "string"
+                    },
+                    "r": {
+                        "type": "string"
+                    },
+                    "s": {
+                        "type": "string"
+                    }
+                }
+            },
+            "WatchBlocksV1BlockData": {
+                "type": "object",
+                "required": [
+                    "size",
+                    "totalDifficulty",
+                    "uncles",
+                    "transactions"
+                ],
+                "properties": {
+                    "size": {
+                        "type": "number"
+                    },
+                    "totalDifficulty": {
+                        "type": "string"
+                    },
+                    "uncles": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "transactions": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Web3Transaction"
+                        }
+                    }
+                }
+            },
             "WatchBlocksV1Progress": {
                 "type": "object",
                 "required": ["blockHeader"],
                 "properties": {
                     "blockHeader": {
                         "$ref": "#/components/schemas/Web3BlockHeader"
+                    },
+                    "blockData": {
+                        "$ref": "#/components/schemas/WatchBlocksV1BlockData"
                     }
                 }
             }

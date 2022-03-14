@@ -7,6 +7,7 @@ import { Constants, ISocketApiClient } from "@hyperledger/cactus-core-api";
 import {
   DefaultApi,
   WatchBlocksV1,
+  WatchBlocksV1Options,
   WatchBlocksV1Progress,
 } from "../generated/openapi/typescript-axios";
 import { Configuration } from "../generated/openapi/typescript-axios/configuration";
@@ -47,7 +48,9 @@ export class QuorumApiClient
     this.log.debug(`basePath=${this.options.basePath}`);
   }
 
-  public watchBlocksV1(): Observable<WatchBlocksV1Progress> {
+  public watchBlocksV1(
+    options?: WatchBlocksV1Options,
+  ): Observable<WatchBlocksV1Progress> {
     const socket = io(this.wsApiHost, { path: this.wsApiPath });
     const subject = new ReplaySubject<WatchBlocksV1Progress>(0);
 
@@ -57,7 +60,7 @@ export class QuorumApiClient
 
     socket.on("connect", () => {
       console.log("connected OK...");
-      socket.emit(WatchBlocksV1.Subscribe);
+      socket.emit(WatchBlocksV1.Subscribe, options);
     });
 
     socket.connect();
@@ -68,10 +71,6 @@ export class QuorumApiClient
         socket.emit(WatchBlocksV1.Unsubscribe);
         socket.disconnect();
       }),
-      // TODO: Investigate if we need these below - in theory without these
-      // it could happen that only the fist subscriber gets the last emitted value
-      // publishReplay(1),
-      // refCount(),
     );
   }
 

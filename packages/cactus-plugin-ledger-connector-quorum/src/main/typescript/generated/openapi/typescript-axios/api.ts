@@ -580,6 +580,50 @@ export enum WatchBlocksV1 {
 /**
  * 
  * @export
+ * @interface WatchBlocksV1BlockData
+ */
+export interface WatchBlocksV1BlockData {
+    /**
+     * 
+     * @type {number}
+     * @memberof WatchBlocksV1BlockData
+     */
+    size: number;
+    /**
+     * 
+     * @type {string}
+     * @memberof WatchBlocksV1BlockData
+     */
+    totalDifficulty: string;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof WatchBlocksV1BlockData
+     */
+    uncles: Array<string>;
+    /**
+     * 
+     * @type {Array<Web3Transaction>}
+     * @memberof WatchBlocksV1BlockData
+     */
+    transactions: Array<Web3Transaction>;
+}
+/**
+ * 
+ * @export
+ * @interface WatchBlocksV1Options
+ */
+export interface WatchBlocksV1Options {
+    /**
+     * 
+     * @type {boolean}
+     * @memberof WatchBlocksV1Options
+     */
+    includeBlockData?: boolean;
+}
+/**
+ * 
+ * @export
  * @interface WatchBlocksV1Progress
  */
 export interface WatchBlocksV1Progress {
@@ -589,6 +633,12 @@ export interface WatchBlocksV1Progress {
      * @memberof WatchBlocksV1Progress
      */
     blockHeader: Web3BlockHeader;
+    /**
+     * 
+     * @type {WatchBlocksV1BlockData}
+     * @memberof WatchBlocksV1Progress
+     */
+    blockData?: WatchBlocksV1BlockData;
 }
 /**
  * 
@@ -637,7 +687,7 @@ export interface Web3BlockHeader {
      * @type {string}
      * @memberof Web3BlockHeader
      */
-    transactionRoot: string;
+    transactionsRoot?: string;
     /**
      * 
      * @type {string}
@@ -649,7 +699,19 @@ export interface Web3BlockHeader {
      * @type {string}
      * @memberof Web3BlockHeader
      */
-    receiptRoot: string;
+    receiptsRoot?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Web3BlockHeader
+     */
+    difficulty?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Web3BlockHeader
+     */
+    mixHash?: string;
     /**
      * 
      * @type {string}
@@ -794,6 +856,97 @@ export enum Web3SigningCredentialType {
     None = 'NONE'
 }
 
+/**
+ * 
+ * @export
+ * @interface Web3Transaction
+ */
+export interface Web3Transaction {
+    /**
+     * 
+     * @type {string}
+     * @memberof Web3Transaction
+     */
+    hash: string;
+    /**
+     * 
+     * @type {number}
+     * @memberof Web3Transaction
+     */
+    nonce: number;
+    /**
+     * 
+     * @type {string}
+     * @memberof Web3Transaction
+     */
+    blockHash?: string;
+    /**
+     * 
+     * @type {number}
+     * @memberof Web3Transaction
+     */
+    blockNumber?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof Web3Transaction
+     */
+    transactionIndex?: number;
+    /**
+     * 
+     * @type {string}
+     * @memberof Web3Transaction
+     */
+    from: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Web3Transaction
+     */
+    to?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Web3Transaction
+     */
+    value: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Web3Transaction
+     */
+    gasPrice: string;
+    /**
+     * 
+     * @type {number}
+     * @memberof Web3Transaction
+     */
+    gas: number;
+    /**
+     * 
+     * @type {string}
+     * @memberof Web3Transaction
+     */
+    input: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Web3Transaction
+     */
+    v?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Web3Transaction
+     */
+    r?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Web3Transaction
+     */
+    s?: string;
+}
 /**
  * 
  * @export

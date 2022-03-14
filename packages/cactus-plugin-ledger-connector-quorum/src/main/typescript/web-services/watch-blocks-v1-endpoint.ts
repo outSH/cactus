@@ -3,13 +3,18 @@ import Web3 from "web3";
 
 import { Logger, Checks } from "@hyperledger/cactus-common";
 import { LogLevelDesc, LoggerProvider } from "@hyperledger/cactus-common";
-import { WatchBlocksV1Progress } from "../generated/openapi/typescript-axios";
+import {
+  WatchBlocksV1Options,
+  WatchBlocksV1Progress,
+  Web3Transaction,
+} from "../generated/openapi/typescript-axios";
 import { WatchBlocksV1 } from "../generated/openapi/typescript-axios";
 
-export interface IWatchBlocksV1EndpointOptions {
+export interface IWatchBlocksV1EndpointConfiguration {
   logLevel?: LogLevelDesc;
   socket: SocketIoSocket;
   web3: Web3;
+  options?: WatchBlocksV1Options;
 }
 
 export class WatchBlocksV1Endpoint {
@@ -21,42 +26,69 @@ export class WatchBlocksV1Endpoint {
     Record<WatchBlocksV1, (next: WatchBlocksV1Progress | Error) => void>
   >;
   private readonly web3: Web3;
+  private readonly isIncludeBlock: boolean;
 
   public get className(): string {
     return WatchBlocksV1Endpoint.CLASS_NAME;
   }
 
-  constructor(public readonly options: IWatchBlocksV1EndpointOptions) {
+  constructor(public readonly config: IWatchBlocksV1EndpointConfiguration) {
     const fnTag = `${this.className}#constructor()`;
-    Checks.truthy(options, `${fnTag} arg options`);
-    Checks.truthy(options.web3, `${fnTag} arg options.web3`);
-    Checks.truthy(options.socket, `${fnTag} arg options.socket`);
+    Checks.truthy(config, `${fnTag} arg options`);
+    Checks.truthy(config.web3, `${fnTag} arg options.web3`);
+    Checks.truthy(config.socket, `${fnTag} arg options.socket`);
 
-    this.web3 = options.web3;
-    this.socket = options.socket;
+    this.web3 = config.web3;
+    this.socket = config.socket;
+    this.isIncludeBlock = config.options?.includeBlockData == true;
 
-    const level = this.options.logLevel || "INFO";
+    const level = this.config.logLevel || "INFO";
     const label = this.className;
     this.log = LoggerProvider.getOrCreate({ level, label });
   }
 
   public async subscribe(): Promise<void> {
-    const { socket, log, web3 } = this;
+    const { socket, log, web3, isIncludeBlock } = this;
     log.debug(`${WatchBlocksV1.Subscribe} => ${socket.id}`);
 
-    const sub = web3.eth.subscribe("newBlockHeaders", (ex, blockHeader) => {
-      log.debug("newBlockHeaders: Error=%o BlockHeader=%o", ex, blockHeader);
-      if (blockHeader) {
-        const next: WatchBlocksV1Progress = {
-          blockHeader,
-        };
-        socket.emit(WatchBlocksV1.Next, next);
-      }
-      if (ex) {
-        socket.emit(WatchBlocksV1.Error, ex);
-        sub.unsubscribe();
-      }
-    });
+    const sub = web3.eth.subscribe(
+      "newBlockHeaders",
+      async (ex, blockHeader) => {
+        log.debug("newBlockHeaders: Error=%o BlockHeader=%o", ex, blockHeader);
+        if (blockHeader) {
+          const next: WatchBlocksV1Progress = {
+            blockHeader,
+          };
+
+          if (isIncludeBlock) {
+            const blockData = await web3.eth.getBlock(blockHeader.hash, true);
+            log.error(JSON.stringify(blockData));
+
+            // Remove null and undefined fields
+            blockData.transactions.map((value: any) => {
+              for (const key in value) {
+                if (value[key] === null || value[key] === undefined) {
+                  delete value[key];
+                }
+              }
+            });
+
+            next.blockData = {
+              size: blockData.size,
+              totalDifficulty: blockData.totalDifficulty as any,
+              uncles: blockData.uncles,
+              transactions: blockData.transactions as Web3Transaction[],
+            };
+          }
+
+          socket.emit(WatchBlocksV1.Next, next);
+        }
+        if (ex) {
+          socket.emit(WatchBlocksV1.Error, ex);
+          sub.unsubscribe();
+        }
+      },
+    );
 
     log.debug("Subscribing to Web3 new block headers event...");
 

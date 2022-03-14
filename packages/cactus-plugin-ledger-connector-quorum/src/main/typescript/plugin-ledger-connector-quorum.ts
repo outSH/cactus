@@ -53,6 +53,7 @@ import {
   Web3SigningCredentialPrivateKeyHex,
   Web3SigningCredentialType,
   WatchBlocksV1,
+  WatchBlocksV1Options,
 } from "./generated/openapi/typescript-axios/";
 
 import { RunTransactionEndpoint } from "./web-services/run-transaction-endpoint";
@@ -181,8 +182,13 @@ export class PluginLedgerConnectorQuorum
     wsApi.on("connection", (socket: SocketIoSocket) => {
       this.log.debug(`New Socket connected. ID=${socket.id}`);
 
-      socket.on(WatchBlocksV1.Subscribe, () => {
-        new WatchBlocksV1Endpoint({ web3, socket, logLevel }).subscribe();
+      socket.on(WatchBlocksV1.Subscribe, (options?: WatchBlocksV1Options) => {
+        new WatchBlocksV1Endpoint({
+          web3,
+          socket,
+          logLevel,
+          options,
+        }).subscribe();
       });
 
       socket.on("validator-request", function (data) {
