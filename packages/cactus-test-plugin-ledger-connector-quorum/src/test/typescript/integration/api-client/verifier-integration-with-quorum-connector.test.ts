@@ -17,12 +17,13 @@ const containerImageVersion = "2022-03-10-b298004";
 
 import "jest-extended";
 import { v4 as uuidv4 } from "uuid";
+import Web3 from "web3";
+import { AbiItem } from "web3-utils";
 import { PluginRegistry } from "@hyperledger/cactus-core";
 import {
   PluginLedgerConnectorQuorum,
-  WatchBlocksV1BlockData,
+  QuorumApiClient,
   WatchBlocksV1Progress,
-  Web3BlockHeader,
   Web3SigningCredentialType,
 } from "@hyperledger/cactus-plugin-ledger-connector-quorum";
 import { PluginKeychainMemory } from "@hyperledger/cactus-plugin-keychain-memory";
@@ -39,7 +40,7 @@ import {
   ConfigService,
 } from "@hyperledger/cactus-cmd-api-server";
 
-import { VerifierFactory } from "@hyperledger/cactus-verifier-client";
+import { Verifier, VerifierFactory } from "@hyperledger/cactus-verifier-client";
 import {
   pruneDockerAllIfGithubAction,
   QuorumMultiPartyTestLedger,
@@ -59,6 +60,7 @@ describe("Verifier integration with quorum connector tests", () => {
   let quorumTestLedger: QuorumMultiPartyTestLedger;
   let apiServer: ApiServer;
   let connector: PluginLedgerConnectorQuorum;
+  let web3: Web3;
   let keychainPlugin: PluginKeychainMemory;
   let connectionProfile: ReturnType<
     typeof QuorumMultiPartyTestLedger.prototype.getKeys
@@ -86,6 +88,7 @@ describe("Verifier integration with quorum connector tests", () => {
       containerImageVersion,
       logLevel: sutLogLevel,
       emitContainerLogs: false,
+      //useRunningLedger: true,
     });
     await quorumTestLedger.start();
 
@@ -117,6 +120,9 @@ describe("Verifier integration with quorum connector tests", () => {
       pluginRegistry: new PluginRegistry({ plugins: [keychainPlugin] }),
     });
     plugins.push(connector);
+
+    // Create web3 provider for test
+    web3 = new Web3(connectionProfile.quorum.member1.url);
 
     // Create Api Server
     log.info("Create ApiServer...");
@@ -161,6 +167,11 @@ describe("Verifier integration with quorum connector tests", () => {
   });
 
   afterAll(async () => {
+    // @todo - should be removed after sendAsync OpenAPI
+    globalVerifierFactory
+      .getVerifier(quorumValidatorId, "QUORUM_2X")
+      .ledgerApi.asyncSocket.close();
+
     log.info("Shutdown the server...");
     if (apiServer) {
       await apiServer.shutdown();
@@ -176,90 +187,9 @@ describe("Verifier integration with quorum connector tests", () => {
     await pruneDockerAllIfGithubAction({ logLevel: testLogLevel });
   });
 
-  test("Verifier of QuorumApiClient is created by VerifierFactory", () => {
-    const sut = globalVerifierFactory.getVerifier(quorumValidatorId);
-    expect(sut.ledgerApi.className).toEqual("QuorumApiClient");
-  });
-
-  test("Verifier of QuorumApiClient supports web3EthContract function", async () => {
-    // Deploy contract to interact with
-    const deployOut = await connector.deployContract({
-      contractName: HelloWorldContractJson.contractName,
-      keychainId: keychainPlugin.getKeychainId(),
-      web3SigningCredential: {
-        ethAccount: connectionProfile.quorum.member2.accountAddress,
-        secret: connectionProfile.quorum.member2.privateKey,
-        type: Web3SigningCredentialType.PrivateKeyHex,
-      },
-      gas: 1000000,
-    });
-    expect(deployOut).toBeTruthy();
-    expect(deployOut.transactionReceipt).toBeTruthy();
-    expect(deployOut.transactionReceipt.contractAddress).toBeTruthy();
-    expect(deployOut.transactionReceipt.status).toBeTrue();
-
-    // web3EthContract.call
-    const contractCommon = {
-      abi: HelloWorldContractJson.abi,
-      address: deployOut.transactionReceipt.contractAddress,
-    };
-    const methodCall = {
-      type: "web3EthContract",
-      command: "call",
-      function: "sayHello",
-      params: { from: connectionProfile.quorum.member2.accountAddress },
-    };
-    const argsCall = { args: [] };
-
-    const results = await globalVerifierFactory
-      .getVerifier(quorumValidatorId)
-      .sendSyncRequest(contractCommon, methodCall, argsCall);
-    expect(results.status).toEqual(200);
-    expect(results.data).toEqual("Hello World!");
-    log.error(results);
-
-    // web3EthContract.encodeABI
-    const methodEncode = {
-      type: "web3EthContract",
-      command: "encodeABI",
-      function: "setName",
-      params: { from: connectionProfile.quorum.member2.accountAddress },
-    };
-    const argsEncode = { args: ["CactusQuorum"] };
-
-    const resultsEncode = await globalVerifierFactory
-      .getVerifier(quorumValidatorId)
-      .sendSyncRequest(contractCommon, methodEncode, argsEncode);
-    expect(resultsEncode.status).toEqual(200);
-    expect(resultsEncode.data.length).toBeGreaterThan(5);
-  });
-
-  test("Verifier of QuorumApiClient supports web3Eth function", async () => {
-    // web3Eth.getBalance
-    const contract = {};
-    const method = { type: "web3Eth", command: "getBalance" };
-    const args = { args: [connectionProfile.quorum.member2.accountAddress] };
-
-    const results = await globalVerifierFactory
-      .getVerifier(quorumValidatorId)
-      .sendSyncRequest(contract, method, args);
-
-    expect(results.data.length).toBeGreaterThan(0);
-  });
-
-  test("QuorumApiClient web3Eth throws error on unknown method", async () => {
-    const contract = {};
-    const method = { type: "web3Eth", command: "foo" };
-    const args = {};
-
-    const results = await globalVerifierFactory
-      .getVerifier(quorumValidatorId)
-      .sendSyncRequest(contract, method, args);
-
-    expect(results).toBeTruthy();
-    expect(results.status).toEqual(504);
-    expect(results.errorDetail).toBeTruthy();
-  });
+  //////////////////////////////////
+  // Helper Functions
+  //////////////////////////////////
 
   function monitorAndGetBlock(
     options: Record<string, unknown> = {},
@@ -300,6 +230,248 @@ describe("Verifier integration with quorum connector tests", () => {
     );
   }
 
+  //////////////////////////////////
+  // Tests
+  //////////////////////////////////
+
+  test("Verifier of QuorumApiClient is created by VerifierFactory", () => {
+    const sut = globalVerifierFactory.getVerifier(quorumValidatorId);
+    expect(sut.ledgerApi.className).toEqual("QuorumApiClient");
+  });
+
+  describe("web3EthContract tests", () => {
+    let verifier: Verifier<QuorumApiClient>;
+    let contractCommon: {
+      abi: AbiItem[];
+      address: string;
+    };
+
+    beforeAll(async () => {
+      // Setup verifier
+      verifier = globalVerifierFactory.getVerifier(
+        quorumValidatorId,
+        "QUORUM_2X",
+      );
+
+      // Deploy contract to interact with
+      const deployOut = await connector.deployContract({
+        contractName: HelloWorldContractJson.contractName,
+        keychainId: keychainPlugin.getKeychainId(),
+        web3SigningCredential: {
+          ethAccount: connectionProfile.quorum.member2.accountAddress,
+          secret: connectionProfile.quorum.member2.privateKey,
+          type: Web3SigningCredentialType.PrivateKeyHex,
+        },
+        gas: 1000000,
+      });
+      expect(deployOut).toBeTruthy();
+      expect(deployOut.transactionReceipt).toBeTruthy();
+      expect(deployOut.transactionReceipt.contractAddress).toBeTruthy();
+      expect(deployOut.transactionReceipt.status).toBeTrue();
+      // TODO - test failing assertion here
+
+      contractCommon = {
+        abi: HelloWorldContractJson.abi as AbiItem[],
+        address: deployOut.transactionReceipt.contractAddress as string,
+      };
+    });
+
+    test("Send unsigned transaction and use call to check results works", async () => {
+      const newName = "QuorumCactus";
+
+      // 1. Set new value (send)
+      // Will use signing key of the node we're connected to (member1)
+      const methodSend = {
+        type: "web3EthContract",
+        command: "send",
+        function: "setName",
+        params: { from: connectionProfile.quorum.member1.accountAddress },
+      };
+      const argsSend = { args: [newName] };
+
+      const resultsSend = await verifier.sendSyncRequest(
+        contractCommon,
+        methodSend,
+        argsSend,
+      );
+      expect(resultsSend.status).toEqual(200);
+      expect(resultsSend.data.status).toBeTrue();
+      log.error("SEND", resultsSend); // @todo - REMOVE
+      // {
+      //   status: 200,
+      //   data: {
+      //     blockHash: '0xe3d6f882c9b3074ae2feb1e21f200eabc48e1668f739056761e7c6e0201d8f11',
+      //     blockNumber: 783,
+      //     contractAddress: null,
+      //     cumulativeGasUsed: 33563,
+      //     from: '0xf0e2db6c8dc6c681bb5d6ad121a107f300e9b2b5',
+      //     gasUsed: 33563,
+      //     isPrivacyMarkerTransaction: false,
+      //     logsBloom: '0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
+      //     status: true,
+      //     to: '0xd1730567c9baca516d4e6b7fda2219797c44e110',
+      //     transactionHash: '0xe857ab4c8bd9a816aaf10d0f362a33601750df60dc13a1a969524f7100a33ead',
+      //     transactionIndex: 0,
+      //     events: {}
+      //   }
+      // }
+
+      // 2. Get new, updated value (call)
+      const methodCall = {
+        type: "web3EthContract",
+        command: "call",
+        function: "getName",
+        params: { from: connectionProfile.quorum.member1.accountAddress },
+      };
+      const argsCall = { args: [] };
+
+      const resultCall = await verifier.sendSyncRequest(
+        contractCommon,
+        methodCall,
+        argsCall,
+      );
+      expect(resultCall.status).toEqual(200);
+      expect(resultCall.data).toEqual(newName);
+      log.error("resultCall", resultCall); // @todo - REMOVE
+      // CALL2 { status: 200, data: 'QuorumCactus' }
+    });
+
+    test("encodeABI of transactions gives same results as direct web3 call", async () => {
+      // Send encodeABI request to connector
+      const methodEncode = {
+        type: "web3EthContract",
+        command: "encodeABI",
+        function: "setName",
+        params: { from: connectionProfile.quorum.member1.accountAddress },
+      };
+      const argsEncode = { args: ["QuorumCactusEncode"] };
+
+      const resultsEncode = await verifier.sendSyncRequest(
+        contractCommon,
+        methodEncode,
+        argsEncode,
+      );
+      expect(resultsEncode.status).toEqual(200);
+      expect(resultsEncode.data.length).toBeGreaterThan(5);
+      log.error("ENCODE:", resultsEncode); // @todo - REMOVE
+      // {
+      //   status: 200,
+      //   data: '0xc47f00270000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000c51756f72756d4361637475730000000000000000000000000000000000000000'
+      // }
+
+      // Compare encoded data with direct web3 call
+      const web3Contract = new web3.eth.Contract(
+        contractCommon.abi,
+        contractCommon.address,
+      );
+      const web3Encode = await web3Contract.methods
+        .setName(...argsEncode.args)
+        .encodeABI(methodEncode.params);
+      expect(resultsEncode.data).toEqual(web3Encode);
+    });
+
+    test("estimateGas of transactions gives same results as direct web3 call", async () => {
+      // Send estimateGas request to connector
+      const methodEstimateGas = {
+        type: "web3EthContract",
+        command: "estimateGas",
+        function: "setName",
+        params: { from: connectionProfile.quorum.member1.accountAddress },
+      };
+      const argsEstimateGas = { args: ["QuorumCactusGas"] };
+
+      const resultsEstimateGas = await verifier.sendSyncRequest(
+        contractCommon,
+        methodEstimateGas,
+        argsEstimateGas,
+      );
+      expect(resultsEstimateGas.status).toEqual(200);
+      expect(resultsEstimateGas.data).toBeGreaterThan(0);
+      log.error("resultsEstimateGas:", resultsEstimateGas); // @todo - REMOVE
+      // { status: 200, data: 33563 }
+
+      // Compare gas estimate with direct web3 call
+      const web3Contract = new web3.eth.Contract(
+        contractCommon.abi,
+        contractCommon.address,
+      );
+      const web3Encode = await web3Contract.methods
+        .setName(...argsEstimateGas.args)
+        .estimateGas(methodEstimateGas.params);
+      expect(resultsEstimateGas.data).toEqual(web3Encode);
+    });
+
+    test("Sending transaction with sendAsyncRequest works", async () => {
+      const newName = "QuorumCactusAsync";
+
+      // 1. Set new value with async call (send)
+      // Will use signing key of the node we're connected to (member1)
+      const methodSendAsync = {
+        type: "web3EthContract",
+        command: "send",
+        function: "setName",
+        params: { from: connectionProfile.quorum.member1.accountAddress },
+      };
+      const argsSendAsync = { args: [newName] };
+
+      await verifier.sendAsyncRequest(
+        contractCommon,
+        methodSendAsync,
+        argsSendAsync,
+      );
+
+      // 2. Wait for transaction commit
+      // We assume transaction will be included in the next block
+      await monitorAndGetBlock();
+
+      // 3. Get new, updated value (call)
+      const methodCall = {
+        type: "web3EthContract",
+        command: "call",
+        function: "getName",
+        params: { from: connectionProfile.quorum.member1.accountAddress },
+      };
+      const argsCall = { args: [] };
+
+      const resultsCall = await verifier.sendSyncRequest(
+        contractCommon,
+        methodCall,
+        argsCall,
+      );
+      expect(resultsCall.status).toEqual(200);
+      expect(resultsCall.data).toEqual(newName);
+      log.error("resultsAfterAsync", resultsCall); // @todo - REMOVE
+      // resultsAfterAsync { status: 200, data: 'QuorumCactusAsync' }
+    });
+  });
+
+  test("Verifier of QuorumApiClient supports web3Eth function", async () => {
+    // web3Eth.getBalance
+    const contract = {};
+    const method = { type: "web3Eth", command: "getBalance" };
+    const args = { args: [connectionProfile.quorum.member2.accountAddress] };
+
+    const results = await globalVerifierFactory
+      .getVerifier(quorumValidatorId)
+      .sendSyncRequest(contract, method, args);
+
+    expect(results.data.length).toBeGreaterThan(0);
+  });
+
+  test("QuorumApiClient web3Eth throws error on unknown method", async () => {
+    const contract = {};
+    const method = { type: "web3Eth", command: "foo" };
+    const args = {};
+
+    const results = await globalVerifierFactory
+      .getVerifier(quorumValidatorId)
+      .sendSyncRequest(contract, method, args);
+
+    expect(results).toBeTruthy();
+    expect(results.status).toEqual(504);
+    expect(results.errorDetail).toBeTruthy();
+  });
+
   test("Monitor new blocks headers on Quorum", async () => {
     const ledgerEvent = await monitorAndGetBlock();
     expect(ledgerEvent.id).toEqual("");
@@ -307,16 +479,6 @@ describe("Verifier integration with quorum connector tests", () => {
     expect(ledgerEvent.data).toBeTruthy();
     // blockData should not be present if called with empty options
     expect(ledgerEvent.data?.blockData).toBeUndefined();
-    const blockHeader = ledgerEvent.data?.blockHeader as Web3BlockHeader;
-    expect(blockHeader).toBeTruthy();
-    expect(blockHeader.number).toBeGreaterThanOrEqual(0);
-    expect(blockHeader.hash.length).toBeGreaterThanOrEqual(5);
-    expect(blockHeader.parentHash.length).toBeGreaterThanOrEqual(5);
-    expect(blockHeader.nonce.length).toBeGreaterThanOrEqual(5);
-    expect(blockHeader.miner.length).toBeGreaterThanOrEqual(5);
-    expect(blockHeader.gasLimit).toBeGreaterThan(0);
-    expect(blockHeader.gasUsed).toBeGreaterThanOrEqual(0);
-    expect(blockHeader.timestamp).toBeGreaterThan(0);
   });
 
   test("Monitor new blocks data on Quorum", async () => {
@@ -324,11 +486,6 @@ describe("Verifier integration with quorum connector tests", () => {
     expect(ledgerEvent.data).toBeTruthy();
     // both header and data should be present
     expect(ledgerEvent.data?.blockHeader).toBeTruthy();
-    const blockData = ledgerEvent.data?.blockData as WatchBlocksV1BlockData;
-    expect(blockData).toBeTruthy();
-    expect(blockData.size).toBeGreaterThan(0);
-    expect(parseInt(blockData.totalDifficulty)).toBeGreaterThanOrEqual(0);
-    expect(blockData.uncles).toBeDefined();
-    expect(blockData.transactions).toBeDefined();
+    expect(ledgerEvent.data?.blockData).toBeTruthy();
   });
 });

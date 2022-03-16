@@ -1,6 +1,6 @@
 import { Observable, ReplaySubject } from "rxjs";
 import { finalize } from "rxjs/operators";
-import { io } from "socket.io-client";
+import { io, Socket as ClientSocket } from "socket.io-client";
 import { Logger, Checks } from "@hyperledger/cactus-common";
 import { LogLevelDesc, LoggerProvider } from "@hyperledger/cactus-common";
 import { Constants, ISocketApiClient } from "@hyperledger/cactus-core-api";
@@ -27,6 +27,8 @@ export class QuorumApiClient
   private readonly wsApiHost: string;
   private readonly wsApiPath: string;
 
+  // @todo - remove
+  public readonly asyncSocket: ClientSocket;
   public get className(): string {
     return QuorumApiClient.CLASS_NAME;
   }
@@ -46,6 +48,9 @@ export class QuorumApiClient
     this.log.debug(`wsApiHost=${this.wsApiHost}`);
     this.log.debug(`wsApiPath=${this.wsApiPath}`);
     this.log.debug(`basePath=${this.options.basePath}`);
+
+    // @todo - remove
+    this.asyncSocket = io(this.wsApiHost, { path: this.wsApiPath });
   }
 
   public watchBlocksV1(
@@ -95,8 +100,6 @@ export class QuorumApiClient
     args: any,
   ): void {
     try {
-      const socket = io(this.wsApiHost, { path: this.wsApiPath });
-
       const requestData = {
         contract: contract,
         method: method,
@@ -104,8 +107,7 @@ export class QuorumApiClient
       };
 
       this.log.debug("sendAsyncRequest() Request:", requestData);
-      socket.emit("validator-request", requestData);
-      socket.disconnect();
+      this.asyncSocket.emit("validator-request", requestData);
     } catch (err) {
       this.log.error("sendAsyncRequest() EXCEPTION", err);
       throw err;
