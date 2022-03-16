@@ -802,7 +802,7 @@
             "WatchBlocksV1Options": {
                 "type": "object",
                 "properties": {
-                    "includeBlockData": {
+                    "getBlockData": {
                         "type": "boolean"
                     }
                 }
@@ -888,7 +888,11 @@
                 "required": [
                     "hash",
                     "nonce",
+                    "blockHash",
+                    "blockNumber",
+                    "transactionIndex",
                     "from",
+                    "to",
                     "value",
                     "gasPrice",
                     "gas",
@@ -902,19 +906,23 @@
                         "type": "number"
                     },
                     "blockHash": {
-                        "type": "string"
+                        "type": "string",
+                        "nullable": true
                     },
                     "blockNumber": {
-                        "type": "number"
+                        "type": "number",
+                        "nullable": true
                     },
                     "transactionIndex": {
-                        "type": "number"
+                        "type": "number",
+                        "nullable": true
                     },
                     "from": {
                         "type": "string"
                     },
                     "to": {
-                        "type": "string"
+                        "type": "string",
+                        "nullable": true
                     },
                     "value": {
                         "type": "string"
@@ -942,12 +950,81 @@
             "WatchBlocksV1BlockData": {
                 "type": "object",
                 "required": [
+                    "number",
+                    "hash",
+                    "parentHash",
+                    "nonce",
+                    "sha3Uncles",
+                    "logsBloom",
+                    "transactionRoot",
+                    "stateRoot",
+                    "receiptRoot",
+                    "miner",
+                    "extraData",
+                    "gasLimit",
+                    "gasUsed",
+                    "timestamp",
                     "size",
                     "totalDifficulty",
                     "uncles",
                     "transactions"
                 ],
                 "properties": {
+                    "number": {
+                        "type": "number"
+                    },
+                    "hash": {
+                        "type": "string"
+                    },
+                    "parentHash": {
+                        "type": "string"
+                    },
+                    "nonce": {
+                        "type": "string"
+                    },
+                    "sha3Uncles": {
+                        "type": "string"
+                    },
+                    "logsBloom": {
+                        "type": "string"
+                    },
+                    "transactionsRoot": {
+                        "type": "string"
+                    },
+                    "stateRoot": {
+                        "type": "string"
+                    },
+                    "receiptsRoot": {
+                        "type": "string"
+                    },
+                    "difficulty": {
+                        "type": "string"
+                    },
+                    "mixHash": {
+                        "type": "string"
+                    },
+                    "miner": {
+                        "type": "string"
+                    },
+                    "extraData": {
+                        "type": "string"
+                    },
+                    "gasLimit": {
+                        "type": "integer"
+                    },
+                    "gasUsed": {
+                        "type": "integer"
+                    },
+                    "timestamp": {
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "number"
+                            }
+                        ]
+                    },
                     "size": {
                         "type": "number"
                     },
@@ -970,7 +1047,6 @@
             },
             "WatchBlocksV1Progress": {
                 "type": "object",
-                "required": ["blockHeader"],
                 "properties": {
                     "blockHeader": {
                         "$ref": "#/components/schemas/Web3BlockHeader"

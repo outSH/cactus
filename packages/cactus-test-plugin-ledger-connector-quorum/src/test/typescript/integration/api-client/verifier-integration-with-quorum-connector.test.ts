@@ -24,6 +24,7 @@ import {
   PluginLedgerConnectorQuorum,
   QuorumApiClient,
   WatchBlocksV1Progress,
+  Web3BlockHeader,
   Web3SigningCredentialType,
 } from "@hyperledger/cactus-plugin-ledger-connector-quorum";
 import { PluginKeychainMemory } from "@hyperledger/cactus-plugin-keychain-memory";
@@ -88,7 +89,7 @@ describe("Verifier integration with quorum connector tests", () => {
       containerImageVersion,
       logLevel: sutLogLevel,
       emitContainerLogs: false,
-      //useRunningLedger: true,
+      useRunningLedger: true,
     });
     await quorumTestLedger.start();
 
@@ -210,7 +211,7 @@ describe("Verifier integration with quorum connector tests", () => {
 
               log.info(
                 "Listener received ledgerEvent, block number",
-                ledgerEvent.data.blockHeader.number,
+                ledgerEvent.data.blockHeader?.number,
               );
 
               sut.stopMonitor(appId);
@@ -472,20 +473,56 @@ describe("Verifier integration with quorum connector tests", () => {
     expect(results.errorDetail).toBeTruthy();
   });
 
+  function assertBlockHeader(header: Web3BlockHeader) {
+    // Check if defined and with expected type
+    // Ignore nullable / undefine-able fields
+    expect(typeof header.parentHash).toEqual("string");
+    expect(typeof header.sha3Uncles).toEqual("string");
+    expect(typeof header.miner).toEqual("string");
+    expect(typeof header.stateRoot).toEqual("string");
+    expect(typeof header.logsBloom).toEqual("string");
+    expect(typeof header.number).toEqual("number");
+    expect(typeof header.gasLimit).toEqual("number");
+    expect(typeof header.gasUsed).toEqual("number");
+    expect(typeof header.extraData).toEqual("string");
+    expect(typeof header.nonce).toEqual("string");
+    expect(typeof header.hash).toEqual("string");
+    expect(typeof header.difficulty).toEqual("string");
+  }
+
   test("Monitor new blocks headers on Quorum", async () => {
     const ledgerEvent = await monitorAndGetBlock();
+    // assert well-formed output
     expect(ledgerEvent.id).toEqual("");
     expect(ledgerEvent.verifierId).toEqual(quorumValidatorId);
     expect(ledgerEvent.data).toBeTruthy();
+
     // blockData should not be present if called with empty options
     expect(ledgerEvent.data?.blockData).toBeUndefined();
+    expect(ledgerEvent.data?.blockHeader).toBeTruthy();
+
+    // check some fields
+    assertBlockHeader(ledgerEvent.data?.blockHeader as Web3BlockHeader);
   });
 
   test("Monitor new blocks data on Quorum", async () => {
-    const ledgerEvent = await monitorAndGetBlock({ includeBlockData: true });
+    const ledgerEvent = await monitorAndGetBlock({ getBlockData: true });
+    // assert well-formed output
+    expect(ledgerEvent.id).toEqual("");
+    expect(ledgerEvent.verifierId).toEqual(quorumValidatorId);
     expect(ledgerEvent.data).toBeTruthy();
-    // both header and data should be present
-    expect(ledgerEvent.data?.blockHeader).toBeTruthy();
+
+    // blockHeader should not be present if called with getBlockData option
+    expect(ledgerEvent.data?.blockHeader).toBeFalsy();
     expect(ledgerEvent.data?.blockData).toBeTruthy();
+
+    // check some fields
+    assertBlockHeader(ledgerEvent.data?.blockData as Web3BlockHeader);
+    expect(typeof ledgerEvent.data?.blockData?.size).toEqual("number");
+    expect(typeof ledgerEvent.data?.blockData?.totalDifficulty).toEqual(
+      "string",
+    );
+    expect(typeof ledgerEvent.data?.blockData?.uncles).toEqual("object");
+    expect(typeof ledgerEvent.data?.blockData?.transactions).toEqual("object");
   });
 });

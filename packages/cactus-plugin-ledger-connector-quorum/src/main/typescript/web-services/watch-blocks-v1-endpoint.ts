@@ -7,8 +7,8 @@ import {
 import {
   WatchBlocksV1Options,
   WatchBlocksV1Progress,
-  Web3Transaction,
   WatchBlocksV1,
+  WatchBlocksV1BlockData,
 } from "../generated/openapi/typescript-axios";
 import { Socket as SocketIoSocket } from "socket.io";
 import Web3 from "web3";
@@ -29,7 +29,7 @@ export class WatchBlocksV1Endpoint {
     Record<WatchBlocksV1, (next: WatchBlocksV1Progress | string) => void>
   >;
   private readonly web3: Web3;
-  private readonly isIncludeBlock: boolean;
+  private readonly isGetBlockData: boolean;
 
   public get className(): string {
     return WatchBlocksV1Endpoint.CLASS_NAME;
@@ -43,7 +43,7 @@ export class WatchBlocksV1Endpoint {
 
     this.web3 = config.web3;
     this.socket = config.socket;
-    this.isIncludeBlock = config.options?.includeBlockData == true;
+    this.isGetBlockData = config.options?.getBlockData == true;
 
     const level = this.config.logLevel || "INFO";
     const label = this.className;
@@ -51,7 +51,7 @@ export class WatchBlocksV1Endpoint {
   }
 
   public async subscribe(): Promise<void> {
-    const { socket, log, web3, isIncludeBlock } = this;
+    const { socket, log, web3, isGetBlockData } = this;
     log.debug(`${WatchBlocksV1.Subscribe} => ${socket.id}`);
 
     const sub = web3.eth.subscribe(
@@ -63,29 +63,20 @@ export class WatchBlocksV1Endpoint {
           socket.emit(WatchBlocksV1.Error, ex.message);
           sub.unsubscribe();
         } else if (blockHeader) {
-          const next: WatchBlocksV1Progress = {
-            blockHeader,
-          };
+          let next: WatchBlocksV1Progress;
 
-          if (isIncludeBlock) {
-            const blockData = await web3.eth.getBlock(blockHeader.hash, true);
+          if (isGetBlockData) {
+            const web3BlockData = await web3.eth.getBlock(
+              blockHeader.hash,
+              true,
+            );
 
-            // Remove null and undefined fields to match OpenAPI return type
-            blockData.transactions.map((value: any) => {
-              for (const key in value) {
-                if (value[key] === null || value[key] === undefined) {
-                  delete value[key];
-                }
-              }
-            });
-
-            next.blockData = {
-              size: blockData.size,
-              // Safely cast to string, in case totalDifficulty is really a number (I think it returns a string and web3 typedef is wrong)
-              totalDifficulty: `${blockData.totalDifficulty}`,
-              uncles: blockData.uncles,
-              transactions: blockData.transactions as Web3Transaction[],
+            next = {
+              // difficulty and totalDifficulty returned from the ledger are string, forcing typecast
+              blockData: (web3BlockData as unknown) as WatchBlocksV1BlockData,
             };
+          } else {
+            next = { blockHeader };
           }
 
           socket.emit(WatchBlocksV1.Next, next);

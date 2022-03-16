@@ -632,6 +632,102 @@ export interface WatchBlocksV1BlockData {
      * @type {number}
      * @memberof WatchBlocksV1BlockData
      */
+    number: number;
+    /**
+     * 
+     * @type {string}
+     * @memberof WatchBlocksV1BlockData
+     */
+    hash: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof WatchBlocksV1BlockData
+     */
+    parentHash: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof WatchBlocksV1BlockData
+     */
+    nonce: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof WatchBlocksV1BlockData
+     */
+    sha3Uncles: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof WatchBlocksV1BlockData
+     */
+    logsBloom: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof WatchBlocksV1BlockData
+     */
+    transactionsRoot?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof WatchBlocksV1BlockData
+     */
+    stateRoot: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof WatchBlocksV1BlockData
+     */
+    receiptsRoot?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof WatchBlocksV1BlockData
+     */
+    difficulty?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof WatchBlocksV1BlockData
+     */
+    mixHash?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof WatchBlocksV1BlockData
+     */
+    miner: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof WatchBlocksV1BlockData
+     */
+    extraData: string;
+    /**
+     * 
+     * @type {number}
+     * @memberof WatchBlocksV1BlockData
+     */
+    gasLimit: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof WatchBlocksV1BlockData
+     */
+    gasUsed: number;
+    /**
+     * 
+     * @type {string | number}
+     * @memberof WatchBlocksV1BlockData
+     */
+    timestamp: string | number;
+    /**
+     * 
+     * @type {number}
+     * @memberof WatchBlocksV1BlockData
+     */
     size: number;
     /**
      * 
@@ -663,7 +759,7 @@ export interface WatchBlocksV1Options {
      * @type {boolean}
      * @memberof WatchBlocksV1Options
      */
-    includeBlockData?: boolean;
+    getBlockData?: boolean;
 }
 /**
  * 
@@ -676,7 +772,7 @@ export interface WatchBlocksV1Progress {
      * @type {Web3BlockHeader}
      * @memberof WatchBlocksV1Progress
      */
-    blockHeader: Web3BlockHeader;
+    blockHeader?: Web3BlockHeader;
     /**
      * 
      * @type {WatchBlocksV1BlockData}
@@ -923,19 +1019,19 @@ export interface Web3Transaction {
      * @type {string}
      * @memberof Web3Transaction
      */
-    blockHash?: string;
+    blockHash: string | null;
     /**
      * 
      * @type {number}
      * @memberof Web3Transaction
      */
-    blockNumber?: number;
+    blockNumber: number | null;
     /**
      * 
      * @type {number}
      * @memberof Web3Transaction
      */
-    transactionIndex?: number;
+    transactionIndex: number | null;
     /**
      * 
      * @type {string}
@@ -947,7 +1043,7 @@ export interface Web3Transaction {
      * @type {string}
      * @memberof Web3Transaction
      */
-    to?: string;
+    to: string | null;
     /**
      * 
      * @type {string}
