@@ -247,6 +247,20 @@ describe("Verifier integration with quorum connector tests", () => {
     expect(results.data.length).toBeGreaterThan(0);
   });
 
+  test("QuorumApiClient web3Eth throws error on unknown method", async () => {
+    const contract = {};
+    const method = { type: "web3Eth", command: "foo" };
+    const args = {};
+
+    const results = await globalVerifierFactory
+      .getVerifier(quorumValidatorId)
+      .sendSyncRequest(contract, method, args);
+
+    expect(results).toBeTruthy();
+    expect(results.status).toEqual(504);
+    expect(results.errorDetail).toBeTruthy();
+  });
+
   function monitorAndGetBlock(
     options: Record<string, unknown> = {},
   ): Promise<LedgerEvent<WatchBlocksV1Progress>> {

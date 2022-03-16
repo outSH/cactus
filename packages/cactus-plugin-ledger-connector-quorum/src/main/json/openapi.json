@@ -736,6 +736,48 @@
                     }
                 }
             },
+            "InvokeWeb3EthMethodV1Request": {
+                "type": "object",
+                "required": ["methodName"],
+                "additionalProperties": false,
+                "properties": {
+                    "methodName": {
+                        "description": "The name of the web3.eth method to invoke",
+                        "type": "string",
+                        "nullable": false,
+                        "minLength": 1,
+                        "maxLength": 2048
+                    },
+                    "params": {
+                        "description": "The list of arguments to pass to web3.eth method specified in methodName",
+                        "type": "array",
+                        "default": [],
+                        "items": {}
+                    }
+                }
+            },
+            "InvokeWeb3EthMethodV1Response": {
+                "type": "object",
+                "required": [
+                    "status"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                    "status": {
+                        "type": "number",
+                        "nullable": false,
+                        "description": "Status code of the operation"
+                    },
+                    "data": {
+                        "description": "Output of requested web3.eth method"
+                    },
+                    "errorDetail": {
+                        "type": "string",
+                        "nullable": false,
+                        "description": "Error details"
+                    }
+                }
+            },
             "PrometheusExporterMetricsResponse": {
                 "type": "string",
                 "nullable": false
@@ -1129,6 +1171,40 @@
                             "text/plain": {
                                 "schema": {
                                     "$ref": "#/components/schemas/PrometheusExporterMetricsResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/plugins/@hyperledger/cactus-plugin-ledger-connector-quorum/invoke-web3eth-method": {
+            "post": {
+                "x-hyperledger-cactus": {
+                    "http": {
+                        "verbLowerCase": "post",
+                        "path": "/api/v1/plugins/@hyperledger/cactus-plugin-ledger-connector-quorum/invoke-web3eth-method"
+                    }
+                },
+                "operationId": "invokeWeb3EthMethodV1",
+                "summary": "Invoke any method from web3.eth (low-level)",
+                "parameters": [],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/InvokeWeb3EthMethodV1Request"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/InvokeWeb3EthMethodV1Response"
                                 }
                             }
                         }

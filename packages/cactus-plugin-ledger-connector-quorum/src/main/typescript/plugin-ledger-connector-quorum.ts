@@ -1,12 +1,13 @@
 import { Server } from "http";
 import { Server as SecureServer } from "https";
+import type {
+  Server as SocketIoServer,
+  Socket as SocketIoSocket,
+} from "socket.io";
 
 import { Express } from "express";
 import Web3 from "web3";
-// The strange way of obtaining the contract class here is like this because
-// web3-eth internally sub-classes the Contract class at runtime
-// @see https://stackoverflow.com/a/63639280/698470
-const Contract = new Web3().eth.Contract;
+import { Contract } from "web3-eth-contract";
 import { ContractSendMethod } from "web3-eth-contract";
 import { TransactionReceipt } from "web3-eth";
 
@@ -50,11 +51,18 @@ import {
   Web3SigningCredentialCactusKeychainRef,
   Web3SigningCredentialPrivateKeyHex,
   Web3SigningCredentialType,
+  WatchBlocksV1,
+  WatchBlocksV1Options,
+  InvokeWeb3EthMethodV1Request,
+  InvokeWeb3EthMethodV1Response,
 } from "./generated/openapi/typescript-axios/";
 
 import { RunTransactionEndpoint } from "./web-services/run-transaction-endpoint";
 import { InvokeContractEndpoint } from "./web-services/invoke-contract-endpoint";
 import { InvokeContractJsonObjectEndpoint } from "./web-services/invoke-contract-endpoint-json-object";
+import { WatchBlocksV1Endpoint } from "./web-services/watch-blocks-v1-endpoint";
+import { ValidatorRequest } from "./web-services/validator-request-endpoint";
+
 import { isWeb3SigningCredentialNone } from "./model-type-guards";
 
 import { PrometheusExporter } from "./prometheus-exporter/prometheus-exporter";
@@ -62,10 +70,15 @@ import {
   GetPrometheusExporterMetricsEndpointV1,
   IGetPrometheusExporterMetricsEndpointV1Options,
 } from "./web-services/get-prometheus-exporter-metrics-endpoint-v1";
+import {
+  IInvokeWeb3EthMethodEndpointOptions,
+  InvokeWeb3EthMethodEndpoint,
+} from "./web-services/invoke-web3eth-method-v1-endpoint";
 
 export interface IPluginLedgerConnectorQuorumOptions
   extends ICactusPluginOptions {
   rpcApiHttpHost: string;
+  rpcApiWsHost?: string;
   logLevel?: LogLevelDesc;
   prometheusExporter?: PrometheusExporter;
   pluginRegistry: PluginRegistry;
@@ -95,6 +108,14 @@ export class PluginLedgerConnectorQuorum
     return PluginLedgerConnectorQuorum.CLASS_NAME;
   }
 
+  private getWeb3Provider() {
+    if (!this.options.rpcApiWsHost) {
+      return new Web3.providers.HttpProvider(this.options.rpcApiHttpHost);
+    }
+
+    return new Web3.providers.WebsocketProvider(this.options.rpcApiWsHost);
+  }
+
   constructor(public readonly options: IPluginLedgerConnectorQuorumOptions) {
     const fnTag = `${this.className}#constructor()`;
     Checks.truthy(options, `${fnTag} arg options`);
@@ -106,10 +127,7 @@ export class PluginLedgerConnectorQuorum
     const label = this.className;
     this.log = LoggerProvider.getOrCreate({ level, label });
 
-    const web3Provider = new Web3.providers.HttpProvider(
-      this.options.rpcApiHttpHost,
-    );
-    this.web3 = new Web3(web3Provider);
+    this.web3 = new Web3(this.getWeb3Provider());
     this.instanceId = options.instanceId;
     this.pluginRegistry = options.pluginRegistry as PluginRegistry;
     this.prometheusExporter =
@@ -143,18 +161,45 @@ export class PluginLedgerConnectorQuorum
 
   public async shutdown(): Promise<void> {
     this.log.info(`Shutting down ${this.className}...`);
+    const provider = this.web3.currentProvider;
+    if (provider && typeof provider == "object") {
+      if ("disconnect" in provider) {
+        provider.disconnect(1000, "shutdown");
+      }
+    }
   }
 
   public async onPluginInit(): Promise<unknown> {
     return;
   }
 
-  async registerWebServices(app: Express): Promise<IWebServiceEndpoint[]> {
+  async registerWebServices(
+    app: Express,
+    wsApi: SocketIoServer,
+  ): Promise<IWebServiceEndpoint[]> {
+    const { web3 } = this;
+    const { logLevel } = this.options;
     const webServices = await this.getOrCreateWebServices();
     await Promise.all(webServices.map((ws) => ws.registerExpress(app)));
+
+    wsApi.on("connection", (socket: SocketIoSocket) => {
+      this.log.debug(`New Socket connected. ID=${socket.id}`);
+
+      socket.on(WatchBlocksV1.Subscribe, (options?: WatchBlocksV1Options) => {
+        new WatchBlocksV1Endpoint({
+          web3,
+          socket,
+          logLevel,
+          options,
+        }).subscribe();
+      });
+
+      socket.on("validator-request", function (data) {
+        new ValidatorRequest(web3).onRequest(socket, data);
+      });
+    });
     return webServices;
   }
-
   public async getOrCreateWebServices(): Promise<IWebServiceEndpoint[]> {
     if (Array.isArray(this.endpoints)) {
       return this.endpoints;
@@ -203,6 +248,14 @@ export class PluginLedgerConnectorQuorum
       const endpoint = new GetPrometheusExporterMetricsEndpointV1(opts);
       endpoints.push(endpoint);
     }
+    {
+      const opts: IInvokeWeb3EthMethodEndpointOptions = {
+        connector: this,
+        logLevel: this.options.logLevel,
+      };
+      const endpoint = new InvokeWeb3EthMethodEndpoint(opts);
+      endpoints.push(endpoint);
+    }
     this.endpoints = endpoints;
     return endpoints;
   }
@@ -224,7 +277,7 @@ export class PluginLedgerConnectorQuorum
 
   public async getContractInfoKeychain(
     req: InvokeContractV1Request,
-  ): Promise<any> {
+  ): Promise<InvokeContractV1Response> {
     const fnTag = `${this.className}#invokeContract()`;
 
     const { contractName, keychainId } = req;
@@ -244,7 +297,6 @@ export class PluginLedgerConnectorQuorum
     }
     const contractStr = await keychainPlugin.get(contractName);
     const contractJSON = JSON.parse(contractStr);
-    (req as any).contractJSON = contractJSON;
 
     // if not exists a contract deployed, we deploy it
     const networkId = await this.web3.eth.net.getId();
@@ -266,14 +318,17 @@ export class PluginLedgerConnectorQuorum
       contractJSON.networks = network;
       keychainPlugin.set(req.contractName, JSON.stringify(contractJSON));
     }
-    (req as any).contractAddress = contractJSON.networks[networkId].address;
 
-    return this.invokeContract(req);
+    return this.invokeContract({
+      ...req,
+      contractAddress: contractJSON.networks[networkId].address,
+      contractJSON: contractJSON,
+    });
   }
 
   public async getContractInfo(
     req: InvokeContractJsonObjectV1Request,
-  ): Promise<any> {
+  ): Promise<InvokeContractV1Response> {
     const fnTag = `${this.className}#invokeContractNoKeychain()`;
     const { contractJSON, contractAddress } = req;
     if (!contractJSON) {
@@ -285,7 +340,9 @@ export class PluginLedgerConnectorQuorum
     return this.invokeContract(req);
   }
 
-  public async invokeContract(req: any): Promise<InvokeContractV1Response> {
+  public async invokeContract(
+    req: InvokeContractJsonObjectV1Request,
+  ): Promise<InvokeContractV1Response> {
     const fnTag = `${this.className}#invokeContract()`;
 
     const { contractAddress, contractJSON } = req;
@@ -610,5 +667,40 @@ export class PluginLedgerConnectorQuorum
       );
     }
     return this.runDeploy(req);
+  }
+
+  // Low level function to call any method from web3.eth
+  // Should be used only if given functionality is not already covered by another endpoint.
+  public async invokeWeb3EthMethod(
+    args: InvokeWeb3EthMethodV1Request,
+  ): Promise<InvokeWeb3EthMethodV1Response> {
+    return new Promise((resolve, rejects) => {
+      this.log.debug("invokeWeb3EthMethod methodName:", args.methodName);
+      this.log.debug("invokeWeb3EthMethod params:", args.params);
+
+      const looseWeb3Eth = this.web3.eth as any;
+      if (!(args.methodName in looseWeb3Eth)) {
+        rejects(new Error(`No method "${args.methodName}" in web3.eth`));
+      }
+
+      const web3Method = looseWeb3Eth[args.methodName];
+      const web3Response: Promise<unknown> = args.params
+        ? web3Method(...args.params)
+        : web3Method();
+
+      web3Response
+        .then((result: unknown) => {
+          const retObj = {
+            status: 200,
+            data: result,
+          };
+          this.log.debug("invokeWeb3EthMethod response (OK):", retObj);
+          return resolve(retObj);
+        })
+        .catch((err) => {
+          this.log.warn("invokeWeb3EthMethod response (ERROR):", err);
+          rejects(err);
+        });
+    });
   }
 }

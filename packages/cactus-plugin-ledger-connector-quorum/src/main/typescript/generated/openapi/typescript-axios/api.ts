@@ -404,6 +404,50 @@ export interface InvokeContractV1Response {
 /**
  * 
  * @export
+ * @interface InvokeWeb3EthMethodV1Request
+ */
+export interface InvokeWeb3EthMethodV1Request {
+    /**
+     * The name of the web3.eth method to invoke
+     * @type {string}
+     * @memberof InvokeWeb3EthMethodV1Request
+     */
+    methodName: string;
+    /**
+     * The list of arguments to pass to web3.eth method specified in methodName
+     * @type {Array<any>}
+     * @memberof InvokeWeb3EthMethodV1Request
+     */
+    params?: Array<any>;
+}
+/**
+ * 
+ * @export
+ * @interface InvokeWeb3EthMethodV1Response
+ */
+export interface InvokeWeb3EthMethodV1Response {
+    /**
+     * Status code of the operation
+     * @type {number}
+     * @memberof InvokeWeb3EthMethodV1Response
+     */
+    status: number;
+    /**
+     * Output of requested web3.eth method
+     * @type {any}
+     * @memberof InvokeWeb3EthMethodV1Response
+     */
+    data?: any | null;
+    /**
+     * Error details
+     * @type {string}
+     * @memberof InvokeWeb3EthMethodV1Response
+     */
+    errorDetail?: string;
+}
+/**
+ * 
+ * @export
  * @interface QuorumTransactionConfig
  */
 export interface QuorumTransactionConfig {
@@ -1185,6 +1229,40 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * 
+         * @summary Invoke any method from web3.eth (low-level)
+         * @param {InvokeWeb3EthMethodV1Request} [invokeWeb3EthMethodV1Request] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        invokeWeb3EthMethodV1: async (invokeWeb3EthMethodV1Request?: InvokeWeb3EthMethodV1Request, options: any = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/v1/plugins/@hyperledger/cactus-plugin-ledger-connector-quorum/invoke-web3eth-method`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter, options.query);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(invokeWeb3EthMethodV1Request, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @summary Executes a transaction on a quorum ledger
          * @param {RunTransactionRequest} [runTransactionRequest] 
          * @param {*} [options] Override http request option.
@@ -1283,6 +1361,17 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
+         * @summary Invoke any method from web3.eth (low-level)
+         * @param {InvokeWeb3EthMethodV1Request} [invokeWeb3EthMethodV1Request] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async invokeWeb3EthMethodV1(invokeWeb3EthMethodV1Request?: InvokeWeb3EthMethodV1Request, options?: any): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<InvokeWeb3EthMethodV1Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.invokeWeb3EthMethodV1(invokeWeb3EthMethodV1Request, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
          * @summary Executes a transaction on a quorum ledger
          * @param {RunTransactionRequest} [runTransactionRequest] 
          * @param {*} [options] Override http request option.
@@ -1350,6 +1439,16 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          */
         invokeContractV1NoKeychain(invokeContractJsonObjectV1Request?: InvokeContractJsonObjectV1Request, options?: any): AxiosPromise<InvokeContractV1Response> {
             return localVarFp.invokeContractV1NoKeychain(invokeContractJsonObjectV1Request, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Invoke any method from web3.eth (low-level)
+         * @param {InvokeWeb3EthMethodV1Request} [invokeWeb3EthMethodV1Request] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        invokeWeb3EthMethodV1(invokeWeb3EthMethodV1Request?: InvokeWeb3EthMethodV1Request, options?: any): AxiosPromise<InvokeWeb3EthMethodV1Response> {
+            return localVarFp.invokeWeb3EthMethodV1(invokeWeb3EthMethodV1Request, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -1428,6 +1527,18 @@ export class DefaultApi extends BaseAPI {
      */
     public invokeContractV1NoKeychain(invokeContractJsonObjectV1Request?: InvokeContractJsonObjectV1Request, options?: any) {
         return DefaultApiFp(this.configuration).invokeContractV1NoKeychain(invokeContractJsonObjectV1Request, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Invoke any method from web3.eth (low-level)
+     * @param {InvokeWeb3EthMethodV1Request} [invokeWeb3EthMethodV1Request] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public invokeWeb3EthMethodV1(invokeWeb3EthMethodV1Request?: InvokeWeb3EthMethodV1Request, options?: any) {
+        return DefaultApiFp(this.configuration).invokeWeb3EthMethodV1(invokeWeb3EthMethodV1Request, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
