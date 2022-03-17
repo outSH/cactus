@@ -15,6 +15,11 @@ import { PluginFactoryLedgerConnector } from "./plugin-factory-ledger-connector"
 export {
   QuorumApiClient,
   QuorumApiClientOptions,
+  QuorumRequestInputWeb3EthMethod,
+  QuorumRequestInputWeb3EthContractMethod,
+  QuorumRequestInputContract,
+  QuorumRequestInputMethod,
+  QuorumRequestInputArgs,
 } from "./api-client/quorum-api-client";
 
 export * from "./generated/openapi/typescript-axios/api";

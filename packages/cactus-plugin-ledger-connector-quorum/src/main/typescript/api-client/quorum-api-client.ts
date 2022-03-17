@@ -22,29 +22,29 @@ export class QuorumApiClientOptions extends Configuration {
 }
 
 // Command 'web3Eth' input method type
-type QuorumRequestInputWeb3EthMethod = {
+export type QuorumRequestInputWeb3EthMethod = {
   type: "web3Eth";
   command: string;
 };
 
 // Command 'web3EthContract' input method type
-type QuorumRequestInputWeb3EthContractMethod = {
+export type QuorumRequestInputWeb3EthContractMethod = {
   type: "web3EthContract";
   command: EthContractInvocationType;
   function: string;
-  params: any[];
+  params?: any[];
 };
 
 // Final input types for sending requests
-type QuorumRequestInputContract = {
+export type QuorumRequestInputContract = {
   abi?: AbiItem[];
   address?: string;
 };
-type QuorumRequestInputMethod =
+export type QuorumRequestInputMethod =
   | QuorumRequestInputWeb3EthMethod
   | QuorumRequestInputWeb3EthContractMethod;
-type QuorumRequestInputArgs = {
-  args: any[] | Record<string, unknown>;
+export type QuorumRequestInputArgs = {
+  args?: any[] | Record<string, unknown>;
 };
 
 export class QuorumApiClient
@@ -121,28 +121,28 @@ export class QuorumApiClient
    * @param method - function / method to be executed by validator.
    * @param args - arguments.
    */
-  public sendAsyncRequest(): // contract: QuorumRequestInputContract,
-  // method: QuorumRequestInputMethod,
-  // args: QuorumRequestInputArgs,
-  void {
-    this.sendSyncRequest(
-      {},
-      {
-        type: "web3EthContract",
-        command: EthContractInvocationType.Call,
-        function: "foo",
-        params: [1, 2, 3],
-      },
-      {
-        args: { from: "Foo" },
-      },
-    );
+  public sendAsyncRequest(
+    contract: QuorumRequestInputContract,
+    method: QuorumRequestInputMethod,
+    args: QuorumRequestInputArgs,
+  ): void {
+    const callName = `${method.type} - ${method.command}`;
+    this.log.debug("sendAsyncRequest()", callName);
+
+    this.sendSyncRequest(contract, method, args)
+      .then((value) => {
+        this.log.info(`sendAsyncRequest call resolved (${callName})`);
+        this.log.debug("sendAsyncRequest results:", JSON.stringify(value));
+      })
+      .catch((err) => {
+        this.log.warn(`sendAsyncRequest failed (${callName}). Error:`, err);
+      });
   }
 
   /**
    * Sends request to be executed on the ledger, watches and reports any error and the response from a ledger.
    * @param contract - contract to execute on the ledger.
-   * @param method - function / method to be executed by validator.
+   * @param method - function / method specification to be executed by validator.
    * @param args - arguments.
    * @returns Promise that will resolve with response from the ledger, or reject when error occurred.
    */
@@ -153,48 +153,87 @@ export class QuorumApiClient
   ): Promise<any> {
     return new Promise((resolve, reject) => {
       this.log.debug("sendSyncRequest()");
-      this.log.debug("Method type:", method.type);
 
-      if (method.type === "web3Eth") {
-        this.log.info("!!! web3Eth -> invokeWeb3EthMethodV1");
+      // TODO - separate func
+      switch (method.type) {
+        case "web3Eth": {
+          this.log.info("Send 'web3Eth' request command");
 
-        const invokeArgs = {
-          methodName: method.command as string,
-          params: args.args as any[],
-        };
-        this.log.debug("Call invokeWeb3EthMethodV1 with args:", invokeArgs);
-        this.invokeWeb3EthMethodV1(invokeArgs)
-          .then((value) => {
-            resolve(value.data);
-          })
-          .catch((err) => {
-            reject(err);
-          });
-      } else if (method.type === "web3EthContract") {
-        this.log.info("!!! web3EthContract -> InvokeRawWeb3EthContractV1");
+          // Check parameters
+          Checks.nonBlankString(
+            method.command,
+            "Method command must not be empty",
+          );
+          if (args && args.args && !Array.isArray(args.args)) {
+            throw new Error("web3Eth arguments (args.args) must be an array");
+          }
 
-        const invokeArgs: InvokeRawWeb3EthContractV1Request = {
-          abi: contract.abi as AbiItem[],
-          address: contract.address as string,
-          invocationType: method.command,
-          invocationParams: args.args,
-          contractMethod: method.function,
-          contractMethodArgs: method.params,
-        };
-        this.log.debug(
-          "Call invokeRawWeb3EthContractV1 with args:",
-          invokeArgs,
-        );
+          // Prepare input
+          const invokeArgs = {
+            methodName: method.command,
+            params: args.args as any,
+          };
 
-        this.invokeRawWeb3EthContractV1(invokeArgs)
-          .then((value) => {
-            resolve(value.data);
-          })
-          .catch((err) => {
-            reject(err);
-          });
-      } else {
-        throw new Error("Not supported function");
+          // Call the endpoint
+          this.invokeWeb3EthMethodV1(invokeArgs)
+            .then((value) => {
+              this.log.debug("invokeWeb3EthMethodV1() OK");
+              resolve(value.data);
+            })
+            .catch((err) => {
+              this.log.debug("invokeWeb3EthMethodV1() Error:", err);
+              reject(err);
+            });
+          break;
+        }
+        case "web3EthContract": {
+          this.log.info("Send 'web3EthContract' request command");
+
+          // Check parameters
+          Checks.truthy(contract.abi, "Contract ABI must be defined");
+          Checks.truthy(contract.address, "Contract address must be set");
+          if (
+            !Object.values(EthContractInvocationType).includes(method.command)
+          ) {
+            throw new Error(
+              `Unknown invocationType (${method.command}), must be defined in EthContractInvocationType`,
+            );
+          }
+          Checks.nonBlankString(
+            method.function,
+            "contractMethod (method.function) must not be empty",
+          );
+          if (method.params && !Array.isArray(method.params)) {
+            throw new Error(
+              "Contract method arguments (method.params) must be an array",
+            );
+          }
+
+          // Prepare input
+          const invokeArgs: InvokeRawWeb3EthContractV1Request = {
+            abi: contract.abi as AbiItem[],
+            address: contract.address as string,
+            invocationType: method.command,
+            invocationParams: args.args,
+            contractMethod: method.function,
+            contractMethodArgs: method.params,
+          };
+
+          // Call the endpoint
+          this.invokeRawWeb3EthContractV1(invokeArgs)
+            .then((value) => {
+              resolve(value.data);
+            })
+            .catch((err) => {
+              reject(err);
+            });
+          break;
+        }
+        default:
+          const value: never = method;
+          throw new Error(
+            `Unhandled discriminated union member: ${JSON.stringify(value)}`,
+          );
       }
     });
   }
