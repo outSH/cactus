@@ -168,11 +168,6 @@ describe("Verifier integration with quorum connector tests", () => {
   });
 
   afterAll(async () => {
-    // @todo - should be removed after sendAsync OpenAPI
-    globalVerifierFactory
-      .getVerifier(quorumValidatorId, "QUORUM_2X")
-      .ledgerApi.asyncSocket.close();
-
     log.info("Shutdown the server...");
     if (apiServer) {
       await apiServer.shutdown();
@@ -286,9 +281,13 @@ describe("Verifier integration with quorum connector tests", () => {
         type: "web3EthContract",
         command: "send",
         function: "setName",
-        params: { from: connectionProfile.quorum.member1.accountAddress },
+        params: [newName],
       };
-      const argsSend = { args: [newName] };
+      const argsSend = {
+        args: {
+          from: connectionProfile.quorum.member1.accountAddress,
+        },
+      };
 
       const resultsSend = await verifier.sendSyncRequest(
         contractCommon,
@@ -322,9 +321,9 @@ describe("Verifier integration with quorum connector tests", () => {
         type: "web3EthContract",
         command: "call",
         function: "getName",
-        params: { from: connectionProfile.quorum.member1.accountAddress },
+        params: [],
       };
-      const argsCall = { args: [] };
+      const argsCall = {};
 
       const resultCall = await verifier.sendSyncRequest(
         contractCommon,
@@ -343,9 +342,13 @@ describe("Verifier integration with quorum connector tests", () => {
         type: "web3EthContract",
         command: "encodeABI",
         function: "setName",
-        params: { from: connectionProfile.quorum.member1.accountAddress },
+        params: ["QuorumCactusEncode"],
       };
-      const argsEncode = { args: ["QuorumCactusEncode"] };
+      const argsEncode = {
+        args: {
+          from: connectionProfile.quorum.member1.accountAddress,
+        },
+      };
 
       const resultsEncode = await verifier.sendSyncRequest(
         contractCommon,
@@ -366,8 +369,8 @@ describe("Verifier integration with quorum connector tests", () => {
         contractCommon.address,
       );
       const web3Encode = await web3Contract.methods
-        .setName(...argsEncode.args)
-        .encodeABI(methodEncode.params);
+        .setName(...methodEncode.params)
+        .encodeABI(argsEncode);
       expect(resultsEncode.data).toEqual(web3Encode);
     });
 
@@ -377,9 +380,9 @@ describe("Verifier integration with quorum connector tests", () => {
         type: "web3EthContract",
         command: "estimateGas",
         function: "setName",
-        params: { from: connectionProfile.quorum.member1.accountAddress },
+        params: ["QuorumCactusGas"],
       };
-      const argsEstimateGas = { args: ["QuorumCactusGas"] };
+      const argsEstimateGas = {};
 
       const resultsEstimateGas = await verifier.sendSyncRequest(
         contractCommon,
@@ -397,12 +400,12 @@ describe("Verifier integration with quorum connector tests", () => {
         contractCommon.address,
       );
       const web3Encode = await web3Contract.methods
-        .setName(...argsEstimateGas.args)
-        .estimateGas(methodEstimateGas.params);
+        .setName(...methodEstimateGas.params)
+        .estimateGas(argsEstimateGas);
       expect(resultsEstimateGas.data).toEqual(web3Encode);
     });
 
-    test("Sending transaction with sendAsyncRequest works", async () => {
+    test.skip("Sending transaction with sendAsyncRequest works", async () => {
       const newName = "QuorumCactusAsync";
 
       // 1. Set new value with async call (send)
@@ -411,9 +414,13 @@ describe("Verifier integration with quorum connector tests", () => {
         type: "web3EthContract",
         command: "send",
         function: "setName",
-        params: { from: connectionProfile.quorum.member1.accountAddress },
+        params: [newName],
       };
-      const argsSendAsync = { args: [newName] };
+      const argsSendAsync = {
+        args: {
+          from: connectionProfile.quorum.member1.accountAddress,
+        },
+      };
 
       await verifier.sendAsyncRequest(
         contractCommon,
@@ -430,9 +437,9 @@ describe("Verifier integration with quorum connector tests", () => {
         type: "web3EthContract",
         command: "call",
         function: "getName",
-        params: { from: connectionProfile.quorum.member1.accountAddress },
+        params: [],
       };
-      const argsCall = { args: [] };
+      const argsCall = {};
 
       const resultsCall = await verifier.sendSyncRequest(
         contractCommon,

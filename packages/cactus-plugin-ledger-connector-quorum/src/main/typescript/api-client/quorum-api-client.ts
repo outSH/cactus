@@ -1,6 +1,6 @@
 import { Observable, ReplaySubject } from "rxjs";
 import { finalize } from "rxjs/operators";
-import { io, Socket as ClientSocket } from "socket.io-client";
+import { io } from "socket.io-client";
 import { Logger, Checks } from "@hyperledger/cactus-common";
 import { LogLevelDesc, LoggerProvider } from "@hyperledger/cactus-common";
 import { Constants, ISocketApiClient } from "@hyperledger/cactus-core-api";
@@ -13,12 +13,39 @@ import {
   WatchBlocksV1Progress,
 } from "../generated/openapi/typescript-axios";
 import { Configuration } from "../generated/openapi/typescript-axios/configuration";
+import { AbiItem } from "web3-utils";
 
 export class QuorumApiClientOptions extends Configuration {
   readonly logLevel?: LogLevelDesc;
   readonly wsApiHost?: string;
   readonly wsApiPath?: string;
 }
+
+// Command 'web3Eth' input method type
+type QuorumRequestInputWeb3EthMethod = {
+  type: "web3Eth";
+  command: string;
+};
+
+// Command 'web3EthContract' input method type
+type QuorumRequestInputWeb3EthContractMethod = {
+  type: "web3EthContract";
+  command: EthContractInvocationType;
+  function: string;
+  params: any[];
+};
+
+// Final input types for sending requests
+type QuorumRequestInputContract = {
+  abi?: AbiItem[];
+  address?: string;
+};
+type QuorumRequestInputMethod =
+  | QuorumRequestInputWeb3EthMethod
+  | QuorumRequestInputWeb3EthContractMethod;
+type QuorumRequestInputArgs = {
+  args: any[] | Record<string, unknown>;
+};
 
 export class QuorumApiClient
   extends DefaultApi
@@ -29,8 +56,6 @@ export class QuorumApiClient
   private readonly wsApiHost: string;
   private readonly wsApiPath: string;
 
-  // @todo - remove
-  public readonly asyncSocket: ClientSocket;
   public get className(): string {
     return QuorumApiClient.CLASS_NAME;
   }
@@ -50,9 +75,6 @@ export class QuorumApiClient
     this.log.debug(`wsApiHost=${this.wsApiHost}`);
     this.log.debug(`wsApiPath=${this.wsApiPath}`);
     this.log.debug(`basePath=${this.options.basePath}`);
-
-    // @todo - remove
-    this.asyncSocket = io(this.wsApiHost, { path: this.wsApiPath });
   }
 
   public watchBlocksV1(
@@ -62,15 +84,17 @@ export class QuorumApiClient
     const subject = new ReplaySubject<WatchBlocksV1Progress>(0);
 
     socket.on(WatchBlocksV1.Next, (data: WatchBlocksV1Progress) => {
+      this.log.debug("Received WatchBlocksV1.Next");
       subject.next(data);
     });
 
     socket.on(WatchBlocksV1.Error, (ex: string) => {
-      this.log.debug("ApiClient", ex);
+      this.log.warn("Received WatchBlocksV1.Error:", ex);
       subject.error(ex);
     });
 
     socket.on(WatchBlocksV1.Complete, () => {
+      this.log.debug("Received WatchBlocksV1.Complete");
       subject.complete();
     });
 
@@ -84,6 +108,7 @@ export class QuorumApiClient
     return subject.pipe(
       finalize(() => {
         console.log("FINALIZE - unsubscribing from the stream...");
+        // @todo - fix emit && disconnect?
         socket.emit(WatchBlocksV1.Unsubscribe);
         socket.disconnect();
       }),
@@ -96,24 +121,22 @@ export class QuorumApiClient
    * @param method - function / method to be executed by validator.
    * @param args - arguments.
    */
-  public sendAsyncRequest(
-    contract: Record<string, unknown>,
-    method: Record<string, unknown>,
-    args: any,
-  ): void {
-    try {
-      const requestData = {
-        contract: contract,
-        method: method,
-        args: args,
-      };
-
-      this.log.debug("sendAsyncRequest() Request:", requestData);
-      this.asyncSocket.emit("validator-request", requestData);
-    } catch (err) {
-      this.log.error("sendAsyncRequest() EXCEPTION", err);
-      throw err;
-    }
+  public sendAsyncRequest(): // contract: QuorumRequestInputContract,
+  // method: QuorumRequestInputMethod,
+  // args: QuorumRequestInputArgs,
+  void {
+    this.sendSyncRequest(
+      {},
+      {
+        type: "web3EthContract",
+        command: EthContractInvocationType.Call,
+        function: "foo",
+        params: [1, 2, 3],
+      },
+      {
+        args: { from: "Foo" },
+      },
+    );
   }
 
   /**
@@ -122,24 +145,22 @@ export class QuorumApiClient
    * @param method - function / method to be executed by validator.
    * @param args - arguments.
    * @returns Promise that will resolve with response from the ledger, or reject when error occurred.
-   * @todo Refactor to RxJS
-   * @todo better types
    */
   public sendSyncRequest(
-    contract: Record<string, unknown>,
-    method: Record<string, unknown>,
-    args: any,
+    contract: QuorumRequestInputContract,
+    method: QuorumRequestInputMethod,
+    args: QuorumRequestInputArgs,
   ): Promise<any> {
     return new Promise((resolve, reject) => {
-      this.log.debug("call : sendSyncRequest");
+      this.log.debug("sendSyncRequest()");
+      this.log.debug("Method type:", method.type);
 
-      ////////////////////// HANDLE HTTP CALLS
       if (method.type === "web3Eth") {
         this.log.info("!!! web3Eth -> invokeWeb3EthMethodV1");
 
         const invokeArgs = {
           methodName: method.command as string,
-          params: args.args,
+          params: args.args as any[],
         };
         this.log.debug("Call invokeWeb3EthMethodV1 with args:", invokeArgs);
         this.invokeWeb3EthMethodV1(invokeArgs)
@@ -153,12 +174,12 @@ export class QuorumApiClient
         this.log.info("!!! web3EthContract -> InvokeRawWeb3EthContractV1");
 
         const invokeArgs: InvokeRawWeb3EthContractV1Request = {
-          abi: contract.abi as any,
+          abi: contract.abi as AbiItem[],
           address: contract.address as string,
-          invocationType: method.command as EthContractInvocationType,
-          invocationParams: method.params as any[],
-          contractMethod: method.function as string,
-          contractMethodArgs: args.args as any[],
+          invocationType: method.command,
+          invocationParams: args.args,
+          contractMethod: method.function,
+          contractMethodArgs: method.params,
         };
         this.log.debug(
           "Call invokeRawWeb3EthContractV1 with args:",
