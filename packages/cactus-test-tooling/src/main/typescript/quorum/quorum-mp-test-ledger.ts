@@ -14,6 +14,8 @@ export interface IQuorumMultiPartyTestLedgerOptions {
   readonly logLevel?: LogLevelDesc;
   readonly emitContainerLogs?: boolean;
   readonly envVars?: string[];
+  // For test development, attach to ledger that is already running, don't spin up new one
+  readonly useRunningLedger?: boolean;
 }
 
 export class QuorumMultiPartyTestLedger implements ITestLedger {
@@ -21,6 +23,7 @@ export class QuorumMultiPartyTestLedger implements ITestLedger {
   public readonly containerImageVersion: string;
   private readonly logLevel: LogLevelDesc;
   private readonly emitContainerLogs: boolean;
+  private readonly useRunningLedger: boolean;
   private readonly envVars: string[];
 
   private readonly log: Logger;
@@ -31,15 +34,26 @@ export class QuorumMultiPartyTestLedger implements ITestLedger {
     this.containerImageName =
       options?.containerImageName ||
       "ghcr.io/hyperledger/cactus-quorum-all-in-one";
+
     this.containerImageVersion =
       options?.containerImageVersion || "2021-01-08-7a055c3";
+
     this.logLevel = options?.logLevel || "info";
+
     if (options?.emitContainerLogs != undefined) {
       this.emitContainerLogs = options.emitContainerLogs;
     } else {
       this.emitContainerLogs = true;
     }
+
+    if (options?.useRunningLedger != undefined) {
+      this.useRunningLedger = options.useRunningLedger;
+    } else {
+      this.useRunningLedger = false;
+    }
+
     this.envVars = options?.envVars || [];
+
     this.log = LoggerProvider.getOrCreate({
       level: this.logLevel,
       label: "quorum-multi-party-test-ledger",
@@ -51,6 +65,20 @@ export class QuorumMultiPartyTestLedger implements ITestLedger {
   }
 
   public async start(omitPull = false): Promise<Container> {
+    if (this.useRunningLedger) {
+      this.log.info(
+        "Search for already running Quorum Test Ledger because 'useRunningLedger' flag is enabled.",
+      );
+      const containerInfo = await Containers.getByPredicate(
+        (ci) =>
+          ci.Image === this.fullContainerImageName && ci.State === "running",
+      );
+      const docker = new Docker();
+      this.containerId = containerInfo.Id;
+      this.container = docker.getContainer(this.containerId);
+      return this.container;
+    }
+
     this.log.info(
       `Starting Quorum Test Ledger: ${this.fullContainerImageName}`,
     );
@@ -133,7 +161,10 @@ export class QuorumMultiPartyTestLedger implements ITestLedger {
   }
 
   public stop(): Promise<unknown> {
-    if (this.container) {
+    if (this.useRunningLedger) {
+      this.log.info("Ignore stop request because useRunningLedger is enabled.");
+      return Promise.resolve();
+    } else if (this.container) {
       return Containers.stop(this.container);
     } else {
       return Promise.reject(
@@ -145,7 +176,12 @@ export class QuorumMultiPartyTestLedger implements ITestLedger {
   }
 
   public destroy(): Promise<unknown> {
-    if (this.container) {
+    if (this.useRunningLedger) {
+      this.log.info(
+        "Ignore destroy request because useRunningLedger is enabled.",
+      );
+      return Promise.resolve();
+    } else if (this.container) {
       return this.container.remove();
     } else {
       return Promise.reject(
