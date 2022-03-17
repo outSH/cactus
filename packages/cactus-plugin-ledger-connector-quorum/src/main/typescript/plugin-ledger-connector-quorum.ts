@@ -55,7 +55,6 @@ import {
   WatchBlocksV1,
   WatchBlocksV1Options,
   InvokeWeb3EthMethodV1Request,
-  InvokeWeb3EthMethodV1Response,
   InvokeRawWeb3EthContractV1Request,
 } from "./generated/openapi/typescript-axios/";
 
@@ -687,7 +686,7 @@ export class PluginLedgerConnectorQuorum
   // Should be used only if given functionality is not already covered by another endpoint.
   public async invokeWeb3EthMethod(
     args: InvokeWeb3EthMethodV1Request,
-  ): Promise<InvokeWeb3EthMethodV1Response> {
+  ): Promise<any> {
     return new Promise((resolve, rejects) => {
       this.log.debug("invokeWeb3EthMethod input:", JSON.stringify(args));
 
@@ -702,14 +701,9 @@ export class PluginLedgerConnectorQuorum
         : web3Method();
 
       web3Response
-        .then((result: unknown) => {
-          // todo - dont return status and data, do it in endpoint only
-          const retObj = {
-            status: 200,
-            data: result,
-          };
-          this.log.debug("invokeWeb3EthMethod response (OK):", retObj);
-          return resolve(retObj);
+        .then((result: any) => {
+          this.log.debug("invokeWeb3EthMethod response (OK):", result);
+          return resolve(result);
         })
         .catch((err) => {
           this.log.warn("invokeWeb3EthMethod response (ERROR):", err);
@@ -751,6 +745,7 @@ export class PluginLedgerConnectorQuorum
       args.address,
     );
 
+    // @todo - check if methods exist?
     return contract.methods[args.contractMethod](...contractMethodArgs)[
       invocationMethod
     ](args.invocationParams);

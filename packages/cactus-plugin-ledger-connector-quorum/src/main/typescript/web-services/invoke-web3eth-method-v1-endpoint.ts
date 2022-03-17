@@ -15,6 +15,7 @@ import { registerWebServiceEndpoint } from "@hyperledger/cactus-core";
 import { PluginLedgerConnectorQuorum } from "../plugin-ledger-connector-quorum";
 import OAS from "../../json/openapi.json";
 import sanitizeHtml from "sanitize-html";
+import { InvokeWeb3EthMethodV1Response } from "../public-api";
 
 export interface IInvokeWeb3EthMethodEndpointOptions {
   logLevel?: LogLevelDesc;
@@ -82,10 +83,16 @@ export class InvokeWeb3EthMethodEndpoint implements IWebServiceEndpoint {
   public async handleRequest(req: Request, res: Response): Promise<void> {
     const reqTag = `${this.getVerbLowerCase()} - ${this.getPath()}`;
     this.log.debug(reqTag);
-    const reqBody = req.body;
+
     try {
-      const resBody = await this.options.connector.invokeWeb3EthMethod(reqBody);
-      res.json(resBody);
+      const methodResponse = await this.options.connector.invokeWeb3EthMethod(
+        req.body,
+      );
+      const response: InvokeWeb3EthMethodV1Response = {
+        status: 200,
+        data: methodResponse,
+      };
+      res.json(response);
     } catch (ex: any) {
       this.log.warn(`Error while serving ${reqTag}`, ex);
       res.json({

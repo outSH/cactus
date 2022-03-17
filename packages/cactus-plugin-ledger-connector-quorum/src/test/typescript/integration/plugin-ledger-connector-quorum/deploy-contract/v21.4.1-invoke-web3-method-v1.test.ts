@@ -80,11 +80,8 @@ describe("InvokeWeb3EthMethodEndpoint Tests", () => {
     const connectorResponse = await connector.invokeWeb3EthMethod({
       methodName: "getGasPrice",
     });
-    log.error(connectorResponse);
     expect(connectorResponse).toBeTruthy();
-    expect(connectorResponse.status).toEqual(200);
-    expect(connectorResponse.data).toBeTruthy();
-    expect(connectorResponse.data).toEqual("0"); // gas is free on quorum
+    expect(connectorResponse).toEqual("0"); // gas is free on quorum
   });
 
   test("invokeWeb3EthMethod with 1-argument method works (getBlock)", async () => {
@@ -93,14 +90,12 @@ describe("InvokeWeb3EthMethodEndpoint Tests", () => {
       params: ["earliest"],
     });
     expect(connectorResponse).toBeTruthy();
-    expect(connectorResponse.status).toEqual(200);
-    expect(connectorResponse.data).toBeTruthy();
-    expect(connectorResponse.data.hash.length).toBeGreaterThan(5);
+    expect(connectorResponse.hash.length).toBeGreaterThan(5);
 
     // Compare with direct web3 response
     const web3Response = await web3.eth.getBlock("earliest");
     expect(web3Response).toBeTruthy();
-    expect(web3Response).toEqual(connectorResponse.data);
+    expect(web3Response).toEqual(connectorResponse);
   });
 
   test("invokeWeb3EthMethod with 2-argument method works (getStorageAt)", async () => {
@@ -112,13 +107,11 @@ describe("InvokeWeb3EthMethodEndpoint Tests", () => {
       params: [genesisAccount, 0],
     });
     expect(connectorResponse).toBeTruthy();
-    expect(connectorResponse.status).toEqual(200);
-    expect(connectorResponse.data).toBeTruthy();
 
     // Compare with direct web3 response
     const web3Response = await web3.eth.getStorageAt(genesisAccount, 0);
     expect(web3Response).toBeTruthy();
-    expect(web3Response).toEqual(connectorResponse.data);
+    expect(web3Response).toEqual(connectorResponse);
   });
 
   test("invokeWeb3EthMethod with missing arg throws error (getBlock)", async () => {
