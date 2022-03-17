@@ -6,6 +6,8 @@ import { LogLevelDesc, LoggerProvider } from "@hyperledger/cactus-common";
 import { Constants, ISocketApiClient } from "@hyperledger/cactus-core-api";
 import {
   DefaultApi,
+  EthContractInvocationType,
+  InvokeRawWeb3EthContractV1Request,
   WatchBlocksV1,
   WatchBlocksV1Options,
   WatchBlocksV1Progress,
@@ -121,6 +123,7 @@ export class QuorumApiClient
    * @param args - arguments.
    * @returns Promise that will resolve with response from the ledger, or reject when error occurred.
    * @todo Refactor to RxJS
+   * @todo better types
    */
   public sendSyncRequest(
     contract: Record<string, unknown>,
@@ -146,101 +149,32 @@ export class QuorumApiClient
           .catch((err) => {
             reject(err);
           });
+      } else if (method.type === "web3EthContract") {
+        this.log.info("!!! web3EthContract -> InvokeRawWeb3EthContractV1");
+
+        const invokeArgs: InvokeRawWeb3EthContractV1Request = {
+          abi: contract.abi as any,
+          address: contract.address as string,
+          invocationType: method.command as EthContractInvocationType,
+          invocationParams: method.params as any[],
+          contractMethod: method.function as string,
+          contractMethodArgs: args.args as any[],
+        };
+        this.log.debug(
+          "Call invokeRawWeb3EthContractV1 with args:",
+          invokeArgs,
+        );
+
+        this.invokeRawWeb3EthContractV1(invokeArgs)
+          .then((value) => {
+            resolve(value.data);
+          })
+          .catch((err) => {
+            reject(err);
+          });
       } else {
-        /////////////////////////////
-        // OLD LOGIC - to be removed
-
-        const socket = io(this.wsApiHost, { path: this.wsApiPath });
-
-        try {
-          this.log.debug(
-            "##in sendSyncRequest, contract:",
-            contract,
-            "method:",
-            method,
-            "args:",
-            args,
-          );
-          let responseFlag = false;
-
-          // reqID generation
-          const reqID = this.genarateReqID();
-          this.log.debug(`##sendSyncRequest, reqID = ${reqID}`);
-
-          socket.on("connect_error", (err: Error) => {
-            this.log.error("##connect_error:", err);
-            socket.disconnect();
-            reject(err);
-          });
-          socket.on("connect_timeout", (err: Record<string, unknown>) => {
-            this.log.error("####Error:", err);
-            socket.disconnect();
-            reject(err);
-          });
-          socket.on("error", (err: Record<string, unknown>) => {
-            this.log.error("####Error:", err);
-            socket.disconnect();
-            reject(err);
-          });
-          socket.on("response", (result: any) => {
-            this.log.debug("#[recv]response, res:", result);
-            if (reqID === result.id) {
-              responseFlag = true;
-
-              const resultObj = {
-                status: result.resObj.status,
-                data: result.resObj.data.result,
-              };
-              this.log.debug("resultObj =", resultObj);
-
-              socket.disconnect();
-
-              // Result reply
-              resolve(resultObj);
-            }
-          });
-
-          // Call Validator
-          const requestData = {
-            contract: contract,
-            method: method,
-            args: args,
-            reqID: reqID,
-          };
-          this.log.debug("requestData:", requestData);
-          socket.emit("validator-request", requestData);
-          this.log.debug("set timeout");
-
-          // Time-out setting
-          const timeoutMilliseconds = 10000;
-          setTimeout(() => {
-            if (responseFlag === false) {
-              this.log.debug("requestTimeout reqID:", reqID);
-              socket.disconnect();
-              resolve({ status: 504 });
-            }
-          }, timeoutMilliseconds);
-        } catch (err) {
-          this.log.error("##Error: sendSyncRequest:", err);
-          socket.disconnect();
-          reject(err);
-        }
+        throw new Error("Not supported function");
       }
     });
-  }
-
-  private counterReqID = 1;
-
-  /**
-   * Generated sync request id used to track and match responses from the validator.
-   * @returns ID lower than maxCounterRequestID.
-   */
-  private genarateReqID(): string {
-    const maxCounterRequestID = 10000;
-    if (this.counterReqID > maxCounterRequestID) {
-      // Counter initialization
-      this.counterReqID = 1;
-    }
-    return `QuorumApiClient_${this.counterReqID++}`;
   }
 }

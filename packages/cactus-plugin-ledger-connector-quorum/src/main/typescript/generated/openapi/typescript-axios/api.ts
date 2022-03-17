@@ -226,8 +226,10 @@ export interface DeployContractSolidityBytecodeV1Response {
  */
 
 export enum EthContractInvocationType {
-    Send = 'SEND',
-    Call = 'CALL'
+    Send = 'send',
+    Call = 'call',
+    EncodeAbi = 'encodeABI',
+    EstimateGas = 'estimateGas'
 }
 
 /**
@@ -400,6 +402,74 @@ export interface InvokeContractV1Response {
      * @memberof InvokeContractV1Response
      */
     success: boolean;
+}
+/**
+ * 
+ * @export
+ * @interface InvokeRawWeb3EthContractV1Request
+ */
+export interface InvokeRawWeb3EthContractV1Request {
+    /**
+     * The application binary interface of the solidity contract
+     * @type {Array<any>}
+     * @memberof InvokeRawWeb3EthContractV1Request
+     */
+    abi: Array<any>;
+    /**
+     * Deployed solidity contract address
+     * @type {string}
+     * @memberof InvokeRawWeb3EthContractV1Request
+     */
+    address: string;
+    /**
+     * 
+     * @type {EthContractInvocationType}
+     * @memberof InvokeRawWeb3EthContractV1Request
+     */
+    invocationType: EthContractInvocationType;
+    /**
+     * The list of arguments for contract invocation method (send, call, etc...)
+     * @type {object}
+     * @memberof InvokeRawWeb3EthContractV1Request
+     */
+    invocationParams?: object;
+    /**
+     * Method of deployed solidity contract to execute
+     * @type {string}
+     * @memberof InvokeRawWeb3EthContractV1Request
+     */
+    contractMethod: string;
+    /**
+     * The list of arguments for deployed solidity contract method
+     * @type {Array<any>}
+     * @memberof InvokeRawWeb3EthContractV1Request
+     */
+    contractMethodArgs?: Array<any>;
+}
+/**
+ * 
+ * @export
+ * @interface InvokeRawWeb3EthContractV1Response
+ */
+export interface InvokeRawWeb3EthContractV1Response {
+    /**
+     * Status code of the operation
+     * @type {number}
+     * @memberof InvokeRawWeb3EthContractV1Response
+     */
+    status: number;
+    /**
+     * Output of contract invocation method
+     * @type {any}
+     * @memberof InvokeRawWeb3EthContractV1Response
+     */
+    data?: any | null;
+    /**
+     * Error details
+     * @type {string}
+     * @memberof InvokeRawWeb3EthContractV1Response
+     */
+    errorDetail?: string;
 }
 /**
  * 
@@ -1325,6 +1395,40 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * 
+         * @summary Low-level endpoint to invoke a method on deployed contract.
+         * @param {InvokeRawWeb3EthContractV1Request} [invokeRawWeb3EthContractV1Request] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        invokeRawWeb3EthContractV1: async (invokeRawWeb3EthContractV1Request?: InvokeRawWeb3EthContractV1Request, options: any = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/v1/plugins/@hyperledger/cactus-plugin-ledger-connector-quorum/invoke-raw-web3eth-contract`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter, options.query);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(invokeRawWeb3EthContractV1Request, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @summary Invoke any method from web3.eth (low-level)
          * @param {InvokeWeb3EthMethodV1Request} [invokeWeb3EthMethodV1Request] 
          * @param {*} [options] Override http request option.
@@ -1457,6 +1561,17 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
+         * @summary Low-level endpoint to invoke a method on deployed contract.
+         * @param {InvokeRawWeb3EthContractV1Request} [invokeRawWeb3EthContractV1Request] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async invokeRawWeb3EthContractV1(invokeRawWeb3EthContractV1Request?: InvokeRawWeb3EthContractV1Request, options?: any): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<InvokeRawWeb3EthContractV1Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.invokeRawWeb3EthContractV1(invokeRawWeb3EthContractV1Request, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
          * @summary Invoke any method from web3.eth (low-level)
          * @param {InvokeWeb3EthMethodV1Request} [invokeWeb3EthMethodV1Request] 
          * @param {*} [options] Override http request option.
@@ -1535,6 +1650,16 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          */
         invokeContractV1NoKeychain(invokeContractJsonObjectV1Request?: InvokeContractJsonObjectV1Request, options?: any): AxiosPromise<InvokeContractV1Response> {
             return localVarFp.invokeContractV1NoKeychain(invokeContractJsonObjectV1Request, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Low-level endpoint to invoke a method on deployed contract.
+         * @param {InvokeRawWeb3EthContractV1Request} [invokeRawWeb3EthContractV1Request] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        invokeRawWeb3EthContractV1(invokeRawWeb3EthContractV1Request?: InvokeRawWeb3EthContractV1Request, options?: any): AxiosPromise<InvokeRawWeb3EthContractV1Response> {
+            return localVarFp.invokeRawWeb3EthContractV1(invokeRawWeb3EthContractV1Request, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -1623,6 +1748,18 @@ export class DefaultApi extends BaseAPI {
      */
     public invokeContractV1NoKeychain(invokeContractJsonObjectV1Request?: InvokeContractJsonObjectV1Request, options?: any) {
         return DefaultApiFp(this.configuration).invokeContractV1NoKeychain(invokeContractJsonObjectV1Request, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Low-level endpoint to invoke a method on deployed contract.
+     * @param {InvokeRawWeb3EthContractV1Request} [invokeRawWeb3EthContractV1Request] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public invokeRawWeb3EthContractV1(invokeRawWeb3EthContractV1Request?: InvokeRawWeb3EthContractV1Request, options?: any) {
+        return DefaultApiFp(this.configuration).invokeRawWeb3EthContractV1(invokeRawWeb3EthContractV1Request, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

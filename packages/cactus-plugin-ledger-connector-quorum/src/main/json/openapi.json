@@ -147,8 +147,10 @@
             "EthContractInvocationType": {
                 "type": "string",
                 "enum": [
-                    "SEND",
-                    "CALL"
+                    "send",
+                    "call",
+                    "encodeABI",
+                    "estimateGas"
                 ]
             },
             "SolidityContractJsonArtifact": {
@@ -778,6 +780,66 @@
                     }
                 }
             },
+            "InvokeRawWeb3EthContractV1Request": {
+                "type": "object",
+                "required": [
+                    "abi",
+                    "address",
+                    "invocationType",
+                    "contractMethod"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                    "abi": {
+                        "description": "The application binary interface of the solidity contract",
+                        "type": "array",
+                        "items": {}
+                    },
+                    "address": {
+                        "description": "Deployed solidity contract address",
+                        "type": "string"
+                    },
+                    "invocationType": {
+                        "description": "Contract invocation method to be performed (send, call, etc...)",
+                        "$ref": "#/components/schemas/EthContractInvocationType"
+                    },
+                    "invocationParams": {
+                        "description": "The list of arguments for contract invocation method (send, call, etc...)",
+                        "type": "object",
+                        "default": {}
+                    },
+                    "contractMethod": {
+                        "description": "Method of deployed solidity contract to execute",
+                        "type": "string"
+                    },
+                    "contractMethodArgs": {
+                        "description": "The list of arguments for deployed solidity contract method",
+                        "type": "array",
+                        "default": [],
+                        "items": {}
+                    }
+                }
+            },
+            "InvokeRawWeb3EthContractV1Response": {
+                "type": "object",
+                "required": [
+                    "status"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                    "status": {
+                        "description": "Status code of the operation",
+                        "type": "number"
+                    },
+                    "data": {
+                        "description": "Output of contract invocation method"
+                    },
+                    "errorDetail": {
+                        "description": "Error details",
+                        "type": "string"
+                    }
+                }
+            },
             "PrometheusExporterMetricsResponse": {
                 "type": "string",
                 "nullable": false
@@ -1281,6 +1343,40 @@
                             "text/plain": {
                                 "schema": {
                                     "$ref": "#/components/schemas/InvokeWeb3EthMethodV1Response"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/plugins/@hyperledger/cactus-plugin-ledger-connector-quorum/invoke-raw-web3eth-contract": {
+            "post": {
+                "x-hyperledger-cactus": {
+                    "http": {
+                        "verbLowerCase": "post",
+                        "path": "/api/v1/plugins/@hyperledger/cactus-plugin-ledger-connector-quorum/invoke-raw-web3eth-contract"
+                    }
+                },
+                "operationId": "InvokeRawWeb3EthContractV1",
+                "summary": "Low-level endpoint to invoke a method on deployed contract.",
+                "parameters": [],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/InvokeRawWeb3EthContractV1Request"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/InvokeRawWeb3EthContractV1Response"
                                 }
                             }
                         }

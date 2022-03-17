@@ -7,6 +7,7 @@ import type {
 
 import { Express } from "express";
 import Web3 from "web3";
+import { AbiItem } from "web3-utils";
 import { Contract } from "web3-eth-contract";
 import { ContractSendMethod } from "web3-eth-contract";
 import { TransactionReceipt } from "web3-eth";
@@ -55,6 +56,7 @@ import {
   WatchBlocksV1Options,
   InvokeWeb3EthMethodV1Request,
   InvokeWeb3EthMethodV1Response,
+  InvokeRawWeb3EthContractV1Request,
 } from "./generated/openapi/typescript-axios/";
 
 import { RunTransactionEndpoint } from "./web-services/run-transaction-endpoint";
@@ -74,6 +76,10 @@ import {
   IInvokeWeb3EthMethodEndpointOptions,
   InvokeWeb3EthMethodEndpoint,
 } from "./web-services/invoke-web3eth-method-v1-endpoint";
+import {
+  IInvokeRawWeb3EthContractEndpointOptions,
+  InvokeRawWeb3EthContractEndpoint,
+} from "./web-services/invoke-raw-web3eth-contract-v1-endpoint";
 
 export interface IPluginLedgerConnectorQuorumOptions
   extends ICactusPluginOptions {
@@ -254,6 +260,14 @@ export class PluginLedgerConnectorQuorum
         logLevel: this.options.logLevel,
       };
       const endpoint = new InvokeWeb3EthMethodEndpoint(opts);
+      endpoints.push(endpoint);
+    }
+    {
+      const opts: IInvokeRawWeb3EthContractEndpointOptions = {
+        connector: this,
+        logLevel: this.options.logLevel,
+      };
+      const endpoint = new InvokeRawWeb3EthContractEndpoint(opts);
       endpoints.push(endpoint);
     }
     this.endpoints = endpoints;
@@ -675,8 +689,7 @@ export class PluginLedgerConnectorQuorum
     args: InvokeWeb3EthMethodV1Request,
   ): Promise<InvokeWeb3EthMethodV1Response> {
     return new Promise((resolve, rejects) => {
-      this.log.debug("invokeWeb3EthMethod methodName:", args.methodName);
-      this.log.debug("invokeWeb3EthMethod params:", args.params);
+      this.log.debug("invokeWeb3EthMethod input:", JSON.stringify(args));
 
       const looseWeb3Eth = this.web3.eth as any;
       if (!(args.methodName in looseWeb3Eth)) {
@@ -690,6 +703,7 @@ export class PluginLedgerConnectorQuorum
 
       web3Response
         .then((result: unknown) => {
+          // todo - dont return status and data, do it in endpoint only
           const retObj = {
             status: 200,
             data: result,
@@ -702,5 +716,43 @@ export class PluginLedgerConnectorQuorum
           rejects(err);
         });
     });
+  }
+
+  // Low level function to invoke contract
+  // Should be used only if given functionality is not already covered by another endpoint.
+  public async invokeRawWeb3EthContract(
+    args: InvokeRawWeb3EthContractV1Request,
+  ): Promise<any> {
+    this.log.debug("invokeRawWeb3EthContract input:", JSON.stringify(args));
+
+    const contractMethodArgs = args.contractMethodArgs || [];
+
+    // todo - simplify
+    let invocationMethod = "";
+    switch (args.invocationType) {
+      case EthContractInvocationType.Call:
+        invocationMethod = "call";
+        break;
+      case EthContractInvocationType.Send:
+        invocationMethod = "send";
+        break;
+      case EthContractInvocationType.EncodeAbi:
+        invocationMethod = "encodeABI";
+        break;
+      case EthContractInvocationType.EstimateGas:
+        invocationMethod = "estimateGas";
+        break;
+      default:
+        throw new Error("Unknown invocation type");
+    }
+
+    const contract = new this.web3.eth.Contract(
+      args.abi as AbiItem[],
+      args.address,
+    );
+
+    return contract.methods[args.contractMethod](...contractMethodArgs)[
+      invocationMethod
+    ](args.invocationParams);
   }
 }
