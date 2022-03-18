@@ -1,0 +1,15 @@
+{
+  "authorizationProtocol": "NONE",
+  "authorizationConfigJson": {},
+  "plugins": [
+    {
+      "packageName": "@hyperledger/cactus-plugin-ledger-connector-quorum",
+      "type": "org.hyperledger.cactus.plugin_import_type.LOCAL",
+      "action": "org.hyperledger.cactus.plugin_import_action.INSTALL",
+      "options": {
+        "rpcApiHttpHost": "http://localhost:49195",
+        "instanceId": "some-unique-quorum-connector-instance-id"
+      }
+    }
+  ]
+}

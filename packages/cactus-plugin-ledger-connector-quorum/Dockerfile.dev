@@ -1,0 +1,15 @@
+FROM cactus-api-server:latest
+
+ARG PLUGIN_ROOT=/opt/cactus-plugin-ledger-connector-quorum
+
+# TODO - Copy yarn.lock in case wrong package versions are getting installed
+COPY --chown=$APP_USER:$APP_USER ./dist "${PLUGIN_ROOT}/dist"
+COPY --chown=$APP_USER:$APP_USER ./package.json "${PLUGIN_ROOT}"
+
+RUN pushd ${PLUGIN_ROOT} \
+  && yarn install --production --ignore-engines --non-interactive --cache-folder ./.yarnCache \
+  && rm -rf ./.yarnCache \
+  && yarn link \
+  && popd
+
+CMD ["/bin/bash"]

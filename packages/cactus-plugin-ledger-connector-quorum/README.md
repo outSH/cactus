@@ -53,6 +53,8 @@ async transactPrivateKey(req: RunTransactionRequest): Promise<RunTransactionResp
 async transactCactusKeychainRef(req: RunTransactionRequest):Promise<RunTransactionResponse>;
 async deployContract(req: DeployContractSolidityBytecodeV1Request):Promise<RunTransactionResponse>;
 async signTransaction(req: SignTransactionRequest):Promise<Optional<SignTransactionResponse>>;
+async invokeRawWeb3EthMethod(req: InvokeRawWeb3EthMethodV1Request): Promise<any>;
+async invokeRawWeb3EthContract(req: InvokeRawWeb3EthContractV1Request): Promise<any>;
 ```
 
 Call example to deploy a contract:
@@ -126,7 +128,7 @@ docker run \
 Launch container with **configuration file** mounted from host machine:
 ```sh
 
-echo '[{"packageName": "@hyperledger/cactus-plugin-ledger-connector-quorum", "type": "org.hyperledger.cactus.plugin_import_type.LOCAL", "action": "org.hyperledger.cactus.plugin_import_action.INSTALL",  "options": {"rpcApiHttpHost": "http://localhost:8545", "instanceId": "some-unique-quorum-connector-instance-id"}}]' > cactus.json
+echo '{"authorizationProtocol":"NONE","authorizationConfigJson":{},"plugins":[{"packageName":"@hyperledger/cactus-plugin-ledger-connector-quorum","type":"org.hyperledger.cactus.plugin_import_type.LOCAL","action":"org.hyperledger.cactus.plugin_import_action.INSTALL","options":{"rpcApiHttpHost":"http://localhost:8545","instanceId":"some-unique-quorum-connector-instance-id"}}]}' > cactus.json
 
 docker run \
   --rm \
@@ -134,7 +136,7 @@ docker run \
   --publish 4000:4000 \
   --mount type=bind,source="$(pwd)"/cactus.json,target=/cactus.json \
   cplcb \
-    ./node_modules/.bin/cactusapi \
+    ./node_modules/@hyperledger/cactus-cmd-api-server/dist/lib/main/typescript/cmd/cactus-api.js \
     --config-file=/cactus.json
 ```
 
@@ -263,5 +265,5 @@ Please review [CONTIRBUTING.md](../../CONTRIBUTING.md) to get started.
 
 This distribution is published under the Apache License Version 2.0 found in the [LICENSE](../../LICENSE) file.
 
-## Acknowledgments 
+## Acknowledgments
 ```
