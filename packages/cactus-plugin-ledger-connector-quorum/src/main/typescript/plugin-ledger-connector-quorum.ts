@@ -43,6 +43,7 @@ import {
   DeployContractSolidityBytecodeJsonObjectV1Request,
   DeployContractSolidityBytecodeV1Response,
   EthContractInvocationType,
+  EthContractInvocationWeb3Method,
   InvokeContractV1Request,
   InvokeContractJsonObjectV1Request,
   InvokeContractV1Response,
@@ -716,38 +717,23 @@ export class PluginLedgerConnectorQuorum
   public async invokeRawWeb3EthMethod(
     args: InvokeRawWeb3EthMethodV1Request,
   ): Promise<any> {
-    return new Promise((resolve, rejects) => {
-      this.log.debug("invokeRawWeb3EthMethod input:", JSON.stringify(args));
+    this.log.debug("invokeRawWeb3EthMethod input:", JSON.stringify(args));
 
-      Checks.nonBlankString(
-        args.methodName,
-        "web3.eth method string must not be empty",
-      );
+    Checks.nonBlankString(
+      args.methodName,
+      "web3.eth method string must not be empty",
+    );
 
-      const looseWeb3Eth = this.web3.eth as any;
-      if (
-        Object.prototype.hasOwnProperty.call(looseWeb3Eth, args.methodName) &&
-        typeof looseWeb3Eth[args.methodName] === "function"
-      ) {
-        const web3Method = looseWeb3Eth[args.methodName];
+    const looseWeb3Eth = this.web3.eth as any;
+    if (
+      !Object.prototype.hasOwnProperty.call(looseWeb3Eth, args.methodName) ||
+      typeof looseWeb3Eth[args.methodName] !== "function"
+    ) {
+      throw new Error(`No method "${args.methodName}" in web3.eth`);
+    }
 
-        const web3Response: Promise<unknown> = args.params
-          ? web3Method(...args.params)
-          : web3Method();
-
-        web3Response
-          .then((result: any) => {
-            this.log.debug("invokeRawWeb3EthMethod response (OK):", result);
-            return resolve(result);
-          })
-          .catch((err) => {
-            this.log.warn("invokeRawWeb3EthMethod response (ERROR):", err);
-            rejects(err);
-          });
-      } else {
-        rejects(new Error(`No method "${args.methodName}" in web3.eth`));
-      }
-    });
+    const web3MethodArgs = args.params || [];
+    return looseWeb3Eth[args.methodName](...web3MethodArgs);
   }
 
   // Low level function to invoke contract
@@ -760,10 +746,12 @@ export class PluginLedgerConnectorQuorum
     const contractMethodArgs = args.contractMethodArgs || [];
 
     if (
-      !Object.values(EthContractInvocationType).includes(args.invocationType)
+      !Object.values(EthContractInvocationWeb3Method).includes(
+        args.invocationType,
+      )
     ) {
       throw new Error(
-        `Unknown invocationType (${args.invocationType}), must be specified in EthContractInvocationType`,
+        `Unknown invocationType (${args.invocationType}), must be specified in EthContractInvocationWeb3Method`,
       );
     }
 

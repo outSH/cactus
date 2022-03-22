@@ -147,6 +147,13 @@
             "EthContractInvocationType": {
                 "type": "string",
                 "enum": [
+                    "SEND",
+                    "CALL"
+                ]
+            },
+            "EthContractInvocationWeb3Method": {
+                "type": "string",
+                "enum": [
                     "send",
                     "call",
                     "encodeABI",
@@ -801,7 +808,7 @@
                     },
                     "invocationType": {
                         "description": "Contract invocation method to be performed (send, call, etc...)",
-                        "$ref": "#/components/schemas/EthContractInvocationType"
+                        "$ref": "#/components/schemas/EthContractInvocationWeb3Method"
                     },
                     "invocationParams": {
                         "description": "The list of arguments for contract invocation method (send, call, etc...)",
@@ -1358,7 +1365,7 @@
                         "path": "/api/v1/plugins/@hyperledger/cactus-plugin-ledger-connector-quorum/invoke-raw-web3eth-contract"
                     }
                 },
-                "operationId": "InvokeRawWeb3EthContractV1",
+                "operationId": "invokeRawWeb3EthContractV1",
                 "summary": "Low-level endpoint to invoke a method on deployed contract.",
                 "parameters": [],
                 "requestBody": {

@@ -16,7 +16,7 @@ import "jest-extended";
 import { v4 as uuidv4 } from "uuid";
 import { PluginRegistry } from "@hyperledger/cactus-core";
 import {
-  EthContractInvocationType,
+  EthContractInvocationWeb3Method,
   InvokeRawWeb3EthContractV1Request,
   PluginLedgerConnectorQuorum,
   Web3SigningCredentialType,
@@ -141,7 +141,7 @@ describe("invokeRawWeb3EthContract Tests", () => {
     const sendInvokeArgs: InvokeRawWeb3EthContractV1Request = {
       abi: contractAbi,
       address: contractAddress,
-      invocationType: EthContractInvocationType.Send,
+      invocationType: EthContractInvocationWeb3Method.Send,
       invocationParams: sendInvocationArgs,
       contractMethod: "setName",
       contractMethodArgs: [newName],
@@ -157,7 +157,7 @@ describe("invokeRawWeb3EthContract Tests", () => {
     const callInvokeArgs: InvokeRawWeb3EthContractV1Request = {
       abi: contractAbi,
       address: contractAddress,
-      invocationType: EthContractInvocationType.Call,
+      invocationType: EthContractInvocationWeb3Method.Call,
       contractMethod: "getName",
     };
 
@@ -172,7 +172,7 @@ describe("invokeRawWeb3EthContract Tests", () => {
     const callInvokeArgs: InvokeRawWeb3EthContractV1Request = {
       abi: contractAbi,
       address: "0x0321",
-      invocationType: EthContractInvocationType.Call,
+      invocationType: EthContractInvocationWeb3Method.Call,
       contractMethod: "getName",
     };
 
@@ -183,7 +183,7 @@ describe("invokeRawWeb3EthContract Tests", () => {
     const callInvokeArgs: InvokeRawWeb3EthContractV1Request = {
       abi: contractAbi,
       address: contractAddress,
-      invocationType: "foo" as EthContractInvocationType,
+      invocationType: "foo" as EthContractInvocationWeb3Method,
       contractMethod: "getName",
     };
 
@@ -194,7 +194,7 @@ describe("invokeRawWeb3EthContract Tests", () => {
     const callInvokeArgs: InvokeRawWeb3EthContractV1Request = {
       abi: contractAbi,
       address: contractAddress,
-      invocationType: EthContractInvocationType.Call,
+      invocationType: EthContractInvocationWeb3Method.Call,
       contractMethod: "nonExistingFoo",
     };
 

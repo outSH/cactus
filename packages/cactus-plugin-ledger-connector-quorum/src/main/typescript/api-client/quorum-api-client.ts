@@ -6,7 +6,7 @@ import { LogLevelDesc, LoggerProvider } from "@hyperledger/cactus-common";
 import { Constants, ISocketApiClient } from "@hyperledger/cactus-core-api";
 import {
   DefaultApi,
-  EthContractInvocationType,
+  EthContractInvocationWeb3Method,
   InvokeRawWeb3EthContractV1Request,
   WatchBlocksV1,
   WatchBlocksV1Options,
@@ -30,7 +30,7 @@ export type QuorumRequestInputWeb3EthMethod = {
 // Command 'web3EthContract' input method type
 export type QuorumRequestInputWeb3EthContractMethod = {
   type: "web3EthContract";
-  command: EthContractInvocationType;
+  command: EthContractInvocationWeb3Method;
   function: string;
   params?: any[];
 };
@@ -179,9 +179,11 @@ export class QuorumApiClient
       // Check parameters
       Checks.truthy(contract.abi, "Contract ABI must be defined");
       Checks.truthy(contract.address, "Contract address must be set");
-      if (!Object.values(EthContractInvocationType).includes(method.command)) {
+      if (
+        !Object.values(EthContractInvocationWeb3Method).includes(method.command)
+      ) {
         throw new Error(
-          `Unknown invocationType (${method.command}), must be specified in EthContractInvocationType`,
+          `Unknown invocationType (${method.command}), must be specified in EthContractInvocationWeb3Method`,
         );
       }
       Checks.nonBlankString(

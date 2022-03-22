@@ -226,6 +226,17 @@ export interface DeployContractSolidityBytecodeV1Response {
  */
 
 export enum EthContractInvocationType {
+    Send = 'SEND',
+    Call = 'CALL'
+}
+
+/**
+ * 
+ * @export
+ * @enum {string}
+ */
+
+export enum EthContractInvocationWeb3Method {
     Send = 'send',
     Call = 'call',
     EncodeAbi = 'encodeABI',
@@ -423,10 +434,10 @@ export interface InvokeRawWeb3EthContractV1Request {
     address: string;
     /**
      * 
-     * @type {EthContractInvocationType}
+     * @type {EthContractInvocationWeb3Method}
      * @memberof InvokeRawWeb3EthContractV1Request
      */
-    invocationType: EthContractInvocationType;
+    invocationType: EthContractInvocationWeb3Method;
     /**
      * The list of arguments for contract invocation method (send, call, etc...)
      * @type {object}
