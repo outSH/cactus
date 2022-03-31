@@ -27,7 +27,10 @@ import java.lang.Exception
 import java.lang.RuntimeException
 import java.util.*
 import java.util.concurrent.TimeUnit
+import java.math.BigInteger
 import kotlin.IllegalArgumentException
+import net.corda.core.contracts.ContractState
+import rx.Subscription
 
 // TODO Look into this project for powering the connector of ours:
 // https://github.com/180Protocol/codaptor
@@ -39,6 +42,9 @@ class ApiPluginLedgerConnectorCordaServiceImpl(
     // Either way, these magic strings gotta go.
     val rpc: NodeRPCConnection
 ) : ApiPluginLedgerConnectorCordaService {
+
+    val watchedTransactionsBuffer = mutableMapOf<String, MutableList<GetMonitorTransactionsV1ResponseTx>>()
+    val watchedTransactionsSubs = mutableMapOf<String, Subscription>()
 
     companion object {
         val logger = loggerFor<ApiPluginLedgerConnectorCordaServiceImpl>()
@@ -109,7 +115,7 @@ class ApiPluginLedgerConnectorCordaServiceImpl(
                 "requiredSigningKeys" to returnValue.requiredSigningKeys,
                 "sigs" to returnValue.sigs
             );
-          
+
         } else if (returnValue != null) {
             callOutput = try {
                 val returnValueJson = writer.writeValueAsString(returnValue);
@@ -345,5 +351,109 @@ class ApiPluginLedgerConnectorCordaServiceImpl(
         val nodeInfoList = reader.readValue<List<NodeInfo>>(networkMapJson)
         logger.info("Returning {} NodeInfo elements in response.", nodeInfoList.size)
         return nodeInfoList
+    }
+
+    /**
+     * Start monitoring state changes for stateClass specified in request body.
+     */
+    override fun startMonitorV1(req: StartMonitorV1Request?): StartMonitorV1Response {
+        val stateName = req?.stateFullClassName
+
+        if (stateName.isNullOrEmpty()) {
+            // Missing input class name
+            logger.info("Request rejected because missing state class name")
+            return StartMonitorV1Response(false)
+        }
+
+        if (this.watchedTransactionsSubs.containsKey(stateName)) {
+            // Monitor already started
+            logger.info("Monitoring already started - returning true")
+            return StartMonitorV1Response(true)
+        }
+
+        @Suppress("UNCHECKED_CAST")
+        val contractState = jsonJvmObjectDeserializer.getOrInferType(stateName) as Class<out ContractState>
+
+        // FIXME: "valutTrack(xxx).updates" occurs an error if Corda ledger has already over 200 transactions using the stateName that you set above.
+        // Please refer to "https://r3-cev.atlassian.net/browse/CORDA-2956" to get more infomation.
+        val stateObservable = this.rpc.proxy.vaultTrack(contractState).updates
+        var txCounter = BigInteger.valueOf(0)
+        this.watchedTransactionsBuffer[stateName] = mutableListOf<GetMonitorTransactionsV1ResponseTx>()
+        this.watchedTransactionsSubs[stateName] = stateObservable.subscribe { update ->
+            update.produced.forEach { newTx ->
+                val txResponse = GetMonitorTransactionsV1ResponseTx(txCounter.toString(), newTx.toString())
+                txCounter = txCounter.add(BigInteger.valueOf(1))
+                logger.debug("Pushing new transaction for state '{}', index {}", stateName, txCounter)
+                this.watchedTransactionsBuffer[stateName]?.add(txResponse)
+            }
+        }
+
+        logger.info("Monitoring for state '{}' started.", stateName)
+        return StartMonitorV1Response(true)
+    }
+
+    /**
+     * Read all transactions that were not read by any consumer yet.
+     * Must be called after startMonitorV1 and before stopMonitorV1.
+     * Transactions buffer must be explicitly cleared with clearMonitorTransactionsV1
+     */
+    override fun getMonitorTransactionsV1(req: GetMonitorTransactionsV1Request?): GetMonitorTransactionsV1Response {
+        val stateName = req?.stateFullClassName
+
+        if (stateName.isNullOrEmpty()) {
+            // Missing input class name
+            logger.info("Request rejected because missing state class name")
+            return GetMonitorTransactionsV1Response("", listOf())
+        }
+
+        val transactions = this.watchedTransactionsBuffer.getOrElse(stateName) { listOf<GetMonitorTransactionsV1ResponseTx>() }
+        logger.debug("Returning {} transaction to the caller", transactions.size)
+        return GetMonitorTransactionsV1Response(stateName, transactions)
+    }
+
+    /**
+     * Clear monitored transactions based on index from internal buffer.
+     * Any future call to getMonitorTransactionsV1 will not return transactions removed by this call.
+     */
+    override fun clearMonitorTransactionsV1(req: ClearMonitorTransactionsV1Request?): ClearMonitorTransactionsV1Response {
+        val stateName = req?.stateFullClassName
+        if (stateName.isNullOrEmpty()) {
+            // Missing input class name
+            logger.info("Request rejected because missing state class name")
+            return ClearMonitorTransactionsV1Response(false)
+        }
+
+        val indexesToRemove = req?.txIndexes
+        if (indexesToRemove.isNullOrEmpty()) {
+            logger.info("No indexes to remove")
+            return ClearMonitorTransactionsV1Response(true)
+        }
+
+        val transactions = this.watchedTransactionsBuffer.getOrElse(stateName) { mutableListOf<GetMonitorTransactionsV1ResponseTx>() }
+        logger.debug("Transactions before remove", transactions.size)
+        transactions.removeAll { it.index in indexesToRemove }
+        logger.debug("Transactions after remove", transactions.size)
+        return ClearMonitorTransactionsV1Response(true)
+    }
+
+    /**
+     * Stop monitoring state changes for stateClass specified in request body.
+     * Removes all transactions that were not read yet, unsubscribes from the monitor.
+     */
+    override fun stopMonitorV1(req: StopMonitorV1Request?): StopMonitorV1Response {
+        val stateName = req?.stateFullClassName
+
+        if (stateName.isNullOrEmpty()) {
+            // Missing input class name
+            logger.info("Request rejected because missing state class name")
+            return StopMonitorV1Response(false)
+        }
+
+        this.watchedTransactionsSubs[stateName]?.unsubscribe()
+        this.watchedTransactionsSubs.remove(stateName)
+        this.watchedTransactionsBuffer.remove(stateName)
+        logger.info("Monitoring for state '{}' stopped.", stateName)
+
+        return StopMonitorV1Response(true)
     }
 }
