@@ -293,6 +293,27 @@ const res = await apiClient.invokeContractV1({
 });
 ```
 
+### Transaction Monitoring
+- There are two interfaces to monitor changes of vault states - reactive `watchBlocksV1` method, and low-level HTTP API calls.
+- Note: The monitoring APIs are implemented only on kotlin-server connector (`main-server`), not typescript connector!
+- For usage examples review the functional test file: `packages/cactus-plugin-ledger-connector-corda/src/test/typescript/integration/monitor-transactions-v4.8.test.ts`
+
+#### watchBlocksV1
+- `watchBlocksV1(options: watchBlocksV1Options): Observable<CordaBlock>`
+- Reactive (RxJS) interface to observe state changes.
+- Internally, it uses polling of low-level HTTP APIs.
+- Options:
+  - `stateFullClassName: string`: state to monitor.
+  - `pollRate?: number`: how often poll the kotlin server for changes (default 5 seconds).
+
+#### Low-level HTTP API
+- These should not be used when watchBlocks API is sufficient.
+- Consists of the following methods:
+  - `startMonitorV1`: Start monitoring for specified state changes. All changes after calling this function will be stored in internal kotlin-server buffer, ready to be read by calls to `GetMonitorTransactionsV1`. Transactions occuring before the call to startMonitorV1 will not be reported.
+  - `GetMonitorTransactionsV1`: Read all transactions for given state name still remaining in internal buffer.
+  - `ClearMonitorTransactionsV1`: Remove transaction for given state name with specified index number from internal buffer. Should be used to acknowledge receiving specified transactions in user code, so that transactions are not reported multiple times.
+  - `stopMonitorV1`: Don't watch for transactions changes anymore, remove any transactions that were not read until now.
+
 ### Custom Configuration via Env Variables
 
 ```json
