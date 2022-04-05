@@ -28,6 +28,12 @@ import { BASE_PATH, COLLECTION_FORMATS, RequestArgs, BaseAPI, RequiredError } fr
  */
 export interface ClearMonitorTransactionsV1Request {
     /**
+     * ID of a client application that wants to monitor the state changes
+     * @type {string}
+     * @memberof ClearMonitorTransactionsV1Request
+     */
+    clientAppId: string;
+    /**
      * The fully qualified name of the Corda state to monitor
      * @type {string}
      * @memberof ClearMonitorTransactionsV1Request
@@ -362,6 +368,12 @@ export enum FlowInvocationType {
  * @interface GetMonitorTransactionsV1Request
  */
 export interface GetMonitorTransactionsV1Request {
+    /**
+     * ID of a client application that wants to monitor the state changes
+     * @type {string}
+     * @memberof GetMonitorTransactionsV1Request
+     */
+    clientAppId: string;
     /**
      * The fully qualified name of the Corda state to monitor
      * @type {string}
@@ -764,6 +776,12 @@ export interface SHA256 {
  */
 export interface StartMonitorV1Request {
     /**
+     * ID of a client application that wants to monitor the state changes
+     * @type {string}
+     * @memberof StartMonitorV1Request
+     */
+    clientAppId: string;
+    /**
      * The fully qualified name of the Corda state to monitor
      * @type {string}
      * @memberof StartMonitorV1Request
@@ -789,6 +807,12 @@ export interface StartMonitorV1Response {
  * @interface StopMonitorV1Request
  */
 export interface StopMonitorV1Request {
+    /**
+     * ID of a client application that wants to monitor the state changes
+     * @type {string}
+     * @memberof StopMonitorV1Request
+     */
+    clientAppId: string;
     /**
      * The fully qualified name of the Corda state to monitor
      * @type {string}

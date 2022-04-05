@@ -493,10 +493,19 @@
             "StartMonitorV1Request": {
                 "type": "object",
                 "required": [
+                    "clientAppId",
                     "stateFullClassName"
                 ],
                 "additionalProperties": false,
                 "properties": {
+                    "clientAppId": {
+                        "description": "ID of a client application that wants to monitor the state changes",
+                        "example": "frond_v1_x_7Hdg6s",
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 1024,
+                        "nullable": false
+                    },
                     "stateFullClassName": {
                         "description": "The fully qualified name of the Corda state to monitor",
                         "example": "net.corda.samples.example.states.IOUState",
@@ -523,10 +532,19 @@
             "GetMonitorTransactionsV1Request": {
                 "type": "object",
                 "required": [
+                    "clientAppId",
                     "stateFullClassName"
                 ],
                 "additionalProperties": false,
                 "properties": {
+                    "clientAppId": {
+                        "description": "ID of a client application that wants to monitor the state changes",
+                        "example": "frond_v1_x_7Hdg6s",
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 1024,
+                        "nullable": false
+                    },
                     "stateFullClassName": {
                         "description": "The fully qualified name of the Corda state to monitor",
                         "example": "net.corda.samples.example.states.IOUState",
@@ -574,11 +592,20 @@
             "ClearMonitorTransactionsV1Request": {
                 "type": "object",
                 "required": [
+                    "clientAppId",
                     "stateFullClassName",
                     "index"
                 ],
                 "additionalProperties": false,
                 "properties": {
+                    "clientAppId": {
+                        "description": "ID of a client application that wants to monitor the state changes",
+                        "example": "frond_v1_x_7Hdg6s",
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 1024,
+                        "nullable": false
+                    },
                     "stateFullClassName": {
                         "description": "The fully qualified name of the Corda state to monitor",
                         "example": "net.corda.samples.example.states.IOUState",
@@ -612,10 +639,19 @@
             "StopMonitorV1Request": {
                 "type": "object",
                 "required": [
+                    "clientAppId",
                     "stateFullClassName"
                 ],
                 "additionalProperties": false,
                 "properties": {
+                    "clientAppId": {
+                        "description": "ID of a client application that wants to monitor the state changes",
+                        "example": "frond_v1_x_7Hdg6s",
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 1024,
+                        "nullable": false
+                    },
                     "stateFullClassName": {
                         "description": "The fully qualified name of the Corda state to monitor",
                         "example": "net.corda.samples.example.states.IOUState",

@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectWriter
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.springframework.stereotype.Service
+import org.springframework.scheduling.annotation.Scheduled
 import net.corda.core.flows.FlowLogic
 import net.corda.core.messaging.CordaRPCOps
 import net.corda.core.messaging.FlowProgressHandle
@@ -32,6 +33,58 @@ import kotlin.IllegalArgumentException
 import net.corda.core.contracts.ContractState
 import rx.Subscription
 
+// TODO - Inny pliczek
+class ClientStateMonitorSession() {
+    data class MonitorQueue(val events: MutableList<GetMonitorTransactionsV1ResponseTx>, val subscription: Subscription)
+
+    val stateBuffers = mutableMapOf<String, MonitorQueue>()
+
+    fun startMonitor(ContractState) {
+        // handle case it's already started
+        // ret bool? if succeed?
+
+        @Suppress("UNCHECKED_CAST")
+        val contractState = jsonJvmObjectDeserializer.getOrInferType(stateName) as Class<out ContractState>
+        // if possible toString(), then pass ContractState
+
+        // FIXME: "valutTrack(xxx).updates" occurs an error if Corda ledger has already over 200 transactions using the stateName that you set above.
+        // Please refer to "https://r3-cev.atlassian.net/browse/CORDA-2956" to get more infomation.
+        val stateObservable = this.rpc.proxy.vaultTrack(contractState).updates
+        var txCounter = BigInteger.valueOf(0)
+        this.watchedTransactionsBuffer[stateName] = mutableListOf<GetMonitorTransactionsV1ResponseTx>()
+        this.watchedTransactionsSubs[stateName] = stateObservable.subscribe { update ->
+            update.produced.forEach { newTx ->
+                val txResponse = GetMonitorTransactionsV1ResponseTx(txCounter.toString(), newTx.toString())
+                txCounter = txCounter.add(BigInteger.valueOf(1))
+                logger.debug("Pushing new transaction for state '{}', index {}", stateName, txCounter)
+                this.watchedTransactionsBuffer[stateName]?.add(txResponse)
+            }
+        }
+
+        logger.info("Monitoring for state '{}' started.", stateName)
+    }
+
+    fun getTransactions() {
+                val transactions = this.watchedTransactionsBuffer.getOrElse(stateName) { listOf<GetMonitorTransactionsV1ResponseTx>() }
+
+    }
+
+    fun clearTransactions() {
+val transactions = this.watchedTransactionsBuffer.getOrElse(stateName) { mutableListOf<GetMonitorTransactionsV1ResponseTx>() }
+        logger.debug("Transactions before remove", transactions.size)
+        transactions.removeAll { it.index in indexesToRemove }
+        logger.debug("Transactions after remove", transactions.size)
+    }
+
+    fun stopMonitor() {
+this.watchedTransactionsSubs[stateName]?.unsubscribe()
+        this.watchedTransactionsSubs.remove(stateName)
+        this.watchedTransactionsBuffer.remove(stateName)
+        logger.info("Monitoring for state '{}' stopped.", stateName)
+
+    }
+}
+
 // TODO Look into this project for powering the connector of ours:
 // https://github.com/180Protocol/codaptor
 @Service
@@ -43,8 +96,9 @@ class ApiPluginLedgerConnectorCordaServiceImpl(
     val rpc: NodeRPCConnection
 ) : ApiPluginLedgerConnectorCordaService {
 
-    val watchedTransactionsBuffer = mutableMapOf<String, MutableList<GetMonitorTransactionsV1ResponseTx>>()
-    val watchedTransactionsSubs = mutableMapOf<String, Subscription>()
+    val clientMonitorStates = mutableMapOf<String, ClientStateMonitorSession>()
+    // TODO - remove empty clients
+    fun getClientMonitor(clientAppId: String) = this.clientMonitorStates.getOrPut(clientAppId) { ClientStateMonitorSession() }
 
     companion object {
         val logger = loggerFor<ApiPluginLedgerConnectorCordaServiceImpl>()
@@ -57,6 +111,11 @@ class ApiPluginLedgerConnectorCordaServiceImpl(
         val writer: ObjectWriter = mapper.writer()
 
         val jsonJvmObjectDeserializer = JsonJvmObjectDeserializer()
+    }
+
+    @Scheduled(fixedDelay = 500)
+    fun scheduleCleanDeadMonitorSessions(): Unit {
+        logger.info("HODOR", watchedTransactionsBuffer.size)
     }
 
     fun dynamicInvoke(rpc: CordaRPCOps, req: InvokeContractV1Request): InvokeContractV1Response {
@@ -354,106 +413,98 @@ class ApiPluginLedgerConnectorCordaServiceImpl(
     }
 
     /**
-     * Start monitoring state changes for stateClass specified in request body.
+     * Start monitoring state changes for clientAppID of stateClass specified in the request body.
      */
     override fun startMonitorV1(req: StartMonitorV1Request?): StartMonitorV1Response {
+        val clientAppId = req?.clientAppId
         val stateName = req?.stateFullClassName
 
+        if (clientAppId.isNullOrEmpty()) {
+            logger.info("Request rejected because missing client app ID")
+            return StartMonitorV1Response(false)
+        }
+
         if (stateName.isNullOrEmpty()) {
-            // Missing input class name
             logger.info("Request rejected because missing state class name")
             return StartMonitorV1Response(false)
         }
 
-        if (this.watchedTransactionsSubs.containsKey(stateName)) {
-            // Monitor already started
-            logger.info("Monitoring already started - returning true")
-            return StartMonitorV1Response(true)
-        }
+        getClientMonitor(clientAppId).startMonitor(stateName)
 
-        @Suppress("UNCHECKED_CAST")
-        val contractState = jsonJvmObjectDeserializer.getOrInferType(stateName) as Class<out ContractState>
-
-        // FIXME: "valutTrack(xxx).updates" occurs an error if Corda ledger has already over 200 transactions using the stateName that you set above.
-        // Please refer to "https://r3-cev.atlassian.net/browse/CORDA-2956" to get more infomation.
-        val stateObservable = this.rpc.proxy.vaultTrack(contractState).updates
-        var txCounter = BigInteger.valueOf(0)
-        this.watchedTransactionsBuffer[stateName] = mutableListOf<GetMonitorTransactionsV1ResponseTx>()
-        this.watchedTransactionsSubs[stateName] = stateObservable.subscribe { update ->
-            update.produced.forEach { newTx ->
-                val txResponse = GetMonitorTransactionsV1ResponseTx(txCounter.toString(), newTx.toString())
-                txCounter = txCounter.add(BigInteger.valueOf(1))
-                logger.debug("Pushing new transaction for state '{}', index {}", stateName, txCounter)
-                this.watchedTransactionsBuffer[stateName]?.add(txResponse)
-            }
-        }
-
-        logger.info("Monitoring for state '{}' started.", stateName)
         return StartMonitorV1Response(true)
     }
 
     /**
-     * Read all transactions that were not read by any consumer yet.
+     * Read all transactions that were not read by it's client yet.
      * Must be called after startMonitorV1 and before stopMonitorV1.
      * Transactions buffer must be explicitly cleared with clearMonitorTransactionsV1
      */
     override fun getMonitorTransactionsV1(req: GetMonitorTransactionsV1Request?): GetMonitorTransactionsV1Response {
+        val clientAppId = req?.clientAppId
         val stateName = req?.stateFullClassName
 
+        if (clientAppId.isNullOrEmpty()) {
+            logger.info("Request rejected because missing client app ID")
+            return GetMonitorTransactionsV1Response("", listOf())
+        }
+
         if (stateName.isNullOrEmpty()) {
-            // Missing input class name
             logger.info("Request rejected because missing state class name")
             return GetMonitorTransactionsV1Response("", listOf())
         }
 
-        val transactions = this.watchedTransactionsBuffer.getOrElse(stateName) { listOf<GetMonitorTransactionsV1ResponseTx>() }
+        val transactions = getClientMonitor(clientAppId).getTransactions(stateName)
         logger.debug("Returning {} transaction to the caller", transactions.size)
         return GetMonitorTransactionsV1Response(stateName, transactions)
     }
 
     /**
-     * Clear monitored transactions based on index from internal buffer.
+     * Clear monitored transactions based on index from internal client buffer.
      * Any future call to getMonitorTransactionsV1 will not return transactions removed by this call.
      */
     override fun clearMonitorTransactionsV1(req: ClearMonitorTransactionsV1Request?): ClearMonitorTransactionsV1Response {
+        val clientAppId = req?.clientAppId
         val stateName = req?.stateFullClassName
+        val indexesToRemove = req?.txIndexes
+
+        if (clientAppId.isNullOrEmpty()) {
+            logger.info("Request rejected because missing client app ID")
+            return ClearMonitorTransactionsV1Response(false)
+        }
+
         if (stateName.isNullOrEmpty()) {
-            // Missing input class name
             logger.info("Request rejected because missing state class name")
             return ClearMonitorTransactionsV1Response(false)
         }
 
-        val indexesToRemove = req?.txIndexes
         if (indexesToRemove.isNullOrEmpty()) {
             logger.info("No indexes to remove")
             return ClearMonitorTransactionsV1Response(true)
         }
 
-        val transactions = this.watchedTransactionsBuffer.getOrElse(stateName) { mutableListOf<GetMonitorTransactionsV1ResponseTx>() }
-        logger.debug("Transactions before remove", transactions.size)
-        transactions.removeAll { it.index in indexesToRemove }
-        logger.debug("Transactions after remove", transactions.size)
+        getClientMonitor(clientAppId).clearTransactions(stateName, indexesToRemove)
         return ClearMonitorTransactionsV1Response(true)
     }
 
     /**
-     * Stop monitoring state changes for stateClass specified in request body.
+     * Stop monitoring state changes for clientAppID of stateClass specified in the request body.
      * Removes all transactions that were not read yet, unsubscribes from the monitor.
      */
     override fun stopMonitorV1(req: StopMonitorV1Request?): StopMonitorV1Response {
+        val clientAppId = req?.clientAppId
         val stateName = req?.stateFullClassName
 
+        if (clientAppId.isNullOrEmpty()) {
+            logger.info("Request rejected because missing client app ID")
+            return StopMonitorV1Response(false)
+        }
+
         if (stateName.isNullOrEmpty()) {
-            // Missing input class name
             logger.info("Request rejected because missing state class name")
             return StopMonitorV1Response(false)
         }
 
-        this.watchedTransactionsSubs[stateName]?.unsubscribe()
-        this.watchedTransactionsSubs.remove(stateName)
-        this.watchedTransactionsBuffer.remove(stateName)
-        logger.info("Monitoring for state '{}' stopped.", stateName)
-
+        getClientMonitor(clientAppId).stopMonitor(stateName)
         return StopMonitorV1Response(true)
     }
 }
