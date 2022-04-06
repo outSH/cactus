@@ -60,6 +60,7 @@ export class CordaApiClient
     };
 
     this.startMonitorV1({
+      clientAppId: "testApp",
       stateFullClassName: stateName,
     })
       .then((startMonRes) => {
@@ -82,6 +83,7 @@ export class CordaApiClient
   ) {
     try {
       const response = await this.getMonitorTransactionsV1({
+        clientAppId: "testApp",
         stateFullClassName: stateName,
       });
 
@@ -89,6 +91,7 @@ export class CordaApiClient
 
       const readTxIdx = response.data.tx.map((tx) => tx.index);
       await this.clearMonitorTransactionsV1({
+        clientAppId: "testApp",
         stateFullClassName: stateName,
         txIndexes: readTxIdx.filter(Boolean) as string[],
       });
@@ -107,6 +110,7 @@ export class CordaApiClient
     clearInterval(monitor);
 
     this.stopMonitorV1({
+      clientAppId: "testApp",
       stateFullClassName: stateName,
     })
       .then((stopMonRes) => {

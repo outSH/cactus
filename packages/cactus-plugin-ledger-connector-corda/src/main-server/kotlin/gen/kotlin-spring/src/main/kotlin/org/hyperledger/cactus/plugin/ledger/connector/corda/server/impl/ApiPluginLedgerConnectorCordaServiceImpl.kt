@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.ObjectWriter
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.springframework.stereotype.Service
-import org.springframework.scheduling.annotation.Scheduled
 import net.corda.core.flows.FlowLogic
 import net.corda.core.messaging.CordaRPCOps
 import net.corda.core.messaging.FlowProgressHandle
@@ -28,62 +27,8 @@ import java.lang.Exception
 import java.lang.RuntimeException
 import java.util.*
 import java.util.concurrent.TimeUnit
-import java.math.BigInteger
 import kotlin.IllegalArgumentException
 import net.corda.core.contracts.ContractState
-import rx.Subscription
-
-// TODO - Inny pliczek
-class ClientStateMonitorSession() {
-    data class MonitorQueue(val events: MutableList<GetMonitorTransactionsV1ResponseTx>, val subscription: Subscription)
-
-    val stateBuffers = mutableMapOf<String, MonitorQueue>()
-
-    fun startMonitor(ContractState) {
-        // handle case it's already started
-        // ret bool? if succeed?
-
-        @Suppress("UNCHECKED_CAST")
-        val contractState = jsonJvmObjectDeserializer.getOrInferType(stateName) as Class<out ContractState>
-        // if possible toString(), then pass ContractState
-
-        // FIXME: "valutTrack(xxx).updates" occurs an error if Corda ledger has already over 200 transactions using the stateName that you set above.
-        // Please refer to "https://r3-cev.atlassian.net/browse/CORDA-2956" to get more infomation.
-        val stateObservable = this.rpc.proxy.vaultTrack(contractState).updates
-        var txCounter = BigInteger.valueOf(0)
-        this.watchedTransactionsBuffer[stateName] = mutableListOf<GetMonitorTransactionsV1ResponseTx>()
-        this.watchedTransactionsSubs[stateName] = stateObservable.subscribe { update ->
-            update.produced.forEach { newTx ->
-                val txResponse = GetMonitorTransactionsV1ResponseTx(txCounter.toString(), newTx.toString())
-                txCounter = txCounter.add(BigInteger.valueOf(1))
-                logger.debug("Pushing new transaction for state '{}', index {}", stateName, txCounter)
-                this.watchedTransactionsBuffer[stateName]?.add(txResponse)
-            }
-        }
-
-        logger.info("Monitoring for state '{}' started.", stateName)
-    }
-
-    fun getTransactions() {
-                val transactions = this.watchedTransactionsBuffer.getOrElse(stateName) { listOf<GetMonitorTransactionsV1ResponseTx>() }
-
-    }
-
-    fun clearTransactions() {
-val transactions = this.watchedTransactionsBuffer.getOrElse(stateName) { mutableListOf<GetMonitorTransactionsV1ResponseTx>() }
-        logger.debug("Transactions before remove", transactions.size)
-        transactions.removeAll { it.index in indexesToRemove }
-        logger.debug("Transactions after remove", transactions.size)
-    }
-
-    fun stopMonitor() {
-this.watchedTransactionsSubs[stateName]?.unsubscribe()
-        this.watchedTransactionsSubs.remove(stateName)
-        this.watchedTransactionsBuffer.remove(stateName)
-        logger.info("Monitoring for state '{}' stopped.", stateName)
-
-    }
-}
 
 // TODO Look into this project for powering the connector of ours:
 // https://github.com/180Protocol/codaptor
@@ -93,12 +38,9 @@ class ApiPluginLedgerConnectorCordaServiceImpl(
     // to be hardcoded like this. Not even sure if these magic strings here actually get used at all or if spring just
     // overwrites the bean property with whatever it constructed internally based on the configuration.
     // Either way, these magic strings gotta go.
-    val rpc: NodeRPCConnection
+    val rpc: NodeRPCConnection,
+    val monitorManager: StateMonitorQueuesManager
 ) : ApiPluginLedgerConnectorCordaService {
-
-    val clientMonitorStates = mutableMapOf<String, ClientStateMonitorSession>()
-    // TODO - remove empty clients
-    fun getClientMonitor(clientAppId: String) = this.clientMonitorStates.getOrPut(clientAppId) { ClientStateMonitorSession() }
 
     companion object {
         val logger = loggerFor<ApiPluginLedgerConnectorCordaServiceImpl>()
@@ -111,11 +53,6 @@ class ApiPluginLedgerConnectorCordaServiceImpl(
         val writer: ObjectWriter = mapper.writer()
 
         val jsonJvmObjectDeserializer = JsonJvmObjectDeserializer()
-    }
-
-    @Scheduled(fixedDelay = 500)
-    fun scheduleCleanDeadMonitorSessions(): Unit {
-        logger.info("HODOR", watchedTransactionsBuffer.size)
     }
 
     fun dynamicInvoke(rpc: CordaRPCOps, req: InvokeContractV1Request): InvokeContractV1Response {
@@ -415,9 +352,9 @@ class ApiPluginLedgerConnectorCordaServiceImpl(
     /**
      * Start monitoring state changes for clientAppID of stateClass specified in the request body.
      */
-    override fun startMonitorV1(req: StartMonitorV1Request?): StartMonitorV1Response {
-        val clientAppId = req?.clientAppId
-        val stateName = req?.stateFullClassName
+    override fun startMonitorV1(startMonitorV1Request: StartMonitorV1Request?): StartMonitorV1Response {
+        val clientAppId = startMonitorV1Request?.clientAppId
+        val stateName = startMonitorV1Request?.stateFullClassName
 
         if (clientAppId.isNullOrEmpty()) {
             logger.info("Request rejected because missing client app ID")
@@ -429,9 +366,13 @@ class ApiPluginLedgerConnectorCordaServiceImpl(
             return StartMonitorV1Response(false)
         }
 
-        getClientMonitor(clientAppId).startMonitor(stateName)
+        @Suppress("UNCHECKED_CAST")
+        val contractState = jsonJvmObjectDeserializer.getOrInferType(stateName) as Class<out ContractState>
 
-        return StartMonitorV1Response(true)
+        monitorManager.withClient(clientAppId) {
+            startMonitor(stateName, contractState)
+            return StartMonitorV1Response(true)
+        }
     }
 
     /**
@@ -439,9 +380,9 @@ class ApiPluginLedgerConnectorCordaServiceImpl(
      * Must be called after startMonitorV1 and before stopMonitorV1.
      * Transactions buffer must be explicitly cleared with clearMonitorTransactionsV1
      */
-    override fun getMonitorTransactionsV1(req: GetMonitorTransactionsV1Request?): GetMonitorTransactionsV1Response {
-        val clientAppId = req?.clientAppId
-        val stateName = req?.stateFullClassName
+    override fun getMonitorTransactionsV1(getMonitorTransactionsV1Request: GetMonitorTransactionsV1Request?): GetMonitorTransactionsV1Response {
+        val clientAppId = getMonitorTransactionsV1Request?.clientAppId
+        val stateName = getMonitorTransactionsV1Request?.stateFullClassName
 
         if (clientAppId.isNullOrEmpty()) {
             logger.info("Request rejected because missing client app ID")
@@ -453,19 +394,19 @@ class ApiPluginLedgerConnectorCordaServiceImpl(
             return GetMonitorTransactionsV1Response("", listOf())
         }
 
-        val transactions = getClientMonitor(clientAppId).getTransactions(stateName)
-        logger.debug("Returning {} transaction to the caller", transactions.size)
-        return GetMonitorTransactionsV1Response(stateName, transactions)
+        monitorManager.withClient(clientAppId) {
+            return GetMonitorTransactionsV1Response(stateName, getTransactions(stateName).toList())
+        }
     }
 
     /**
      * Clear monitored transactions based on index from internal client buffer.
      * Any future call to getMonitorTransactionsV1 will not return transactions removed by this call.
      */
-    override fun clearMonitorTransactionsV1(req: ClearMonitorTransactionsV1Request?): ClearMonitorTransactionsV1Response {
-        val clientAppId = req?.clientAppId
-        val stateName = req?.stateFullClassName
-        val indexesToRemove = req?.txIndexes
+    override fun clearMonitorTransactionsV1(clearMonitorTransactionsV1Request: ClearMonitorTransactionsV1Request?): ClearMonitorTransactionsV1Response {
+        val clientAppId = clearMonitorTransactionsV1Request?.clientAppId
+        val stateName = clearMonitorTransactionsV1Request?.stateFullClassName
+        val indexesToRemove = clearMonitorTransactionsV1Request?.txIndexes
 
         if (clientAppId.isNullOrEmpty()) {
             logger.info("Request rejected because missing client app ID")
@@ -482,17 +423,19 @@ class ApiPluginLedgerConnectorCordaServiceImpl(
             return ClearMonitorTransactionsV1Response(true)
         }
 
-        getClientMonitor(clientAppId).clearTransactions(stateName, indexesToRemove)
-        return ClearMonitorTransactionsV1Response(true)
+        monitorManager.withClient(clientAppId) {
+            clearTransactions(stateName, indexesToRemove)
+            return ClearMonitorTransactionsV1Response(true)
+        }
     }
 
     /**
      * Stop monitoring state changes for clientAppID of stateClass specified in the request body.
      * Removes all transactions that were not read yet, unsubscribes from the monitor.
      */
-    override fun stopMonitorV1(req: StopMonitorV1Request?): StopMonitorV1Response {
-        val clientAppId = req?.clientAppId
-        val stateName = req?.stateFullClassName
+    override fun stopMonitorV1(stopMonitorV1Request: StopMonitorV1Request?): StopMonitorV1Response {
+        val clientAppId = stopMonitorV1Request?.clientAppId
+        val stateName = stopMonitorV1Request?.stateFullClassName
 
         if (clientAppId.isNullOrEmpty()) {
             logger.info("Request rejected because missing client app ID")
@@ -504,7 +447,9 @@ class ApiPluginLedgerConnectorCordaServiceImpl(
             return StopMonitorV1Response(false)
         }
 
-        getClientMonitor(clientAppId).stopMonitor(stateName)
-        return StopMonitorV1Response(true)
+        monitorManager.withClient(clientAppId) {
+            stopMonitor(stateName)
+            return StopMonitorV1Response(true)
+        }
     }
 }
