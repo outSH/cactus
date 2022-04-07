@@ -1,10 +1,10 @@
 /**
- * Test low-level state change monitoring interface in Kotlin Corda v4 component.
+ * Test state change monitoring interface in Kotlin Corda v4 connector component.
  */
 
 // Contants: Log Levels
 const testLogLevel: LogLevelDesc = "debug";
-const sutLogLevel: LogLevelDesc = "debug";
+const sutLogLevel: LogLevelDesc = "info";
 
 // Contants: Test ledger
 const ledgerImageName =
@@ -18,10 +18,10 @@ const stateToMonitor = "net.corda.samples.example.states.IOUState";
 const flowToInvoke = "net.corda.samples.example.flows.ExampleFlow$Initiator";
 const testAppId = "monitor-transactions-test-app";
 
+// TODO - REPLACE
 // Contants: Kotlin connector server
 //const kotlinServerImageName = "ghcr.io/outsh/cactus-connector-corda-server";
 //const kotlinServerImageVersion = "corda-dev-1";
-
 const kotlinServerImageName = "cccs";
 const kotlinServerImageVersion = "latest";
 
@@ -41,15 +41,10 @@ import {
 } from "@hyperledger/cactus-common";
 import {
   CordappDeploymentConfig,
-  DeployContractJarsV1Request,
   FlowInvocationType,
-  StartMonitorV1Request,
-  GetMonitorTransactionsV1Request,
   InvokeContractV1Request,
   JvmTypeKind,
   PublicKey,
-  StopMonitorV1Request,
-  ClearMonitorTransactionsV1Request,
 } from "../../../main/typescript/generated/openapi/typescript-axios/index";
 import { CordaApiClient } from "../../../main/typescript/api-client/corda-api-client";
 import { Configuration } from "@hyperledger/cactus-core-api";
@@ -130,11 +125,10 @@ async function deployContract(
   );
   expect(jarFiles).toBeTruthy();
 
-  const deployReq: DeployContractJarsV1Request = {
+  const deployRes = await apiClient.deployContractJarsV1({
     jarFiles,
     cordappDeploymentConfigs,
-  };
-  const deployRes = await apiClient.deployContractJarsV1(deployReq);
+  });
   expect(deployRes.data.deployedJarFiles.length).toBeGreaterThan(0);
 
   const flowsRes = await apiClient.listFlowsV1();
@@ -326,47 +320,32 @@ describe("Monitor Tests", () => {
     }
   });
 
-  describe("Low-level StartMonitor, StopMonitor tests", () => {
+  describe("Low-level StartMonitor and StopMonitor tests", () => {
     afterEach(async () => {
-      // Stop Monitor
-      const reqStopMonitor: StopMonitorV1Request = {
+      // Stop monitor
+      await apiClient.stopMonitorV1({
         clientAppId: testAppId,
         stateFullClassName: stateToMonitor,
-      };
-      await apiClient.stopMonitorV1(reqStopMonitor);
-    });
-
-    test("New transactions are not reported when monitor not started yet", async () => {
-      // Get transactions before sending start monitor - should be 0
-      const reqGetTx: GetMonitorTransactionsV1Request = {
-        clientAppId: testAppId,
-        stateFullClassName: stateToMonitor,
-      };
-      const resGetTxPre = await apiClient.getMonitorTransactionsV1(reqGetTx);
-      expect(resGetTxPre.status).toBe(200);
-      expect(resGetTxPre.data.stateFullClassName).toEqual(stateToMonitor);
-      expect(resGetTxPre.data.tx.length).toBe(0);
+      });
     });
 
     test("Transactions can be read repeatedly until cleared or monitoring stop", async () => {
       // Start monitor
-      const reqMonitor: StartMonitorV1Request = {
+      const resMonitor = await apiClient.startMonitorV1({
         clientAppId: testAppId,
         stateFullClassName: stateToMonitor,
-      };
-      const resMonitor = await apiClient.startMonitorV1(reqMonitor);
+      });
       expect(resMonitor.status).toBe(200);
       expect(resMonitor.data.success).toBeTrue();
 
       // Get transactions before invoke - should be 0
-      const reqGetTx: GetMonitorTransactionsV1Request = {
+      const resGetTxPre = await apiClient.getMonitorTransactionsV1({
         clientAppId: testAppId,
         stateFullClassName: stateToMonitor,
-      };
-      const resGetTxPre = await apiClient.getMonitorTransactionsV1(reqGetTx);
+      });
       expect(resGetTxPre.status).toBe(200);
       expect(resGetTxPre.data.stateFullClassName).toEqual(stateToMonitor);
-      expect(resGetTxPre.data.tx.length).toBe(0);
+      expect(resGetTxPre.data.tx?.length).toBe(0);
 
       // Invoke transactions
       const transactionCount = 3;
@@ -375,12 +354,15 @@ describe("Monitor Tests", () => {
       }
 
       // Get transactions after invoke
-      const resGetTxPost = await apiClient.getMonitorTransactionsV1(reqGetTx);
+      const resGetTxPost = await apiClient.getMonitorTransactionsV1({
+        clientAppId: testAppId,
+        stateFullClassName: stateToMonitor,
+      });
       expect(resGetTxPost.status).toBe(200);
       expect(resGetTxPost.data.stateFullClassName).toEqual(stateToMonitor);
-      expect(resGetTxPost.data.tx.length).toBe(transactionCount);
+      expect(resGetTxPost.data.tx?.length).toBe(transactionCount);
       const seenIndexes = new Set<string>();
-      resGetTxPost.data.tx.forEach((tx) => {
+      resGetTxPost.data.tx?.forEach((tx) => {
         expect(tx.index).toBeTruthy();
         // Expect indexes to be unique
         expect(seenIndexes).not.toContain(tx.index);
@@ -389,26 +371,21 @@ describe("Monitor Tests", () => {
       });
 
       // Get transactions after already reading all current ones - should be the same as before
-      const resGetTxPostRead = await apiClient.getMonitorTransactionsV1(
-        reqGetTx,
-      );
+      const resGetTxPostRead = await apiClient.getMonitorTransactionsV1({
+        clientAppId: testAppId,
+        stateFullClassName: stateToMonitor,
+      });
       expect(resGetTxPostRead.status).toBe(200);
       expect(resGetTxPostRead.data.stateFullClassName).toEqual(stateToMonitor);
-      expect(resGetTxPost.data.tx.length).toBe(transactionCount);
-      resGetTxPost.data.tx.forEach((tx) => {
-        expect(tx.index).toBeTruthy();
-        expect(seenIndexes).toContain(tx.index);
-        expect(tx.data).toBeTruthy();
-      });
+      expect(resGetTxPostRead.data.tx).toEqual(resGetTxPost.data.tx);
     });
 
     test("Received transactions can be cleared so they can't be read anymore", async () => {
       // Start monitor
-      const reqMonitor: StartMonitorV1Request = {
+      const resMonitor = await apiClient.startMonitorV1({
         clientAppId: testAppId,
         stateFullClassName: stateToMonitor,
-      };
-      const resMonitor = await apiClient.startMonitorV1(reqMonitor);
+      });
       expect(resMonitor.status).toBe(200);
       expect(resMonitor.data.success).toBeTrue();
 
@@ -419,129 +396,40 @@ describe("Monitor Tests", () => {
       }
 
       // Get transactions after invoke
-      const reqGetTx: GetMonitorTransactionsV1Request = {
+      const resGetTx = await apiClient.getMonitorTransactionsV1({
         clientAppId: testAppId,
         stateFullClassName: stateToMonitor,
-      };
-      const resGetTxPost = await apiClient.getMonitorTransactionsV1(reqGetTx);
-      expect(resGetTxPost.status).toBe(200);
-      expect(resGetTxPost.data.stateFullClassName).toEqual(stateToMonitor);
-      expect(resGetTxPost.data.tx.length).toBe(transactionCount);
+      });
+      expect(resGetTx.status).toBe(200);
+      expect(resGetTx.data.stateFullClassName).toEqual(stateToMonitor);
+      expect(resGetTx.data.tx?.length).toBe(transactionCount);
 
       // Clear seen transactions
-      const readTxIdx = resGetTxPost.data.tx.map((tx) => tx.index);
-      const reqClearTx: ClearMonitorTransactionsV1Request = {
+      const readTxIdx = resGetTx.data.tx?.map((tx) => tx.index);
+      const resClearTx = await apiClient.clearMonitorTransactionsV1({
         clientAppId: testAppId,
         stateFullClassName: stateToMonitor,
         txIndexes: readTxIdx as string[],
-      };
-      const resClearTx = await apiClient.clearMonitorTransactionsV1(reqClearTx);
+      });
       expect(resClearTx.status).toBe(200);
       expect(resClearTx.data.success).toBeTrue();
 
       // Get transactions after clear - should be 0
-      const resGetTxPostRead = await apiClient.getMonitorTransactionsV1(
-        reqGetTx,
-      );
-      expect(resGetTxPostRead.status).toBe(200);
-      expect(resGetTxPostRead.data.stateFullClassName).toEqual(stateToMonitor);
-      expect(resGetTxPostRead.data.tx.length).toBe(0);
-    });
-
-    test("Clearing unknown state transactions should do nothing and return success", async () => {
-      const reqClearTx: ClearMonitorTransactionsV1Request = {
-        clientAppId: testAppId,
-        stateFullClassName: "foo.bar.unknown",
-        txIndexes: ["999", "998"],
-      };
-      const resClearTx = await apiClient.clearMonitorTransactionsV1(reqClearTx);
-      expect(resClearTx.status).toBe(200);
-      expect(resClearTx.data.success).toBeTrue();
-    });
-
-    test("No new transactions are reported after stopMonitor", async () => {
-      // Start monitor
-      const reqMonitor: StartMonitorV1Request = {
+      const resGetTxPostClear = await apiClient.getMonitorTransactionsV1({
         clientAppId: testAppId,
         stateFullClassName: stateToMonitor,
-      };
-      const resMonitor = await apiClient.startMonitorV1(reqMonitor);
-      expect(resMonitor.status).toBe(200);
-      expect(resMonitor.data.success).toBeTrue();
-
-      // Stop Monitor
-      const reqStopMonitor: StopMonitorV1Request = {
-        clientAppId: testAppId,
-        stateFullClassName: stateToMonitor,
-      };
-      const resStopMonitor = await apiClient.stopMonitorV1(reqStopMonitor);
-      expect(resStopMonitor.status).toBe(200);
-      expect(resStopMonitor.data.success).toBeTrue();
-
-      // Invoke transactions
-      const transactionCount = 3;
-      for (let i = 0; i < transactionCount; i++) {
-        await invokeContract(apiClient, partyBPublicKey);
-      }
-
-      // Get transactions after invoke and stopMonitor - should be 0
-      const reqGetTx: GetMonitorTransactionsV1Request = {
-        clientAppId: testAppId,
-        stateFullClassName: stateToMonitor,
-      };
-      const resGetTxPostRead = await apiClient.getMonitorTransactionsV1(
-        reqGetTx,
-      );
-      expect(resGetTxPostRead.status).toBe(200);
-      expect(resGetTxPostRead.data.stateFullClassName).toEqual(stateToMonitor);
-      expect(resGetTxPostRead.data.tx.length).toBe(0);
-    });
-
-    test("Sending stopMonitor clears transactions not read yet", async () => {
-      // Start monitor
-      const reqMonitor: StartMonitorV1Request = {
-        clientAppId: testAppId,
-        stateFullClassName: stateToMonitor,
-      };
-      const resMonitor = await apiClient.startMonitorV1(reqMonitor);
-      expect(resMonitor.status).toBe(200);
-      expect(resMonitor.data.success).toBeTrue();
-
-      // Invoke transactions
-      const transactionCount = 3;
-      for (let i = 0; i < transactionCount; i++) {
-        await invokeContract(apiClient, partyBPublicKey);
-      }
-
-      // Stop Monitor
-      const reqStopMonitor: StopMonitorV1Request = {
-        clientAppId: testAppId,
-        stateFullClassName: stateToMonitor,
-      };
-      const resStopMonitor = await apiClient.stopMonitorV1(reqStopMonitor);
-      expect(resStopMonitor.status).toBe(200);
-      expect(resStopMonitor.data.success).toBeTrue();
-
-      // Get transactions after invoke and stopMonitor - should be 0
-      const reqGetTx: GetMonitorTransactionsV1Request = {
-        clientAppId: testAppId,
-        stateFullClassName: stateToMonitor,
-      };
-      const resGetTxPostRead = await apiClient.getMonitorTransactionsV1(
-        reqGetTx,
-      );
-      expect(resGetTxPostRead.status).toBe(200);
-      expect(resGetTxPostRead.data.stateFullClassName).toEqual(stateToMonitor);
-      expect(resGetTxPostRead.data.tx.length).toBe(0);
+      });
+      expect(resGetTxPostClear.status).toBe(200);
+      expect(resGetTxPostClear.data.stateFullClassName).toEqual(stateToMonitor);
+      expect(resGetTxPostClear.data.tx?.length).toBe(0);
     });
 
     test("Sending startMonitor repeatedly doesn't affect monitor results", async () => {
       // Start monitor
-      const reqMonitor: StartMonitorV1Request = {
+      const resMonitor = await apiClient.startMonitorV1({
         clientAppId: testAppId,
         stateFullClassName: stateToMonitor,
-      };
-      const resMonitor = await apiClient.startMonitorV1(reqMonitor);
+      });
       expect(resMonitor.status).toBe(200);
       expect(resMonitor.data.success).toBeTrue();
 
@@ -552,7 +440,10 @@ describe("Monitor Tests", () => {
       }
 
       // Start monitor once again
-      const resMonitorAgain = await apiClient.startMonitorV1(reqMonitor);
+      const resMonitorAgain = await apiClient.startMonitorV1({
+        clientAppId: testAppId,
+        stateFullClassName: stateToMonitor,
+      });
       expect(resMonitorAgain.status).toBe(200);
       expect(resMonitorAgain.data.success).toBeTrue();
 
@@ -563,27 +454,23 @@ describe("Monitor Tests", () => {
       }
 
       // Get final transactions
-      const reqGetTx: GetMonitorTransactionsV1Request = {
+      const resGetTx = await apiClient.getMonitorTransactionsV1({
         clientAppId: testAppId,
         stateFullClassName: stateToMonitor,
-      };
-      const resGetTxPostRead = await apiClient.getMonitorTransactionsV1(
-        reqGetTx,
-      );
-      expect(resGetTxPostRead.status).toBe(200);
-      expect(resGetTxPostRead.data.stateFullClassName).toEqual(stateToMonitor);
-      expect(resGetTxPostRead.data.tx.length).toEqual(
+      });
+      expect(resGetTx.status).toBe(200);
+      expect(resGetTx.data.stateFullClassName).toEqual(stateToMonitor);
+      expect(resGetTx.data.tx?.length).toEqual(
         firstTransactionCount + secondTransactionCount,
       );
     });
 
     test("Monitoring restart after previous stop works", async () => {
       // Start monitor
-      const reqMonitor: StartMonitorV1Request = {
+      const resMonitor = await apiClient.startMonitorV1({
         clientAppId: testAppId,
         stateFullClassName: stateToMonitor,
-      };
-      const resMonitor = await apiClient.startMonitorV1(reqMonitor);
+      });
       expect(resMonitor.status).toBe(200);
       expect(resMonitor.data.success).toBeTrue();
 
@@ -594,46 +481,38 @@ describe("Monitor Tests", () => {
       }
 
       // Stop Monitor
-      const reqStopMonitor: StopMonitorV1Request = {
+      const resStopMonitor = await apiClient.stopMonitorV1({
         clientAppId: testAppId,
         stateFullClassName: stateToMonitor,
-      };
-      const resStopMonitor = await apiClient.stopMonitorV1(reqStopMonitor);
+      });
       expect(resStopMonitor.status).toBe(200);
       expect(resStopMonitor.data.success).toBeTrue();
 
-      // Get transactions after invoke and stopMonitor - should be 0
-      const reqGetTx: GetMonitorTransactionsV1Request = {
+      // Restart Monitor
+      const resMonitorRestart = await apiClient.startMonitorV1({
         clientAppId: testAppId,
         stateFullClassName: stateToMonitor,
-      };
-      const resGetTxPostRead = await apiClient.getMonitorTransactionsV1(
-        reqGetTx,
-      );
-      expect(resGetTxPostRead.status).toBe(200);
-      expect(resGetTxPostRead.data.stateFullClassName).toEqual(stateToMonitor);
-      expect(resGetTxPostRead.data.tx.length).toBe(0);
-
-      // Restart Monitor
-      const resMonitorRestart = await apiClient.startMonitorV1(reqMonitor);
+      });
       expect(resMonitorRestart.status).toBe(200);
       expect(resMonitorRestart.data.success).toBeTrue();
 
       // Invoke transactions after restart
-      for (let i = 0; i < transactionCount; i++) {
+      const transactionCountAfterRestart = 2;
+      for (let i = 0; i < transactionCountAfterRestart; i++) {
         await invokeContract(apiClient, partyBPublicKey);
       }
 
-      // Get transactions should return new ones
-      const resGetTxPostRestartPostRestart = await apiClient.getMonitorTransactionsV1(
-        reqGetTx,
-      );
-      expect(resGetTxPostRestartPostRestart.status).toBe(200);
-      expect(resGetTxPostRestartPostRestart.data.stateFullClassName).toEqual(
+      // Get transactions should return only new transactions
+      const resGetTxPostRestart = await apiClient.getMonitorTransactionsV1({
+        clientAppId: testAppId,
+        stateFullClassName: stateToMonitor,
+      });
+      expect(resGetTxPostRestart.status).toBe(200);
+      expect(resGetTxPostRestart.data.stateFullClassName).toEqual(
         stateToMonitor,
       );
-      expect(resGetTxPostRestartPostRestart.data.tx.length).toBe(
-        transactionCount,
+      expect(resGetTxPostRestart.data.tx?.length).toBe(
+        transactionCountAfterRestart,
       );
     });
 
@@ -645,11 +524,10 @@ describe("Monitor Tests", () => {
       }
 
       // Start monitor
-      const reqMonitor: StartMonitorV1Request = {
+      const resMonitor = await apiClient.startMonitorV1({
         clientAppId: testAppId,
         stateFullClassName: stateToMonitor,
-      };
-      const resMonitor = await apiClient.startMonitorV1(reqMonitor);
+      });
       expect(resMonitor.status).toBe(200);
       expect(resMonitor.data.success).toBeTrue();
 
@@ -660,49 +538,90 @@ describe("Monitor Tests", () => {
       }
 
       // Get transactions
-      const reqGetTx: GetMonitorTransactionsV1Request = {
+      const resGetTx = await apiClient.getMonitorTransactionsV1({
         clientAppId: testAppId,
         stateFullClassName: stateToMonitor,
-      };
-      const resGetTxPostRestart = await apiClient.getMonitorTransactionsV1(
-        reqGetTx,
-      );
-      expect(resGetTxPostRestart.status).toBe(200);
-      expect(resGetTxPostRestart.data.stateFullClassName).toEqual(
-        stateToMonitor,
-      );
-      expect(resGetTxPostRestart.data.tx.length).toBe(
-        transactionCountAfterStart,
-      );
+      });
+      expect(resGetTx.status).toBe(200);
+      expect(resGetTx.data.stateFullClassName).toEqual(stateToMonitor);
+      expect(resGetTx.data.tx?.length).toBe(transactionCountAfterStart);
     });
 
     test("Start monitoring with unknown state returns error", async () => {
-      const reqMonitor: StartMonitorV1Request = {
+      const unknownState = "foo.bar.non.existent";
+
+      // Start monitor
+      const resMonitor = await apiClient.startMonitorV1({
         clientAppId: testAppId,
-        stateFullClassName: "foo.bar.non.existent",
-      };
-      expect(apiClient.startMonitorV1(reqMonitor)).toReject();
+        stateFullClassName: unknownState,
+      });
+      expect(resMonitor.status).toBe(200);
+      expect(resMonitor.data.success).toBeFalse();
+      expect(resMonitor.data.msg).toContain(unknownState);
     });
 
     test("Stop monitoring with unknown state does nothing and returns success", async () => {
-      const reqMonitor: StopMonitorV1Request = {
+      // Stop monitor
+      const resStopMon = await apiClient.stopMonitorV1({
         clientAppId: testAppId,
         stateFullClassName: "foo.bar.non.existent",
-      };
-      const resGet = await apiClient.stopMonitorV1(reqMonitor);
-      expect(resGet.status).toBe(200);
-      expect(resGet.data.success).toBeTrue();
+      });
+      expect(resStopMon.status).toBe(200);
+      expect(resStopMon.data.success).toBeTrue();
     });
 
-    test("Reading unknown state transactions returns an empty list", async () => {
-      const reqGetTx: GetMonitorTransactionsV1Request = {
+    test("Reading / clearing transactions without monitor running returns an error", async () => {
+      // Get transactions before start monitor
+      const resGet = await apiClient.getMonitorTransactionsV1({
         clientAppId: testAppId,
-        stateFullClassName: "foo.bar.unknown",
-      };
-      const resGet = await apiClient.getMonitorTransactionsV1(reqGetTx);
+        stateFullClassName: stateToMonitor,
+      });
       expect(resGet.status).toBe(200);
-      expect(resGet.data.stateFullClassName).toEqual("foo.bar.unknown");
-      expect(resGet.data.tx.length).toBe(0);
+      expect(resGet.data.success).toBeFalse();
+      expect(resGet.data.msg).toBeTruthy();
+      expect(resGet.data.stateFullClassName).toBeFalsy();
+      expect(resGet.data.tx).toBeFalsy();
+
+      // Clear transactions before start monitor
+      const resClear = await apiClient.clearMonitorTransactionsV1({
+        clientAppId: testAppId,
+        stateFullClassName: stateToMonitor,
+        txIndexes: ["1", "2"],
+      });
+      expect(resClear.status).toBe(200);
+      expect(resClear.data.success).toBeFalse();
+      expect(resClear.data.msg).toBeTruthy();
+    });
+
+    test("Reading / clearing unknown state returns an error", async () => {
+      // Start monitor
+      const resMonitor = await apiClient.startMonitorV1({
+        clientAppId: testAppId,
+        stateFullClassName: stateToMonitor,
+      });
+      expect(resMonitor.status).toBe(200);
+      expect(resMonitor.data.success).toBeTrue();
+
+      // Get transactions of unknown state
+      const resGet = await apiClient.getMonitorTransactionsV1({
+        clientAppId: testAppId,
+        stateFullClassName: "foo.bar.non.existent",
+      });
+      expect(resGet.status).toBe(200);
+      expect(resGet.data.success).toBeFalse();
+      expect(resGet.data.msg).toBeTruthy();
+      expect(resGet.data.stateFullClassName).toBeFalsy();
+      expect(resGet.data.tx).toBeFalsy();
+
+      // Clear transactions of unknown state
+      const resClear = await apiClient.clearMonitorTransactionsV1({
+        clientAppId: testAppId,
+        stateFullClassName: "foo.bar.non.existent",
+        txIndexes: ["1", "2"],
+      });
+      expect(resClear.status).toBe(200);
+      expect(resClear.data.msg).toBeTruthy();
+      expect(resClear.data.success).toBeFalse();
     });
   });
 
@@ -724,12 +643,12 @@ describe("Monitor Tests", () => {
 
     test("State change can be read by all listening clients separately", async () => {
       // Start monitor for first client
-      const resMonitor = await apiClient.startMonitorV1({
+      const resMonitorFirst = await apiClient.startMonitorV1({
         clientAppId: testAppId,
         stateFullClassName: stateToMonitor,
       });
-      expect(resMonitor.status).toBe(200);
-      expect(resMonitor.data.success).toBeTrue();
+      expect(resMonitorFirst.status).toBe(200);
+      expect(resMonitorFirst.data.success).toBeTrue();
 
       // Start monitor for second client
       const resMonitorAnother = await apiClient.startMonitorV1({
@@ -754,12 +673,12 @@ describe("Monitor Tests", () => {
       expect(resGetTxFirstClient.data.stateFullClassName).toEqual(
         stateToMonitor,
       );
-      expect(resGetTxFirstClient.data.tx.length).toBe(
+      expect(resGetTxFirstClient.data.tx?.length).toBe(
         transactionCountAfterStart,
       );
 
       // Clear transactions seen by the first client
-      const readTxIdx = resGetTxFirstClient.data.tx.map((tx) => tx.index);
+      const readTxIdx = resGetTxFirstClient.data.tx?.map((tx) => tx.index);
       const resClearTx = await apiClient.clearMonitorTransactionsV1({
         clientAppId: testAppId,
         stateFullClassName: stateToMonitor,
@@ -768,7 +687,7 @@ describe("Monitor Tests", () => {
       expect(resClearTx.status).toBe(200);
       expect(resClearTx.data.success).toBeTrue();
 
-      // Get transactions for second client
+      // Get transactions for second client - should have all transactions available
       const resGetTxSecondClient = await apiClient.getMonitorTransactionsV1({
         clientAppId: anotherAppId,
         stateFullClassName: stateToMonitor,
@@ -777,19 +696,19 @@ describe("Monitor Tests", () => {
       expect(resGetTxSecondClient.data.stateFullClassName).toEqual(
         stateToMonitor,
       );
-      expect(resGetTxSecondClient.data.tx.length).toBe(
+      expect(resGetTxSecondClient.data.tx?.length).toBe(
         transactionCountAfterStart,
       );
     });
 
     test("State change unsubscribe doesn't affect other client monitors", async () => {
       // Start monitor for first client
-      const resMonitor = await apiClient.startMonitorV1({
+      const resMonitorFirst = await apiClient.startMonitorV1({
         clientAppId: testAppId,
         stateFullClassName: stateToMonitor,
       });
-      expect(resMonitor.status).toBe(200);
-      expect(resMonitor.data.success).toBeTrue();
+      expect(resMonitorFirst.status).toBe(200);
+      expect(resMonitorFirst.data.success).toBeTrue();
 
       // Start monitor for second client
       const resMonitorAnother = await apiClient.startMonitorV1({
@@ -826,7 +745,7 @@ describe("Monitor Tests", () => {
       expect(resGetTxSecondClient.data.stateFullClassName).toEqual(
         stateToMonitor,
       );
-      expect(resGetTxSecondClient.data.tx.length).toBe(
+      expect(resGetTxSecondClient.data.tx?.length).toBe(
         transactionCountAfterStart + transactionCountOnlySecondClient,
       );
     });

@@ -13,11 +13,14 @@ import javax.validation.Valid
 
 /**
  * 
- * @param success 
+ * @param success Flag set to true if operation completed correctly.
+ * @param msg Message describing operation status or any errors that occurred.
  */
 data class StopMonitorV1Response(
 
-    @field:JsonProperty("success", required = true) val success: kotlin.Boolean
+    @field:JsonProperty("success", required = true) val success: kotlin.Boolean,
+
+    @field:JsonProperty("msg", required = true) val msg: kotlin.String
 ) {
 
 }

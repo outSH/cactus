@@ -23,12 +23,13 @@ import org.hyperledger.cactus.plugin.ledger.connector.corda.server.api.ApiPlugin
 import org.hyperledger.cactus.plugin.ledger.connector.corda.server.model.*
 import java.io.IOException
 import java.io.InputStream
-import java.lang.Exception
 import java.lang.RuntimeException
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.IllegalArgumentException
 import net.corda.core.contracts.ContractState
+import org.springframework.web.util.HtmlUtils.htmlEscape
+import kotlin.Exception
 
 // TODO Look into this project for powering the connector of ours:
 // https://github.com/180Protocol/codaptor
@@ -357,26 +358,37 @@ class ApiPluginLedgerConnectorCordaServiceImpl(
         val stateName = startMonitorV1Request?.stateFullClassName
 
         if (clientAppId.isNullOrEmpty()) {
-            logger.info("Request rejected because missing client app ID")
-            return StartMonitorV1Response(false)
+            val message = "Request rejected because missing client app ID"
+            logger.info(message)
+            return StartMonitorV1Response(false, message)
         }
 
         if (stateName.isNullOrEmpty()) {
-            logger.info("Request rejected because missing state class name")
-            return StartMonitorV1Response(false)
+            val message = "Request rejected because missing state class name"
+            logger.info(message)
+            return StartMonitorV1Response(false, message)
         }
 
-        @Suppress("UNCHECKED_CAST")
-        val contractState = jsonJvmObjectDeserializer.getOrInferType(stateName) as Class<out ContractState>
+        try {
+            @Suppress("UNCHECKED_CAST")
+            val contractState = jsonJvmObjectDeserializer.getOrInferType(stateName) as Class<out ContractState>
 
-        monitorManager.withClient(clientAppId) {
-            startMonitor(stateName, contractState)
-            return StartMonitorV1Response(true)
+            monitorManager.withClient(clientAppId) {
+                startMonitor(stateName, contractState)
+                return StartMonitorV1Response(true, "OK")
+            }
+        } catch (ex: ClassNotFoundException) {
+            val message = "Unknown corda state name to monitor: ${htmlEscape(stateName)}"
+            logger.warn("startMonitorV1 error: {}", message)
+            return StartMonitorV1Response(false, message)
+        } catch (ex: Throwable) {
+            logger.warn("startMonitorV1 error: {}, cause: {}", ex.toString(), ex.cause.toString())
+            return StartMonitorV1Response(false, htmlEscape(ex.toString()))
         }
     }
 
     /**
-     * Read all transactions that were not read by it's client yet.
+     * Read all transactions that were not read by its client yet.
      * Must be called after startMonitorV1 and before stopMonitorV1.
      * Transactions buffer must be explicitly cleared with clearMonitorTransactionsV1
      */
@@ -385,17 +397,25 @@ class ApiPluginLedgerConnectorCordaServiceImpl(
         val stateName = getMonitorTransactionsV1Request?.stateFullClassName
 
         if (clientAppId.isNullOrEmpty()) {
-            logger.info("Request rejected because missing client app ID")
-            return GetMonitorTransactionsV1Response("", listOf())
+            val message = "Request rejected because missing client app ID"
+            logger.info(message)
+            return GetMonitorTransactionsV1Response(false, message)
         }
 
         if (stateName.isNullOrEmpty()) {
-            logger.info("Request rejected because missing state class name")
-            return GetMonitorTransactionsV1Response("", listOf())
+            val message = "Request rejected because missing state class name"
+            logger.info(message)
+            return GetMonitorTransactionsV1Response(false, message)
         }
 
-        monitorManager.withClient(clientAppId) {
-            return GetMonitorTransactionsV1Response(stateName, getTransactions(stateName).toList())
+        try {
+            monitorManager.withClient(clientAppId) {
+                return GetMonitorTransactionsV1Response(true, "OK", stateName, getTransactions(stateName).toList())
+            }
+        }
+         catch (ex: Throwable) {
+            logger.warn("getMonitorTransactionsV1 error: {}, cause: {}", ex.toString(), ex.cause.toString())
+            return GetMonitorTransactionsV1Response(false, htmlEscape(ex.toString()))
         }
     }
 
@@ -409,23 +429,32 @@ class ApiPluginLedgerConnectorCordaServiceImpl(
         val indexesToRemove = clearMonitorTransactionsV1Request?.txIndexes
 
         if (clientAppId.isNullOrEmpty()) {
-            logger.info("Request rejected because missing client app ID")
-            return ClearMonitorTransactionsV1Response(false)
+            val message = "Request rejected because missing client app ID"
+            logger.info(message)
+            return ClearMonitorTransactionsV1Response(false, message)
         }
 
         if (stateName.isNullOrEmpty()) {
-            logger.info("Request rejected because missing state class name")
-            return ClearMonitorTransactionsV1Response(false)
+            val message = "Request rejected because missing state class name"
+            logger.info(message)
+            return ClearMonitorTransactionsV1Response(false, message)
         }
 
         if (indexesToRemove.isNullOrEmpty()) {
-            logger.info("No indexes to remove")
-            return ClearMonitorTransactionsV1Response(true)
+            val message = "No indexes to remove"
+            logger.info(message)
+            return ClearMonitorTransactionsV1Response(true, message)
         }
 
-        monitorManager.withClient(clientAppId) {
-            clearTransactions(stateName, indexesToRemove)
-            return ClearMonitorTransactionsV1Response(true)
+        try {
+            monitorManager.withClient(clientAppId) {
+                clearTransactions(stateName, indexesToRemove)
+                return ClearMonitorTransactionsV1Response(true, "OK")
+            }
+        }
+        catch (ex: Throwable) {
+            logger.warn("clearMonitorTransactionsV1 error: {}, cause: {}", ex.toString(), ex.cause.toString())
+            return ClearMonitorTransactionsV1Response(false, htmlEscape(ex.toString()))
         }
     }
 
@@ -438,18 +467,26 @@ class ApiPluginLedgerConnectorCordaServiceImpl(
         val stateName = stopMonitorV1Request?.stateFullClassName
 
         if (clientAppId.isNullOrEmpty()) {
-            logger.info("Request rejected because missing client app ID")
-            return StopMonitorV1Response(false)
+            val message = "Request rejected because missing client app ID"
+            logger.info(message)
+            return StopMonitorV1Response(false, message)
         }
 
         if (stateName.isNullOrEmpty()) {
-            logger.info("Request rejected because missing state class name")
-            return StopMonitorV1Response(false)
+            val message = "Request rejected because missing state class name"
+            logger.info(message)
+            return StopMonitorV1Response(false, message)
         }
 
-        monitorManager.withClient(clientAppId) {
-            stopMonitor(stateName)
-            return StopMonitorV1Response(true)
+        try {
+            monitorManager.withClient(clientAppId) {
+                stopMonitor(stateName)
+                return StopMonitorV1Response(true, "OK")
+            }
+        }
+        catch (ex: Throwable) {
+            logger.warn("clearMonitorTransactionsV1 error: {}, cause: {}", ex.toString(), ex.cause.toString())
+            return StopMonitorV1Response(false, htmlEscape(ex.toString()))
         }
     }
 }

@@ -6,8 +6,9 @@ import org.hyperledger.cactus.plugin.ledger.connector.corda.server.model.GetMoni
 import rx.Subscription
 import java.math.BigInteger
 import java.time.LocalDateTime
+import javax.annotation.PreDestroy
 
-class StateMonitorClientSession(private val rpc: NodeRPCConnection, private val sessionExpireMinutes: Long) {
+class StateMonitorClientSession(private val rpc: NodeRPCConnection, private val sessionExpireMinutes: Long): AutoCloseable {
     data class StateMonitor(
         val stateChanges: MutableSet<GetMonitorTransactionsV1ResponseTx>,
         val subscription: Subscription
@@ -43,7 +44,13 @@ class StateMonitorClientSession(private val rpc: NodeRPCConnection, private val 
         logger.info("Monitoring for changes of state '{}' started.", stateName)
     }
 
-    fun getTransactions(stateName: String) = monitors[stateName]?.stateChanges ?: mutableSetOf()
+    fun getTransactions(stateName: String): MutableSet<GetMonitorTransactionsV1ResponseTx> {
+        if (!monitors.containsKey(stateName)) {
+            throw Exception("No monitor running for corda state '$stateName' on requested client")
+        }
+
+        return monitors[stateName]?.stateChanges ?: mutableSetOf()
+    }
 
     fun clearTransactions(stateName: String, indexesToRemove: List<String>) {
         val transactions = this.getTransactions(stateName)
@@ -58,7 +65,8 @@ class StateMonitorClientSession(private val rpc: NodeRPCConnection, private val 
         logger.info("Monitoring for state '{}' stopped.", stateName)
     }
 
-    fun stopAllMonitors() {
+    @PreDestroy
+    override fun close() {
         monitors.forEach { it.value.subscription.unsubscribe() }
         monitors.clear()
     }
@@ -69,7 +77,5 @@ class StateMonitorClientSession(private val rpc: NodeRPCConnection, private val 
 
     fun isExpired() = LocalDateTime.now().isAfter(sessionExpireTime)
 
-    fun isValid(): Boolean {
-        return monitors.isNotEmpty() || isExpired()
-    }
+    fun hasMonitorRunning() = monitors.isNotEmpty()
 }

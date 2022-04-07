@@ -24,17 +24,17 @@ class StateMonitorQueuesManager(
     @Scheduled(fixedDelay = SessionExpireCheckInterval)
     fun cleanInvalidClientSessions() {
         logger.info("Remove all invalid client sessions. Before - {}", clientSessions.size)
-        clientSessions.entries.removeAll { !it.value.isValid() }
+        clientSessions.entries.removeAll { !it.value.hasMonitorRunning() || it.value.isExpired() }
         logger.info("Remove all invalid client sessions. After - {}", clientSessions.size)
     }
 
     @PreDestroy
     override fun close() {
         logger.info("StateMonitorQueuesManager close - stop all running monitors.")
-        clientSessions.forEach { it.value.stopAllMonitors() }
+        clientSessions.forEach { it.value.close() }
     }
 
-    final inline fun <T> withClient(clientAppId: String, block: StateMonitorClientSession.() -> T): T {
+    final inline fun<T> withClient(clientAppId: String, block: StateMonitorClientSession.() -> T): T {
         // Get client session and update it's expire time
         val clientSession =
             this.clientSessions.getOrPut(clientAppId) { StateMonitorClientSession(rpc, sessionExpireMinutes) }
@@ -45,7 +45,7 @@ class StateMonitorQueuesManager(
         logger.debug("Monitor withClient block response:", results)
 
         // Check if client session still valid
-        if (!clientSession.isValid()) {
+        if (!clientSession.hasMonitorRunning()) {
             logger.info("Client session {} not valid anymore - remove.", clientAppId)
             this.clientSessions.remove(clientAppId)
         }

@@ -519,12 +519,18 @@
             "StartMonitorV1Response": {
                 "type": "object",
                 "required": [
-                    "success"
+                    "success",
+                    "msg"
                 ],
                 "properties": {
                     "success": {
                         "type": "boolean",
                         "description": "Flag set to true if monitoring started correctly.",
+                        "nullable": false
+                    },
+                    "msg": {
+                        "type": "string",
+                        "description": "Message describing operation status or any errors that occurred.",
                         "nullable": false
                     }
                 }
@@ -558,10 +564,20 @@
             "GetMonitorTransactionsV1Response": {
                 "type": "object",
                 "required": [
-                    "stateFullClassName",
-                    "tx"
+                    "success",
+                    "msg"
                 ],
                 "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "description": "Flag set to true if operation completed correctly.",
+                        "nullable": false
+                    },
+                    "msg": {
+                        "type": "string",
+                        "description": "Message describing operation status or any errors that occurred.",
+                        "nullable": false
+                    },
                     "stateFullClassName": {
                         "description": "The fully qualified name of the Corda state to monitor",
                         "example": "net.corda.samples.example.states.IOUState",
@@ -626,12 +642,19 @@
             "ClearMonitorTransactionsV1Response": {
                 "type": "object",
                 "required": [
-                    "success"
+                    "success",
+                    "msg"
                 ],
                 "additionalProperties": false,
                 "properties": {
                     "success": {
                         "type": "boolean",
+                        "description": "Flag set to true if operation completed correctly.",
+                        "nullable": false
+                    },
+                    "msg": {
+                        "type": "string",
+                        "description": "Message describing operation status or any errors that occurred.",
                         "nullable": false
                     }
                 }
@@ -665,11 +688,18 @@
             "StopMonitorV1Response": {
                 "type": "object",
                 "required": [
-                    "success"
+                    "success",
+                    "msg"
                 ],
                 "properties": {
                     "success": {
                         "type": "boolean",
+                        "description": "Flag set to true if operation completed correctly.",
+                        "nullable": false
+                    },
+                    "msg": {
+                        "type": "string",
+                        "description": "Message describing operation status or any errors that occurred.",
                         "nullable": false
                     }
                 }

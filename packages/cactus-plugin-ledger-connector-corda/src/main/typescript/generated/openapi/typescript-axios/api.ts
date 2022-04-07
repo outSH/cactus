@@ -53,11 +53,17 @@ export interface ClearMonitorTransactionsV1Request {
  */
 export interface ClearMonitorTransactionsV1Response {
     /**
-     * 
+     * Flag set to true if operation completed correctly.
      * @type {boolean}
      * @memberof ClearMonitorTransactionsV1Response
      */
     success: boolean;
+    /**
+     * Message describing operation status or any errors that occurred.
+     * @type {string}
+     * @memberof ClearMonitorTransactionsV1Response
+     */
+    msg: string;
 }
 /**
  * 
@@ -388,17 +394,29 @@ export interface GetMonitorTransactionsV1Request {
  */
 export interface GetMonitorTransactionsV1Response {
     /**
+     * Flag set to true if operation completed correctly.
+     * @type {boolean}
+     * @memberof GetMonitorTransactionsV1Response
+     */
+    success: boolean;
+    /**
+     * Message describing operation status or any errors that occurred.
+     * @type {string}
+     * @memberof GetMonitorTransactionsV1Response
+     */
+    msg: string;
+    /**
      * The fully qualified name of the Corda state to monitor
      * @type {string}
      * @memberof GetMonitorTransactionsV1Response
      */
-    stateFullClassName: string;
+    stateFullClassName?: string;
     /**
      * 
      * @type {Array<GetMonitorTransactionsV1ResponseTx>}
      * @memberof GetMonitorTransactionsV1Response
      */
-    tx: Array<GetMonitorTransactionsV1ResponseTx>;
+    tx?: Array<GetMonitorTransactionsV1ResponseTx>;
 }
 /**
  * 
@@ -800,6 +818,12 @@ export interface StartMonitorV1Response {
      * @memberof StartMonitorV1Response
      */
     success: boolean;
+    /**
+     * Message describing operation status or any errors that occurred.
+     * @type {string}
+     * @memberof StartMonitorV1Response
+     */
+    msg: string;
 }
 /**
  * 
@@ -827,11 +851,17 @@ export interface StopMonitorV1Request {
  */
 export interface StopMonitorV1Response {
     /**
-     * 
+     * Flag set to true if operation completed correctly.
      * @type {boolean}
      * @memberof StopMonitorV1Response
      */
     success: boolean;
+    /**
+     * Message describing operation status or any errors that occurred.
+     * @type {string}
+     * @memberof StopMonitorV1Response
+     */
+    msg: string;
 }
 /**
  * 

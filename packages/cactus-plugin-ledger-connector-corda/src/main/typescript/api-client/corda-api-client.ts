@@ -87,13 +87,15 @@ export class CordaApiClient
         stateFullClassName: stateName,
       });
 
-      response.data.tx.forEach((tx) => subject.next(tx));
+      // TODO - error handling
+      // TODO - clientAppId handling
+      response.data.tx?.forEach((tx) => subject.next(tx));
 
-      const readTxIdx = response.data.tx.map((tx) => tx.index);
+      const readTxIdx = response.data.tx?.map((tx) => tx.index);
       await this.clearMonitorTransactionsV1({
         clientAppId: "testApp",
         stateFullClassName: stateName,
-        txIndexes: readTxIdx.filter(Boolean) as string[],
+        txIndexes: readTxIdx?.filter(Boolean) as string[],
       });
     } catch (err) {
       this.log.warn("Monitor poll error for state", stateName);
