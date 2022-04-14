@@ -20,7 +20,7 @@ logger.level = config.read<string>("logLevel", "info");
 import { ValidatorAuthentication } from "./ValidatorAuthentication";
 // Read the library, SDK, etc. according to EC specifications as needed
 
-import { getClientAndChannel, getSubmitterAndEnroll } from "./fabricaccess.js";
+import { getClientAndChannel, getSubmitterAndEnroll } from "./fabricaccess";
 import { ProposalRequest } from "fabric-client";
 import safeStringify from "fast-safe-stringify";
 
@@ -208,9 +208,15 @@ export class ServerPlugin {
         .then((returnvalue) => {
           if (returnvalue != null) {
             retObj = {
-              status: 200,
-              data: returnvalue,
+              resObj: {
+                status: 200,
+                data: returnvalue,
+              },
             };
+
+            if (args.reqID) {
+              retObj["id"] = args.reqID;
+            }
             return resolve(retObj);
           }
         })
@@ -361,9 +367,6 @@ async function Invoke(reqBody) {
 
     // const respData = await contract.submitTransaction(fcn, args[0], args[1]);
     logger.info("Transaction has been submitted");
-
-    // Disconnect from the gateway.
-    await gateway.disconnect();
   } catch (error) {
     logger.error(`Failed to submit transaction: ${error}`);
   }
@@ -483,10 +486,6 @@ async function InvokeSync(reqBody) {
       }
       logger.info(`##fablicaccess: InvokeSync result: ${result}`);
       console.log(`##fablicaccess: InvokeSync result: ${result}`);
-
-      // Disconnect from the gateway.
-      // logger.debug(`##InvokeSync(H)`);
-      await gateway.disconnect();
 
       logger.debug(`##InvokeSync(I)`);
       return resolve(result);

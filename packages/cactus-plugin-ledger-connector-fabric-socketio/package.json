@@ -30,6 +30,7 @@
     "socket.io": "4.4.1"
   },
   "devDependencies": {
+    "@hyperledger/cactus-api-client": "1.0.0",
     "@types/config": "0.0.41",
     "ts-node": "9.1.1"
   }
