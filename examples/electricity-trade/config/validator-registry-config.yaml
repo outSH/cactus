@@ -1,9 +1,15 @@
 ledgerPluginInfo:
   -
     validatorID: 84jUisrs
-    validatorType: socketio
+    validatorType: legacy-socketio
     validatorURL: https://ethereum-validator:5050
-    validatorKeyPath: ./validatorKey/84jUisrs/key84jUisrs.crt
+    validatorKeyPath: /root/cactus/validatorKey/84jUisrs/key84jUisrs.crt
+    maxCounterRequestID: 100
+    syncFunctionTimeoutMillisecond: 5000
+    socketOptions:
+      rejectUnauthorized: false
+      reconnection: false
+      timeout: 20000
     ledgerInfo:
       ledgerAbstract: Go-Ethereum Ledger
     apiInfo:
@@ -34,9 +40,15 @@ ledgerPluginInfo:
 
   -
     validatorID: sUr7d10R
-    validatorType: socketio
+    validatorType: legacy-socketio
     validatorURL: https://sawtooth-validator:5140
-    validatorKeyPath: ./validatorKey/sUr7d10R/keysUr7d10R.crt
+    validatorKeyPath: /root/cactus/validatorKey/sUr7d10R/keysUr7d10R.crt
+    maxCounterRequestID: 100
+    syncFunctionTimeoutMillisecond: 5000
+    socketOptions:
+      rejectUnauthorized: false
+      reconnection: false
+      timeout: 20000
     ledgerInfo:
       ledgerAbstract: Sawtooth Ledger
     apiInfo: []

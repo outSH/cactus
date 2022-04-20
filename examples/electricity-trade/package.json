@@ -5,7 +5,9 @@
     "start": "docker-compose build && docker-compose up",
     "build": "npm run build-ts && npm run prepare-docker-build",
     "build-ts": "tsc -p ./tsconfig.json",
-    "prepare-docker-build": "cp -f ../../yarn.lock ./dist/"
+    "prepare-docker-build": "npm run copy-yarn-lock && npm run copy-validator-keys",
+    "copy-yarn-lock": "cp -f ../../yarn.lock ./dist/",
+    "copy-validator-keys": "cp -fr ../../packages/cactus-cmd-socketio-server/src/main/typescript/verifier/validatorKey ./dist"
   },
   "dependencies": {
     "@types/node": "^14.0.24",
