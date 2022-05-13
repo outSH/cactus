@@ -1,11 +1,11 @@
-# Cactus discounted-cartrade
+# Cactus discounted-asset-trade
 
 
 ## Abstract
 
-Cactus discounted-cartrade is a sample application that adds employee discounts to the original Cactus cartrade. In this application, when the users transfer the car ownership in the cactus cartrade, they present their employee proofs to the rent-a-car company to receive an employee discount. We implement the employee proofs by proofs on Hyperledger Indy. Car ownership is represented by a [asset-transfer-basic](https://github.com/hyperledger/fabric-samples/tree/release-2.2/asset-transfer-basic) chaincodetoken on Hyperledger Fabric, which can be exchanged for ETH currency on a private Ethereum blockchain. This Business Logic Plugin (BLP) application controls a process from employee certification using Hyperledger Indy to payment using Ethereum.
+Cactus discounted-asset-trade is a sample application that adds employee discounts to the original Cactus cartrade. In this application, when the users transfer the car ownership in the cactus cartrade, they present their employee proofs to the rent-a-car company to receive an employee discount. We implement the employee proofs by proofs on Hyperledger Indy. Car ownership is represented by a [asset-transfer-basic](https://github.com/hyperledger/fabric-samples/tree/release-2.2/asset-transfer-basic) chaincodetoken on Hyperledger Fabric, which can be exchanged for ETH currency on a private Ethereum blockchain. This Business Logic Plugin (BLP) application controls a process from employee certification using Hyperledger Indy to payment using Ethereum.
 
-![discounted-cartrade image](./image/discounted-cartrade-image.png)
+![discounted-asset-trade image](./image/discounted-asset-trade-image.png)
 
 ## Scenario
 
@@ -29,11 +29,11 @@ Alice will use credentials and other Indy formats such as schema and definition 
 
 ### fabric-socketio-validator
 - Validator for fabric ledger.
-- Docker networks: `fabric-all-in-one_testnet-14`, `discounted-cartrade-net`
+- Docker networks: `fabric-all-in-one_testnet-14`, `cactus-example-discounted-asset-trade-net`
 
 ### ethereum-validator
 - Validator for ethereum ledger.
-- Docker network: `geth1net`, `discounted-cartrade-net`
+- Docker network: `geth1net`, `cactus-example-discounted-asset-trade-net`
 
 ### indy-sdk-cli-base-image
 - Base image for indy validator.
@@ -49,17 +49,17 @@ Alice will use credentials and other Indy formats such as schema and definition 
 - Load balancer / gateway for indy validator.
 - Use it's endpoint to talk to indy validator.
 - Uses config from `./nginx/nginx.conf`
-- Docker network: `indy-testnet_indy_net`, `discounted-cartrade-net`
+- Docker network: `indy-testnet_indy_net`, `cactus-example-discounted-asset-trade-net`
 
 ### cmd-socketio-base-image
-- Base image for `discounted-cartrade` BLP.
+- Base image for `cactus-example-discounted-asset-trade` BLP.
 - Contains cactus cmd socketio server module
 - It will build the image and immediately exit on run.
 
-### discounted-cartrade-blp
+### cactus-example-discounted-asset-trade-blp
 - Main logic for this sample application.
 - Use it's endpoint (`localhost:5034`) to interact the bussiness logic.
-- Docker network: `discounted-cartrade-net`
+- Docker network: `cactus-example-discounted-asset-trade-net`
 
 ### req_discounted_cartrade
 - Setup application.
@@ -89,11 +89,6 @@ Alice will use credentials and other Indy formats such as schema and definition 
         - `discounted_cartrade_faio2x_testnet`
         - `indy-testnet-pool`
 
-1. Build cartrade:
-    ```
-    ./script-build-discounted-cartrade.sh
-    ```
-
 1. Launch cartrade and validators from local `docker-compose.yml` (use separate console for that, docker-compose will block your prompt):
     ```
     docker-compose build && docker-compose up
@@ -104,13 +99,13 @@ Alice will use credentials and other Indy formats such as schema and definition 
     This will build and launch all needed containers, the final output should look like this:
 
     ```
-    discounted-cartrade-ethereum-validator | listening on *:5050
+    cactus-example-discounted-asset-trade-ethereum-validator | listening on *:5050
     ...
-    discounted-cartrade-fabric-socketio-validator | listening on *:5040
+    cactus-example-discounted-asset-trade-fabric-socketio-validator | listening on *:5040
     ...
-    discounted-cartrade-indy-validator | 2022-01-31 16:00:49,552 INFO success: validator entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+    cactus-example-discounted-asset-trade-indy-validator | 2022-01-31 16:00:49,552 INFO success: validator entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
     ...
-    discounted-cartrade-indy-validator-nginx | 2022/01/31 16:00:49 [notice] 1#1: start worker process 35
+    cactus-example-discounted-asset-trade-indy-validator-nginx | 2022/01/31 16:00:49 [notice] 1#1: start worker process 35
     ...
     cmd-socketio-base-dummy exited with code 0
     ...
@@ -119,7 +114,7 @@ Alice will use credentials and other Indy formats such as schema and definition 
     req_discounted_cartrade      | Done.
     req_discounted_cartrade exited with code 0
     ...
-    discounted-cartrade-blp      | [2022-01-31T16:00:56.208] [INFO] www - listening on *: 5034
+    cactus-example-discounted-asset-trade-blp      | [2022-01-31T16:00:56.208] [INFO] www - listening on *: 5034
     ```
 
 ## How to use this application
@@ -156,7 +151,7 @@ Alice will use credentials and other Indy formats such as schema and definition 
 
 1. Run the transaction execution using the following script:
     ```
-    ./script-post-discounted-cartrade-sample.sh
+    ./script-post-trade-request.sh
     ```
 
     ... or send request manually:

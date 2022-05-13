@@ -14,9 +14,9 @@ docker rm -f sawtooth-shell-default \
                 sawtooth-devmode-engine-rust-default \
                 sawtooth-validator-default \
                 geth1 \
-                electricity-trade-blp \
-                electricity-trade-ethereum-validator \
-                electricity-trade-sawtooth-validator \
+                cactus-example-electricity-trade-blp \
+                cactus-example-electricity-trade-ethereum-validator \
+                cactus-example-electricity-trade-sawtooth-validator \
                 cmd-socketio-base-dummy
 
 echo ">> Remove docker networks"

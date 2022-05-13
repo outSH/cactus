@@ -1,6 +1,6 @@
 # req_discounted_cartrade
 
-Simple tool for indy setup and sending requests to `discounted-cartrade` sample app.
+Simple tool for indy setup and sending requests to `cactus-example-discounted-asset-trade` sample app.
 
 # Build
 - Use script to build base container `indy-sdk-cli` and tool container `req_discounted_cartrade`
@@ -11,12 +11,12 @@ Simple tool for indy setup and sending requests to `discounted-cartrade` sample 
 # Usage
 - First, ensure indy test pool is already running and docker network `indy-testnet_indy_net` was created.
 
-### Send discounted-cartrade request
+### Send cactus-example-discounted-asset-trade request
 ```
 docker run --rm -ti -v/etc/cactus/:/etc/cactus/ --net="indy-testnet_indy_net" req_discounted_cartrade
 ```
 
-### Recreate the proof and send discounted-cartrade request
+### Recreate the proof and send cactus-example-discounted-asset-trade request
 ```
 docker run --rm -ti -v/etc/cactus/:/etc/cactus/ --net="indy-testnet_indy_net" req_discounted_cartrade --force
 ```

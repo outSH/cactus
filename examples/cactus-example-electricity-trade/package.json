@@ -1,11 +1,16 @@
 {
-  "name": "electricity-trade",
+  "name": "@hyperledger/cactus-example-electricity-trade",
+  "version": "1.0.0",
+  "license": "Apache-2.0",
+  "main": "dist/www.js",
+  "module": "dist/www.js",
+  "types": "dist/www.d.ts",
   "private": true,
   "scripts": {
     "start": "docker-compose build && docker-compose up",
-    "build": "npm run build-ts && npm run prepare-docker-build",
-    "build-ts": "tsc -p ./tsconfig.json",
-    "prepare-docker-build": "npm run copy-yarn-lock && npm run copy-validator-keys",
+    "build": "npm run build-ts && npm run build:dev:backend:postbuild",
+    "build-ts": "tsc",
+    "build:dev:backend:postbuild": "npm run copy-yarn-lock && npm run copy-validator-keys",
     "copy-yarn-lock": "cp -f ../../yarn.lock ./dist/",
     "copy-validator-keys": "npm run copy-ethereum-key && npm run copy-sawtooth-key",
     "copy-ethereum-key": "cp -fr ../../packages/cactus-plugin-ledger-connector-go-ethereum-socketio/sample-config/CA/connector.crt ./dist/ethereum-connector.crt",
@@ -40,8 +45,6 @@
     "eslint": "7.32.0",
     "eslint-config-prettier": "8.4.0",
     "eslint-plugin-prettier": "4.0.0",
-    "prettier": "2.5.1",
-    "tslint": "6.0.0",
-    "typescript": "4.3.5"
+    "prettier": "2.5.1"
   }
 }
