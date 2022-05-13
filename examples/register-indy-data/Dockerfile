@@ -1,4 +1,4 @@
-# Simple tool for setup and sending requests to discounted-cartrade sample app
+# Simple tool for setup and sending requests to cactus-example-discounted-asset-trade sample app
 # Run as part of docker-compose or remember to use host network
 
 FROM indy-sdk-cli

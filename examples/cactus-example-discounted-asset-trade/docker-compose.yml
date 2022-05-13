@@ -5,7 +5,7 @@ version: "3.4"
 
 services:
   fabric-socketio-validator:
-    container_name: discounted-cartrade-fabric-socketio-validator
+    container_name: cactus-example-discounted-asset-trade-fabric-socketio-validator
     image: cactus-plugin-ledger-connector-fabric-socketio
     build:
       context: ../../packages/cactus-plugin-ledger-connector-fabric-socketio/
@@ -17,10 +17,10 @@ services:
           target: /etc/cactus
     networks:
       - fabric-all-in-one_testnet-2x
-      - discounted-cartrade-net
+      - cactus-example-discounted-asset-trade-net
 
   ethereum-validator:
-    container_name: discounted-cartrade-ethereum-validator
+    container_name: cactus-example-discounted-asset-trade-ethereum-validator
     image: cactus-plugin-ledger-connector-go-ethereum-socketio
     build:
       context: ../../packages/cactus-plugin-ledger-connector-go-ethereum-socketio/
@@ -32,7 +32,7 @@ services:
           target: /etc/cactus
     networks:
      - geth1net
-     - discounted-cartrade-net
+     - cactus-example-discounted-asset-trade-net
 
   indy-sdk-cli-base-image:
     # Build base image and immediately exit
@@ -43,7 +43,7 @@ services:
     command: ["echo", "OK - Exit"]
 
   indy-validator:
-    container_name:  discounted-cartrade-indy-validator
+    container_name:  cactus-example-discounted-asset-trade-indy-validator
     image: cactus_validator_socketio_indy
     environment:
     - TEST_POOL_IP=172.16.0.2
@@ -62,7 +62,7 @@ services:
       - indy-testnet_indy_net
 
   indy-validator-nginx:
-    container_name: discounted-cartrade-indy-validator-nginx
+    container_name: cactus-example-discounted-asset-trade-indy-validator-nginx
     image: nginx:1.20-alpine
     volumes:
       - type: bind
@@ -74,7 +74,7 @@ services:
       - "10080:10080"
     networks:
       - indy-testnet_indy_net
-      - discounted-cartrade-net
+      - cactus-example-discounted-asset-trade-net
 
   cmd-socketio-base-image:
     # Build base image and immediately exit
@@ -84,15 +84,15 @@ services:
       context: ../../packages/cactus-cmd-socketio-server/
     command: ["echo", "OK - Exit"]
 
-  discounted-cartrade-blp:
-    container_name: discounted-cartrade-blp
-    image: cactus-example-discounted-cartrade-blp
+  cactus-example-discounted-asset-trade-blp:
+    container_name: cactus-example-discounted-asset-trade-blp
+    image: cactus-example-discounted-asset-trade-blp
     build:
       context: .
     ports:
       - "5034:5034"
     networks:
-     - discounted-cartrade-net
+     - cactus-example-discounted-asset-trade-net
     depends_on:
       - fabric-socketio-validator
       - ethereum-validator
@@ -114,7 +114,7 @@ services:
     networks:
       - indy-testnet_indy_net
     depends_on:
-      - discounted-cartrade-blp
+      - cactus-example-discounted-asset-trade-blp
     volumes:
         - type: bind
           source: ./etc/cactus
@@ -129,5 +129,5 @@ networks:
     external: true
   indy-testnet_indy_net:
     external: true
-  discounted-cartrade-net:
+  cactus-example-discounted-asset-trade-net:
     driver: bridge

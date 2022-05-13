@@ -48,11 +48,6 @@ In this example, we use the Sawtooth intkey transaction processor as an applicat
         - `sawtooth-validator-default`
         - `geth1`
 
-1. Build electricity-trade:
-    ```
-    ./script-build-electricity-trade.sh
-    ```
-
 1. Launch electricity-trade and validators from local `docker-compose.yml` (use separate console for that, docker-compose will block your prompt):
     ```
     docker-compose build && docker-compose up
@@ -65,21 +60,21 @@ In this example, we use the Sawtooth intkey transaction processor as an applicat
     ```
     cmd-socketio-base-dummy    | OK - Exit
     cmd-socketio-base-dummy exited with code 0
-    electricity-trade-ethereum-validator |
-    electricity-trade-ethereum-validator | > @hyperledger/cactus-plugin-ledger-connector-go-ethereum-socketio@1.0.0-rc.3 start /root/cactus
-    electricity-trade-ethereum-validator | > cd ./dist && node common/core/bin/www.js
-    electricity-trade-ethereum-validator |
-    electricity-trade-ethereum-validator | listening on *:5050
-    electricity-trade-sawtooth-validator |
-    electricity-trade-sawtooth-validator | > @hyperledger/cactus-plugin-ledger-connector-sawtooth-socketio@1.0.0-rc.3 start /root/cactus
-    electricity-trade-sawtooth-validator | > cd ./dist && node common/core/bin/www.js
-    electricity-trade-sawtooth-validator |
-    electricity-trade-sawtooth-validator | listening on *:5140
-    electricity-trade-blp      | [2022-02-14T15:47:47.312] [INFO] www - Using BLP with id = h40Q9eMD
-    electricity-trade-blp      | start Dynamic loading.
-    electricity-trade-blp      | path: /api/v1/bl/electricity-trade/, routerJs: /root/cactus/dist/electricity-trade.js
-    electricity-trade-blp      | path: /api/v1/bl/balance/, routerJs: /root/cactus/dist/balance.js
-    electricity-trade-blp      | [2022-02-14T15:47:47.399] [INFO] www - listening on *: 5034
+    cactus-example-electricity-trade-ethereum-validator |
+    cactus-example-electricity-trade-ethereum-validator | > @hyperledger/cactus-plugin-ledger-connector-go-ethereum-socketio@1.0.0-rc.3 start /root/cactus
+    cactus-example-electricity-trade-ethereum-validator | > cd ./dist && node common/core/bin/www.js
+    cactus-example-electricity-trade-ethereum-validator |
+    cactus-example-electricity-trade-ethereum-validator | listening on *:5050
+    cactus-example-electricity-trade-sawtooth-validator |
+    cactus-example-electricity-trade-sawtooth-validator | > @hyperledger/cactus-plugin-ledger-connector-sawtooth-socketio@1.0.0-rc.3 start /root/cactus
+    cactus-example-electricity-trade-sawtooth-validator | > cd ./dist && node common/core/bin/www.js
+    cactus-example-electricity-trade-sawtooth-validator |
+    cactus-example-electricity-trade-sawtooth-validator | listening on *:5140
+    cactus-example-electricity-trade-blp      | [2022-02-14T15:47:47.312] [INFO] www - Using BLP with id = h40Q9eMD
+    cactus-example-electricity-trade-blp      | start Dynamic loading.
+    cactus-example-electricity-trade-blp      | path: /api/v1/bl/cactus-example-electricity-trade/, routerJs: /root/cactus/dist/cactus-example-electricity-trade.js
+    cactus-example-electricity-trade-blp      | path: /api/v1/bl/balance/, routerJs: /root/cactus/dist/balance.js
+    cactus-example-electricity-trade-blp      | [2022-02-14T15:47:47.399] [INFO] www - listening on *: 5034
     ```
 
 ## How to use this application
