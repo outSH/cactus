@@ -68,4 +68,4 @@
     ```
 
 ## Manual Test
-- Validator used by `discounted-cartrade` sample app.
+- Validator used by `cactus-example-discounted-asset-trade` sample app.

@@ -1,13 +1,17 @@
 {
-  "name": "discounted-cartrade",
+  "name": "@hyperledger/cactus-example-discounted-asset-trade",
+  "version": "1.0.0",
+  "license": "Apache-2.0",
+  "main": "dist/www.js",
+  "module": "dist/www.js",
+  "types": "dist/www.d.ts",
   "private": true,
   "scripts": {
     "start": "npm run build_pip_indy_package && docker-compose build && docker-compose up",
-    "build": "npm run build-ts && npm run prepare-docker-build",
-    "build-ts": "tsc -p ./tsconfig.json",
-    "tslint": "tslint -c tslint.json -p tsconfig.json './*.ts'",
+    "build": "npm run build-ts && npm run build:dev:backend:postbuild",
+    "build-ts": "tsc",
     "build_pip_indy_package": "cd ../../packages-python/cactus_validator_socketio_indy && python3 setup.py bdist_wheel",
-    "prepare-docker-build": "npm run copy-yarn-lock && npm run copy-validator-keys",
+    "build:dev:backend:postbuild": "npm run copy-yarn-lock && npm run copy-validator-keys",
     "copy-yarn-lock": "cp -f ../../yarn.lock ./dist/",
     "copy-validator-keys": "npm run copy-fabric-key && npm run copy-ethereum-key && npm run copy-indy-key",
     "copy-fabric-key": "cp -fr ../../packages/cactus-plugin-ledger-connector-fabric-socketio/sample-config/CA/connector.crt ./dist/fabric-connector.crt",
@@ -45,8 +49,6 @@
     "eslint": "7.32.0",
     "eslint-config-prettier": "8.4.0",
     "eslint-plugin-prettier": "4.0.0",
-    "prettier": "2.5.1",
-    "tslint": "6.0.0",
-    "typescript": "4.3.5"
+    "prettier": "2.5.1"
   }
 }
