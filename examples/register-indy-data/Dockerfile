@@ -12,7 +12,7 @@ VOLUME [ "/etc/cactus/" ]
 
 USER indy
 WORKDIR /home/indy
-COPY --chown=indy:indy './req_discounted_cartrade.py' './src/'
+COPY --chown=indy:indy './register-indy-data.py' './src/'
 RUN cp 'from-indy-sdk/utils.py' './src/'
 
-ENTRYPOINT [ "python3", "-m", "src.req_discounted_cartrade" ]
+ENTRYPOINT [ "python3", "-m", "src.register-indy-data" ]

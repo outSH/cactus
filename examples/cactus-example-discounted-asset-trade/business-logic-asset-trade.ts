@@ -1,28 +1,28 @@
 /*
- * Copyright 2020-2021 Hyperledger Cactus Contributors
+ * Copyright 2020-2022 Hyperledger Cactus Contributors
  * SPDX-License-Identifier: Apache-2.0
  *
- * BusinessLogicCartrade.ts
+ * business-logic-asset-trade.ts
  */
 
 import { Request } from "express";
 import { RequestInfo } from "@hyperledger/cactus-cmd-socket-server";
 import { TradeInfo } from "@hyperledger/cactus-cmd-socket-server";
-import { TransactionInfoManagement } from "./TransactionInfoManagement";
-import { TransactionInfo } from "./TransactionInfo";
-import { TransactionData } from "./TransactionData";
-import { BusinessLogicInquireCartradeStatus } from "./BusinessLogicInquireCartradeStatus";
-import { TxInfoData } from "./TxInfoData";
+import { TransactionInfoManagement } from "./transaction-info-management";
+import { TransactionInfo } from "./transaction-info";
+import { TransactionData } from "./transaction-data";
+import { BusinessLogicInquireAssetTradeStatus } from "./business-logic-inquire-asset-trade-status";
+import { TxInfoData } from "./tx-info-data";
 import { routesTransactionManagement } from "@hyperledger/cactus-cmd-socket-server";
 import { LedgerOperation } from "@hyperledger/cactus-cmd-socket-server";
 import { BusinessLogicBase } from "@hyperledger/cactus-cmd-socket-server";
 import { LPInfoHolder } from "@hyperledger/cactus-cmd-socket-server";
-import { makeRawTransaction } from "./TransactionEthereum";
-import { makeSignedProposal } from "./TransactionFabric";
-import { getDataFromIndy } from "./TransactionIndy";
+import { makeRawTransaction } from "./transaction-ethereum";
+import { makeSignedProposal } from "./transaction-fabric";
+import { getDataFromIndy } from "./transaction-indy";
 import { LedgerEvent, ConfigUtil } from "@hyperledger/cactus-cmd-socket-server";
 import { json2str } from "@hyperledger/cactus-cmd-socket-server";
-import { CartradeStatus } from "./define";
+import { AssetTradeStatus } from "./define";
 import {
   VerifierFactory,
   VerifierFactoryConfig,
@@ -35,7 +35,7 @@ const yaml = require("js-yaml");
 const config: any = ConfigUtil.getConfig();
 
 import { getLogger } from "log4js";
-const moduleName = "BusinessLogicCartrade";
+const moduleName = "BusinessLogicAssetTrade";
 const logger = getLogger(`${moduleName}`);
 logger.level = config.logLevel;
 
@@ -50,7 +50,7 @@ const assert = require("assert");
 const identifierSchema = "schema";
 const identifierCredDef = "credDef";
 
-export class BusinessLogicCartrade extends BusinessLogicBase {
+export class BusinessLogicAssetTrade extends BusinessLogicBase {
   transactionInfoManagement: TransactionInfoManagement;
   // useValidator: {};
 
@@ -70,7 +70,7 @@ export class BusinessLogicCartrade extends BusinessLogicBase {
     requestInfo.tradeInfo.fabricAccountFrom = req.body.tradeParams[2];
     requestInfo.tradeInfo.fabricAccountTo = req.body.tradeParams[3];
     //requestInfo.tradeInfo.tradingValue = req.body.tradeParams[4];
-    requestInfo.tradeInfo.carID = req.body.tradeParams[4];
+    requestInfo.tradeInfo.assetID = req.body.tradeParams[4];
     requestInfo.tradeInfo.proofJson = JSON.parse(req.body.tradeParams[5]);
     // requestInfo.authInfo.company = req.body.authParams[0];
 
@@ -99,7 +99,7 @@ export class BusinessLogicCartrade extends BusinessLogicBase {
         // trade status update
         this.transactionInfoManagement.setStatus(
           tradeInfo,
-          CartradeStatus.UnderEscrow
+          AssetTradeStatus.UnderEscrow
         );
 
         // Get varidator information
@@ -128,7 +128,7 @@ export class BusinessLogicCartrade extends BusinessLogicBase {
 
     this.transactionInfoManagement.setStatus(
       tradeInfo,
-      CartradeStatus.UnderTransfer
+      AssetTradeStatus.UnderTransfer
     );
 
     transactionData = new TransactionData("transfer", "ledger002", "tid002");
@@ -139,7 +139,7 @@ export class BusinessLogicCartrade extends BusinessLogicBase {
 
     this.transactionInfoManagement.setStatus(
       tradeInfo,
-      CartradeStatus.UnderSettlement
+      AssetTradeStatus.UnderSettlement
     );
 
     transactionData = new TransactionData("settlement", "ledger003", "tid003");
@@ -150,7 +150,7 @@ export class BusinessLogicCartrade extends BusinessLogicBase {
 
     this.transactionInfoManagement.setStatus(
       tradeInfo,
-      CartradeStatus.Completed
+      AssetTradeStatus.Completed
     );
   }
 
@@ -297,7 +297,7 @@ export class BusinessLogicCartrade extends BusinessLogicBase {
       useValidator["validatorID"][0],
     );
     verifierEthereum.startMonitor(
-      "BusinessLogicCartrade",
+      "BusinessLogicAssetTrade",
       {},
       routesTransactionManagement,
     );
@@ -308,12 +308,12 @@ export class BusinessLogicCartrade extends BusinessLogicBase {
       `####fromAddress: ${requestInfo.tradeInfo.ethereumAccountFrom}`
     );
     const fromAddressPkey =
-      config.cartradeInfo.ethereum[
+      config.assetTradeInfo.ethereum[
         "fromAddressPkey_" + requestInfo.tradeInfo.ethereumAccountFrom
       ];
     logger.debug(`####fromAddressPkey: ${fromAddressPkey}`);
     // TODO: Get address of escrow and set parameter
-    const escrowAddress = config.cartradeInfo.ethereum.escrowAddress;
+    const escrowAddress = config.assetTradeInfo.ethereum.escrowAddress;
 
     // Generate parameters for// sendRawTransaction
     const txParam: {
@@ -327,7 +327,7 @@ export class BusinessLogicCartrade extends BusinessLogicBase {
       fromAddressPkey: fromAddressPkey,
       toAddress: escrowAddress,
       amount: Number(requestInfo.tradeInfo.tradingValue),
-      gas: config.cartradeInfo.ethereum.gas,
+      gas: config.assetTradeInfo.ethereum.gas,
     };
     logger.debug(`####exec makeRawTransaction!!`);
     makeRawTransaction(txParam)
@@ -370,7 +370,7 @@ export class BusinessLogicCartrade extends BusinessLogicBase {
   }
 
   secondTransaction(
-    carID: string,
+    assetID: string,
     fabricAccountTo: string,
     tradeInfo: TradeInfo
   ) {
@@ -390,7 +390,7 @@ export class BusinessLogicCartrade extends BusinessLogicBase {
       useValidator["validatorID"][1],
     );
     verifierFabric.startMonitor(
-      "BusinessLogicCartrade",
+      "BusinessLogicAssetTrade",
       {},
       routesTransactionManagement,
     );
@@ -400,7 +400,7 @@ export class BusinessLogicCartrade extends BusinessLogicBase {
     const ccFncName = "TransferAsset";
 
     const ccArgs: string[] = [
-      carID, // CarID
+      assetID, // assetID
       fabricAccountTo, // Owner
     ];
     makeSignedProposal(ccFncName, ccArgs, verifierFabric)
@@ -471,9 +471,9 @@ export class BusinessLogicCartrade extends BusinessLogicBase {
     logger.debug("getVerifierEthereum");
 
     // TODO: Get address of escrow and set parameter
-    const escrowAddress = config.cartradeInfo.ethereum.escrowAddress;
+    const escrowAddress = config.assetTradeInfo.ethereum.escrowAddress;
     // TODO: get escrow secret key
-    const escrowAddressPkey = config.cartradeInfo.ethereum.escrowAddressPkey;
+    const escrowAddressPkey = config.assetTradeInfo.ethereum.escrowAddressPkey;
 
     // Generate parameters for sendRawTransaction
     const txParam: {
@@ -487,7 +487,7 @@ export class BusinessLogicCartrade extends BusinessLogicBase {
       fromAddressPkey: escrowAddressPkey,
       toAddress: ethereumAccountTo,
       amount: Number(tradingValue),
-      gas: config.cartradeInfo.ethereum.gas,
+      gas: config.assetTradeInfo.ethereum.gas,
     };
     makeRawTransaction(txParam)
       .then((result) => {
@@ -560,10 +560,10 @@ export class BusinessLogicCartrade extends BusinessLogicBase {
     logger.debug(`##onEvent(): ${json2str(ledgerEvent)}`);
 
     switch (ledgerEvent.verifierId) {
-      case config.cartradeInfo.ethereum.validatorID:
+      case config.assetTradeInfo.ethereum.validatorID:
         this.onEvenEtherem(ledgerEvent.data, targetIndex);
         break;
-      case config.cartradeInfo.fabric.validatorID:
+      case config.assetTradeInfo.fabric.validatorID:
         this.onEvenFabric(ledgerEvent.data, targetIndex);
         break;
       default:
@@ -682,7 +682,7 @@ export class BusinessLogicCartrade extends BusinessLogicBase {
         this.createTradeInfoFromTransactionInfo(transactionInfo);
       let txInfoData: TxInfoData;
       switch (txStatus) {
-        case CartradeStatus.UnderEscrow:
+        case AssetTradeStatus.UnderEscrow:
           // store transaction information in DB
           txInfoData = new TxInfoData("escrow", json2str(txInfo));
           this.transactionInfoManagement.setTxInfo(tradeInfo, txInfoData);
@@ -694,15 +694,15 @@ export class BusinessLogicCartrade extends BusinessLogicBase {
           // const tradeInfo = this.createTradeInfoFromTransactionInfo(transactionInfo);
           this.transactionInfoManagement.setStatus(
             tradeInfo,
-            CartradeStatus.UnderTransfer
+            AssetTradeStatus.UnderTransfer
           );
           this.secondTransaction(
-            transactionInfo.carID,
+            transactionInfo.assetID,
             transactionInfo.fabricAccountTo,
             tradeInfo
           );
           break;
-        case CartradeStatus.UnderTransfer:
+        case AssetTradeStatus.UnderTransfer:
           // store transaction information in DB
           txInfoData = new TxInfoData("transfer", json2str(txInfo));
           this.transactionInfoManagement.setTxInfo(tradeInfo, txInfoData);
@@ -714,7 +714,7 @@ export class BusinessLogicCartrade extends BusinessLogicBase {
           // const tradeInfo = this.createTradeInfoFromTransactionInfo(transactionInfo);
           this.transactionInfoManagement.setStatus(
             tradeInfo,
-            CartradeStatus.UnderSettlement
+            AssetTradeStatus.UnderSettlement
           );
           this.thirdTransaction(
             transactionInfo.ethereumAccountTo,
@@ -722,7 +722,7 @@ export class BusinessLogicCartrade extends BusinessLogicBase {
             tradeInfo
           );
           break;
-        case CartradeStatus.UnderSettlement:
+        case AssetTradeStatus.UnderSettlement:
           // store transaction information in DB
           txInfoData = new TxInfoData("settlement", json2str(txInfo));
           this.transactionInfoManagement.setTxInfo(tradeInfo, txInfoData);
@@ -731,14 +731,14 @@ export class BusinessLogicCartrade extends BusinessLogicBase {
           // const tradeInfo = this.createTradeInfoFromTransactionInfo(transactionInfo);
           this.transactionInfoManagement.setStatus(
             tradeInfo,
-            CartradeStatus.Completed
+            AssetTradeStatus.Completed
           );
           logger.info(
-            `##INFO: completed cartrade, businessLogicID: ${transactionInfo.businessLogicID}, tradeID: ${transactionInfo.tradeID}`
+            `##INFO: completed asset-trade, businessLogicID: ${transactionInfo.businessLogicID}, tradeID: ${transactionInfo.tradeID}`
           );
           this.completedTransaction(tradeInfo);
           break;
-        case CartradeStatus.Completed:
+        case AssetTradeStatus.Completed:
           logger.warn(
             `##WARN: already completed, txinfo: ${json2str(transactionInfo)}`
           );
@@ -767,10 +767,10 @@ export class BusinessLogicCartrade extends BusinessLogicBase {
 
   getOperationStatus(tradeID: string): object {
     logger.debug(`##in getOperationStatus()`);
-    const businessLogicInquireCartradeStatus: BusinessLogicInquireCartradeStatus =
-      new BusinessLogicInquireCartradeStatus();
+    const businessLogicInquireAssetTradeStatus: BusinessLogicInquireAssetTradeStatus =
+      new BusinessLogicInquireAssetTradeStatus();
     const transactionStatusData =
-      businessLogicInquireCartradeStatus.getCartradeOperationStatus(tradeID);
+      businessLogicInquireAssetTradeStatus.getAssetTradeOperationStatus(tradeID);
 
     return transactionStatusData;
   }
@@ -783,9 +783,9 @@ export class BusinessLogicCartrade extends BusinessLogicBase {
     logger.debug(`##event: ${json2str(ledgerEvent)}`);
 
     switch (ledgerEvent.verifierId) {
-      case config.cartradeInfo.ethereum.validatorID:
+      case config.assetTradeInfo.ethereum.validatorID:
         return this.getTxIDFromEventEtherem(ledgerEvent.data, targetIndex);
-      case config.cartradeInfo.fabric.validatorID:
+      case config.assetTradeInfo.fabric.validatorID:
         return this.getTxIDFromEventFabric(ledgerEvent.data, targetIndex);
       default:
         logger.error(
@@ -872,10 +872,10 @@ export class BusinessLogicCartrade extends BusinessLogicBase {
 
     try {
       switch (ledgerEvent.verifierId) {
-        case config.cartradeInfo.ethereum.validatorID:
+        case config.assetTradeInfo.ethereum.validatorID:
           retEventNum = event["blockData"]["transactions"].length;
           break;
-        case config.cartradeInfo.fabric.validatorID:
+        case config.assetTradeInfo.fabric.validatorID:
           retEventNum = event["blockData"].length;
           break;
         default:

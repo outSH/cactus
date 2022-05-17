@@ -3,7 +3,7 @@
 
 ## Abstract
 
-Cactus discounted-asset-trade is a sample application that adds employee discounts to the original Cactus cartrade. In this application, when the users transfer the car ownership in the cactus cartrade, they present their employee proofs to the rent-a-car company to receive an employee discount. We implement the employee proofs by proofs on Hyperledger Indy. Car ownership is represented by a [asset-transfer-basic](https://github.com/hyperledger/fabric-samples/tree/release-2.2/asset-transfer-basic) chaincodetoken on Hyperledger Fabric, which can be exchanged for ETH currency on a private Ethereum blockchain. This Business Logic Plugin (BLP) application controls a process from employee certification using Hyperledger Indy to payment using Ethereum.
+Cactus discounted-asset-trade is a sample application that calculates asset cost based on customer type. In this application, when the users transfer the asset ownership in the cactus discounted-asset-trade, they present their employee proofs to the asset-owner company to receive an employee discount. We implement the employee proofs by proofs on Hyperledger Indy. Asset ownership is represented by a [asset-transfer-basic](https://github.com/hyperledger/fabric-samples/tree/release-2.2/asset-transfer-basic) chaincodetoken on Hyperledger Fabric, which can be exchanged for ETH currency on a private Ethereum blockchain. This Business Logic Plugin (BLP) application controls a process from employee certification using Hyperledger Indy to payment using Ethereum.
 
 ![discounted-asset-trade image](./image/discounted-asset-trade-image.png)
 
@@ -13,7 +13,7 @@ The application works in the following scenario:
 
 ### Settings
 
-Alice wants to rent a car using the services of rental car company Thrift Corp. Alice chose this company because she is an employee of Acme Corp., which offers discounts on Thrift Corp.'s services as a benefit.
+Alice wants to buy an asset using the services of company Thrift Corp. Alice chose this company because she is an employee of Acme Corp., which offers discounts on Thrift Corp.'s services as a benefit.
 
 **Note** : Acme Corp and Thrift Corp have the same names on the sample application on Hyperledger Indy.
 
@@ -23,13 +23,13 @@ Alice knows that Acme Corp. provides digital certificates. She asks Acme Corp. t
 
 ### When Alice Uses the Service
 
-Alice will use credentials and other Indy formats such as schema and definition to create an employee proof that she will present when applying the lent-a-car service. Alice then sends a car usage application and her employee proof to the Cactus Node Server via an End User Application. The employee proofs consist of proof requests and proofs on Hyperledger Indy. The Cactus Node server receives the schema and definition from the Indy ledger via Validator and uses this information to verify the proof with the BLP. Once verified, the BLP will decide what she should pay based on the price list and then proceed with the original cartrade application using cactus as an escrow to transfer ETH currencies and car ownership tokens to each other.
+Alice will use credentials and other Indy formats such as schema and definition to create an employee proof that she will present when purchasing the asset. Alice then sends a purchase order and her employee proof to the Cactus Node Server via an End User Application. The employee proofs consist of proof requests and proofs on Hyperledger Indy. The Cactus Node server receives the schema and definition from the Indy ledger via Validator and uses this information to verify the proof with the BLP. Once verified, the BLP will decide what she should pay based on the price list and then proceed with the business logic using cactus as an escrow to transfer ETH currencies and asset ownership tokens to each other.
 
 ## Setup Overview
 
 ### fabric-socketio-validator
 - Validator for fabric ledger.
-- Docker networks: `fabric-all-in-one_testnet-14`, `cactus-example-discounted-asset-trade-net`
+- Docker networks: `fabric-all-in-one_testnet-2x`, `cactus-example-discounted-asset-trade-net`
 
 ### ethereum-validator
 - Validator for ethereum ledger.
@@ -61,7 +61,7 @@ Alice will use credentials and other Indy formats such as schema and definition 
 - Use it's endpoint (`localhost:5034`) to interact the bussiness logic.
 - Docker network: `cactus-example-discounted-asset-trade-net`
 
-### req_discounted_cartrade
+### register-indy-data
 - Setup application.
 - Will generate proof and store it in local configuration on startup.
 - This application can also be used to send requests to the BLP.
@@ -86,10 +86,10 @@ Alice will use credentials and other Indy formats such as schema and definition 
     - (NOTICE: Before executing the above, your account needs to be added to the docker group (`usermod -a -G docker YourAccount` from root user))
     - On success, this should start three containers:
         - `geth1`
-        - `discounted_cartrade_faio2x_testnet`
+        - `asset_trade_faio2x_testnet`
         - `indy-testnet-pool`
 
-1. Launch cartrade and validators from local `docker-compose.yml` (use separate console for that, docker-compose will block your prompt):
+1. Launch discounted-asset-trade and validators from local `docker-compose.yml` (use separate console for that, docker-compose will block your prompt):
     ```
     docker-compose build && docker-compose up
     # or
@@ -111,15 +111,15 @@ Alice will use credentials and other Indy formats such as schema and definition 
     ...
     indy-sdk-cli-base-dummy exited with code 0
     ...
-    req_discounted_cartrade      | Done.
-    req_discounted_cartrade exited with code 0
+    register-indy-data      | Done.
+    register-indy-data exited with code 0
     ...
     cactus-example-discounted-asset-trade-blp      | [2022-01-31T16:00:56.208] [INFO] www - listening on *: 5034
     ```
 
 ## How to use this application
 
-1. (Optional) Check the balance on Ethereum and the car ownership on Fabric using the following script:
+1. (Optional) Check the balance on Ethereum and the asset ownership on Fabric using the following script:
     ```
     node ./read-ledger-state.js
     ```
@@ -157,21 +157,21 @@ Alice will use credentials and other Indy formats such as schema and definition 
     ... or send request manually:
 
     ```
-    docker run --rm -ti -v "$(pwd)/etc/cactus/":"/etc/cactus/" --net="host" req_discounted_cartrade
+    docker run --rm -ti -v "$(pwd)/etc/cactus/":"/etc/cactus/" --net="host" register-indy-data
     ```
 
     After this, the transactions are executed by order. When the following log appears on the console where you executed `docker-compose`, the transactions are completed.
 
     ```
-    [INFO] BusinessLogicCartrade - ##INFO: completed cartrade, businessLogicID: guks32pf, tradeID: *******-001
+    [INFO] BusinessLogicAssetTrade - ##INFO: completed asset-trade, businessLogicID: guks32pf, tradeID: *******-001
     ```
 
-1. (Optional) Check the balance on Ethereum and the car ownership on Fabric using the following script
+1. (Optional) Check the balance on Ethereum and the asset ownership on Fabric using the following script
     ```
     node ./read-ledger-state.js
     ```
 
-    The result looks like the following (simplified output). In the following case, 50 coins from `fromAccount` was transferred to `toAccount`, and the car ownership ("owner") was transferred from Brad to Cathy.
+    The result looks like the following (simplified output). In the following case, 50 coins from `fromAccount` was transferred to `toAccount`, and the asset ownership ("owner") was transferred from Brad to Cathy.
 
     ```
     # Ethereum fromAccount:
@@ -211,8 +211,8 @@ Alice will use credentials and other Indy formats such as schema and definition 
     sudo rm -r ./etc/cactus/
     ```
 1. Stop the docker containers of Ethereum, Fabric and Indy
-    - `docker stop geth1 cartrade_faio2x_testnet indy-testnet-pool`
-    - `docker rm geth1 cartrade_faio2x_testnet indy-testnet-pool`
+    - `docker stop geth1 asset_trade_faio2x_testnet indy-testnet-pool`
+    - `docker rm geth1 asset_trade_faio2x_testnet indy-testnet-pool`
 
 1. Clear indy testnet sandbox
     ```

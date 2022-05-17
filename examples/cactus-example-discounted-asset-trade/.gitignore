@@ -1,5 +1,5 @@
 # BLP artifacts
-TransactionInfo.json
+transaction-Info.json
 etc/
 
 # don't commit package-lock

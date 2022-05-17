@@ -1,8 +1,8 @@
 /*
- * Copyright 2020-2021 Hyperledger Cactus Contributors
+ * Copyright 2020-2022 Hyperledger Cactus Contributors
  * SPDX-License-Identifier: Apache-2.0
  *
- * CarsManagement.ts
+ * fabric-asset-management.ts
  */
 
 import { LPInfoHolder } from "@hyperledger/cactus-cmd-socket-server";
@@ -14,11 +14,11 @@ import {
 
 const config: any = ConfigUtil.getConfig();
 import { getLogger } from "log4js";
-const moduleName = "CarsManagement";
+const moduleName = "FabricAssetManagement";
 const logger = getLogger(`${moduleName}`);
 logger.level = config.logLevel;
 
-export class CarsManagement {
+export class FabricAssetManagement {
   private connectInfo: LPInfoHolder = null; // connection information
   private readonly verifierFactory: VerifierFactory;
 
@@ -30,13 +30,13 @@ export class CarsManagement {
     );
   }
 
-  queryCar(carID: string): Promise<any> {
+  queryAsset(assetID: string): Promise<any> {
     return new Promise((resolve, reject) => {
       const contract = { channelName: "mychannel", contractName: "basic" };
       const method = { type: "evaluateTransaction", command: "ReadAsset" };
-      const args = { args: [carID] };
+      const args = { args: [assetID] };
       // const method = "default";
-      // const args = {"method": {type: "evaluateTransaction", command: "queryCar"},"args": {"args": [carID]}};
+      // const args = {"method": {type: "evaluateTransaction", command: "queryAsset"},"args": {"args": [assetID]}};
 
       this.verifierFactory
         .getVerifier("r9IS4dDf")
@@ -51,13 +51,13 @@ export class CarsManagement {
     });
   }
 
-  queryAllCars(): Promise<any> {
+  queryAllAssets(): Promise<any> {
     return new Promise((resolve, reject) => {
       const contract = { channelName: "mychannel", contractName: "basic" };
       const method = { type: "evaluateTransaction", command: "GetAllAssets" };
       const args = { args: [] };
       // const method = "default";
-      // const args = {"method": {type: "evaluateTransaction", command: "queryAllCars"}, "args": {"args": []}};
+      // const args = {"method": {type: "evaluateTransaction", command: "queryAllAssets"}, "args": {"args": []}};
 
       this.verifierFactory
         .getVerifier("r9IS4dDf")
