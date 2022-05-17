@@ -2,9 +2,9 @@ FROM cactus-cmd-socketio-server:latest
 
 ARG NPM_PKG_VERSION=latest
 
-ENV CARTRADE_HOME=/root/cactus
+ENV APP_HOME=/root/cactus
 
-WORKDIR ${CARTRADE_HOME}
+WORKDIR ${APP_HOME}
 
 # Required by indy-sdk
 RUN apt-get update \

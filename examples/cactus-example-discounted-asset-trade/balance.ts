@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 Hyperledger Cactus Contributors
+ * Copyright 2020-2022 Hyperledger Cactus Contributors
  * SPDX-License-Identifier: Apache-2.0
  *
  * balance.ts
@@ -8,7 +8,7 @@
 import { Router, NextFunction, Request, Response } from "express";
 import { ConfigUtil } from "@hyperledger/cactus-cmd-socket-server";
 import { RIFError } from "@hyperledger/cactus-cmd-socket-server";
-import { BalanceManagement } from "./BalanceManagement";
+import { BalanceManagement } from "./balance-management";
 
 const fs = require("fs");
 const path = require("path");

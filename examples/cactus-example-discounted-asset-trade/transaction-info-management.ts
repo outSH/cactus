@@ -1,15 +1,15 @@
 /*
- * Copyright 2020-2021 Hyperledger Cactus Contributors
+ * Copyright 2020-2022 Hyperledger Cactus Contributors
  * SPDX-License-Identifier: Apache-2.0
  *
- * TransactionInfoManagement.ts
+ * transaction-info-management.ts
  */
 
-import { TransactionInfo } from "./TransactionInfo";
-import { TransactionData } from "./TransactionData";
-import { TxInfoData } from "./TxInfoData";
+import { TransactionInfo } from "./transaction-info";
+import { TransactionData } from "./transaction-data";
+import { TxInfoData } from "./tx-info-data";
 import { TradeInfo, ConfigUtil } from "@hyperledger/cactus-cmd-socket-server";
-import { CartradeStatus } from "./define";
+import { AssetTradeStatus } from "./define";
 
 const fs = require("fs");
 const path = require("path");
@@ -23,7 +23,7 @@ logger.level = config.logLevel;
 
 // Transaction Information Management Class
 export class TransactionInfoManagement {
-  fileName = "TransactionInfo.json";
+  fileName = "transaction-Info.json";
 
   constructor() {}
 
@@ -66,7 +66,7 @@ export class TransactionInfoManagement {
     this.fileDump();
   }
 
-  setStatus(tradeInfo: TradeInfo, status: CartradeStatus) {
+  setStatus(tradeInfo: TradeInfo, status: AssetTradeStatus) {
     // Existence check of table file
     try {
       fs.statSync(this.fileName);

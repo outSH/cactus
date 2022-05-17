@@ -104,9 +104,9 @@ services:
           source: ./etc/cactus
           target: /etc/cactus
 
-  req_discounted_cartrade:
-    container_name: req_discounted_cartrade
-    image: req_discounted_cartrade
+  register-indy-data:
+    container_name: register-indy-data
+    image: register-indy-data
     environment:
     - TEST_POOL_IP=172.16.0.2
     build:

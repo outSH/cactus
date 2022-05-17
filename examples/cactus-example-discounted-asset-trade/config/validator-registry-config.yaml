@@ -51,25 +51,7 @@ ledgerPluginInfo:
       timeout: 20000
     ledgerInfo:
        ledgerAbstract: Fabric Ledger
-    apiInfo:
-      -
-        apiType: changeCarOwner
-        requestedData:
-          -
-            dataName: carId
-            dataType: string
-          -
-            dataName: newOwner
-            dataType: string
-      -
-        apiType: sendSignedProposal
-        requestedData:
-          -
-            dataName: signedCommitProposal
-            dataType: string
-          -
-            dataName: commitReq
-            dataType: string
+    apiInfo: []
 
   -
     validatorID: 3PfTJw8g

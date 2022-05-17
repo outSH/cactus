@@ -1,8 +1,8 @@
 /*
- * Copyright 2021 Hyperledger Cactus Contributors
+ * Copyright 2022 Hyperledger Cactus Contributors
  * SPDX-License-Identifier: Apache-2.0
  *
- * TemplateTradeManagement.ts
+ * template-trade-management.ts
  */
 
 import { Request } from "express";

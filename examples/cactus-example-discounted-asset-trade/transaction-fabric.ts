@@ -1,8 +1,8 @@
 /*
- * Copyright 2020-2021 Hyperledger Cactus Contributors
+ * Copyright 2020-2022 Hyperledger Cactus Contributors
  * SPDX-License-Identifier: Apache-2.0
  *
- * TransactionFabric.ts
+ * transaction-fabric.ts
  */
 
 ////////
@@ -48,17 +48,17 @@ export function makeSignedProposal<T>(
       const transactionProposalReq = {
         fcn: ccFncName, // Chaincode function name
         args: ccArgs, // Chaincode argument
-        chaincodeId: config.cartradeInfo.fabric.chaincodeID,
-        channelId: config.cartradeInfo.fabric.channelName,
+        chaincodeId: config.assetTradeInfo.fabric.chaincodeID,
+        channelId: config.assetTradeInfo.fabric.channelName,
       };
       logger.debug(transactionProposalReq);
 
       // Get certificate and key acquisition
       let certPem = undefined;
       let privateKeyPem = undefined;
-      const submitter = config.cartradeInfo.fabric.submitter.name;
-      const wallet = new FileSystemWallet(config.cartradeInfo.fabric.keystore);
-      logger.debug(`Wallet path: ${config.cartradeInfo.fabric.keystore}`);
+      const submitter = config.assetTradeInfo.fabric.submitter.name;
+      const wallet = new FileSystemWallet(config.assetTradeInfo.fabric.keystore);
+      logger.debug(`Wallet path: ${config.assetTradeInfo.fabric.keystore}`);
 
       const submitterExists = await wallet.exists(submitter);
       if (submitterExists) {
@@ -68,7 +68,7 @@ export function makeSignedProposal<T>(
       }
 
       // const signedTx = await TransactionSigner.signTxFabric(transactionProposalReq, certPem, privateKeyPem);
-      const contract = { channelName: config.cartradeInfo.fabric.channelName };
+      const contract = { channelName: config.assetTradeInfo.fabric.channelName };
       const method = { type: "function", command: "sendSignedProposal" };
       const template = "default";
       const argsParam: {} = {

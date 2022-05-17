@@ -1,24 +1,24 @@
 /*
- * Copyright 2020-2021 Hyperledger Cactus Contributors
+ * Copyright 2020-2022 Hyperledger Cactus Contributors
  * SPDX-License-Identifier: Apache-2.0
  *
- * BusinessLogicInquireCartradeStatus.ts
+ * business-logic-inquire-asset-trade-status.ts
  */
 
-import { TransactionInfo } from "./TransactionInfo";
-import { TransactionStatus } from "./TransactionStatus";
-import { ResultTransactionStatusData } from "./ResultTransactionStatusData";
+import { TransactionInfo } from "./transaction-info";
+import { TransactionStatus } from "./transaction-status";
+import { ResultTransactionStatusData } from "./result-transactions-status-data";
 import { BusinessLogicBase } from "@hyperledger/cactus-cmd-socket-server";
 import fs = require("fs");
 
-export class BusinessLogicInquireCartradeStatus extends BusinessLogicBase {
-  fileName = "TransactionInfo.json";
+export class BusinessLogicInquireAssetTradeStatus extends BusinessLogicBase {
+  fileName = "transaction-Info.json";
 
   constructor() {
     super();
   }
 
-  getCartradeOperationStatus(tradeID: string): object {
+  getAssetTradeOperationStatus(tradeID: string): object {
     // Existence check of table file
     try {
       fs.statSync(this.fileName);

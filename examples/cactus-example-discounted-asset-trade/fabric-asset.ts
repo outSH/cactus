@@ -1,40 +1,40 @@
 /*
- * Copyright 2020-2021 Hyperledger Cactus Contributors
+ * Copyright 2020-2022 Hyperledger Cactus Contributors
  * SPDX-License-Identifier: Apache-2.0
  *
- * asset.ts
+ * fabric-asset.ts
  */
 
 import { Router, NextFunction, Request, Response } from "express";
 import { ConfigUtil } from "@hyperledger/cactus-cmd-socket-server";
 import { RIFError } from "@hyperledger/cactus-cmd-socket-server";
-import { AssetManagement } from "./AssetManagement";
+import { FabricAssetManagement } from "./fabric-asset-management";
 
-const fs = require("fs");
-const path = require("path");
 const config: any = ConfigUtil.getConfig();
 import { getLogger } from "log4js";
-const moduleName = "asset";
+const moduleName = "fabric-asset";
 const logger = getLogger(`${moduleName}`);
 logger.level = config.logLevel;
 
 const router: Router = Router();
-const assetManagement: AssetManagement = new AssetManagement();
+const fabricAssetManagement: FabricAssetManagement = new FabricAssetManagement();
 
-// POST : add asset.
-router.post("/", (req: Request, res: Response, next: NextFunction) => {
+/* GET query asset. */
+router.get("/:assetID", (req: Request, res: Response, next: NextFunction) => {
   try {
-    assetManagement
-      .addAsset(req.body.amount)
+    logger.debug(`start queryAsset`);
+
+    fabricAssetManagement
+      .queryAsset(req.params.assetID)
       .then((result) => {
-        logger.debug("result(addAsset) = " + JSON.stringify(result));
+        logger.debug("result(queryAsset) = " + JSON.stringify(result));
         res.status(200).json(result);
       })
       .catch((err) => {
         logger.error(err);
       });
   } catch (err) {
-    logger.error(`##err name: ${err.constructor.name}`);
+    logger.error(`##(queryAsset)err name: ${err.constructor.name}`);
 
     if (err instanceof RIFError) {
       logger.debug(`##catch RIFError, ${err.statusCode}, ${err.message}`);
@@ -43,25 +43,27 @@ router.post("/", (req: Request, res: Response, next: NextFunction) => {
       return;
     }
 
-    logger.error(`##err in asset: ${err}`);
+    logger.error(`##err in queryAsset: ${err}`);
     next(err);
   }
 });
 
-// GET : get asset.
+/* GET query all assets. */
 router.get("/", (req: Request, res: Response, next: NextFunction) => {
   try {
-    assetManagement
-      .getAsset()
+    logger.debug(`start queryAllAssets`);
+
+    fabricAssetManagement
+      .queryAllAssets()
       .then((result) => {
-        logger.debug("result(getAsset) = " + JSON.stringify(result));
+        logger.debug("result(queryAllAssets) = " + JSON.stringify(result));
         res.status(200).json(result);
       })
       .catch((err) => {
         logger.error(err);
       });
   } catch (err) {
-    logger.error(`##err name: ${err.constructor.name}`);
+    logger.error(`##(queryAllAssets)err name: ${err.constructor.name}`);
 
     if (err instanceof RIFError) {
       logger.debug(`##catch RIFError, ${err.statusCode}, ${err.message}`);
@@ -70,7 +72,7 @@ router.get("/", (req: Request, res: Response, next: NextFunction) => {
       return;
     }
 
-    logger.error(`##err in asset: ${err}`);
+    logger.error(`##err in queryAllAssets: ${err}`);
     next(err);
   }
 });

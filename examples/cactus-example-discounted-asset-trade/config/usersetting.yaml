@@ -11,17 +11,14 @@ appRouters:
     path: /api/v1/bl/trades/
     routerJs: /root/cactus/dist/trades.js
   -
-    path: /api/v1/bl/asset/
-    routerJs: /root/cactus/dist/asset.js
-  -
     path: /api/v1/bl/balance/
     routerJs: /root/cactus/dist/balance.js
   -
-    path: /api/v1/bl/cars/
-    routerJs: /root/cactus/dist/cars.js
+    path: /api/v1/bl/fabric-asset/
+    routerJs: /root/cactus/dist/fabric-asset.js
 
 # BLP Config
-cartradeInfo:
+assetTradeInfo:
   fabric:
     validatorID: r9IS4dDf
     mspID: Org1MSP

@@ -16,7 +16,7 @@ async function main() {
 
   // Read fabric assets
   const fabricResponse = await axios.get(
-    "http://localhost:5034/api/v1/bl/cars/",
+    "http://localhost:5034/api/v1/bl/fabric-asset/",
   );
   console.log("\n# Fabric:");
   console.log(fabricResponse.data.data);

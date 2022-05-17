@@ -9,7 +9,7 @@ WAIT_TIME=30 # How often to check container status
 CONFIG_VOLUME_PATH="./etc/cactus" # Docker volume with shared configuration
 
 # Fabric Env Variables
-export CACTUS_FABRIC_ALL_IN_ONE_CONTAINER_NAME="cartrade_faio2x_testnet"
+export CACTUS_FABRIC_ALL_IN_ONE_CONTAINER_NAME="asset_trade_faio2x_testnet"
 export CACTUS_FABRIC_ALL_IN_ONE_VERSION="2.2.0"
 export CACTUS_FABRIC_TEST_LOOSE_MEMBERSHIP=1
 

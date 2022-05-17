@@ -1,8 +1,8 @@
 /*
- * Copyright 2020-2021 Hyperledger Cactus Contributors
+ * Copyright 2020-2022 Hyperledger Cactus Contributors
  * SPDX-License-Identifier: Apache-2.0
  *
- * TransactionData.ts
+ * transaction-data.ts
  */
 
 export class TransactionData {

@@ -1,8 +1,8 @@
 /*
- * Copyright 2020-2021 Hyperledger Cactus Contributors
+ * Copyright 2020-2022 Hyperledger Cactus Contributors
  * SPDX-License-Identifier: Apache-2.0
  *
- * TransactionInfo.ts
+ * transaction-info.ts
  */
 
 import { RequestInfo } from "@hyperledger/cactus-cmd-socket-server";
@@ -19,7 +19,7 @@ export class TransactionInfo {
   fabricAccountFromKey: string;
   fabricAccountToKey: string;
   tradingValue: string;
-  carID: string;
+  assetID: string;
   status: number;
   escrowLedger: string;
   escrowTxID: string;
@@ -42,7 +42,7 @@ export class TransactionInfo {
     this.fabricAccountFrom = requestInfo.tradeInfo.fabricAccountFrom;
     this.fabricAccountTo = requestInfo.tradeInfo.fabricAccountTo;
     this.tradingValue = requestInfo.tradeInfo.tradingValue;
-    this.carID = requestInfo.tradeInfo.carID;
+    this.assetID = requestInfo.tradeInfo.assetID;
 
     // mode check
     if (mode === 0) {
