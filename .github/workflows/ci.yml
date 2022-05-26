@@ -50,6 +50,7 @@ jobs:
         swap-size-gb: 10
 
     - name: Install Indy SDK
+      if: steps.run_result.outputs.run_result != 'success'
       run: >
         sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys CE7709D068DB5E88 \
           && sudo add-apt-repository "deb https://repo.sovrin.org/sdk/deb bionic stable" \
