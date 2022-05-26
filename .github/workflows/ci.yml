@@ -49,6 +49,18 @@ jobs:
       with:
         swap-size-gb: 10
 
+    - name: Install Indy SDK
+      if: steps.run_result.outputs.run_result != 'success'
+      run: >
+        sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys CE7709D068DB5E88 \
+          && sudo add-apt-repository "deb https://repo.sovrin.org/sdk/deb bionic stable" \
+          && sudo apt-get update \
+          && sudo apt-get install -y \
+              libindy \
+              libnullpay \
+              libvcx \
+              indy-cli
+
     - name: Use Node.js v14.19.1
       if: steps.run_result.outputs.run_result != 'success'
       uses: actions/setup-node@v2.1.2
@@ -91,6 +103,18 @@ jobs:
       uses: pierotofy/set-swap-space@v1.0
       with:
         swap-size-gb: 10
+
+    - name: Install Indy SDK
+      if: steps.run_result.outputs.run_result != 'success'
+      run: >
+        sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys CE7709D068DB5E88 \
+          && sudo add-apt-repository "deb https://repo.sovrin.org/sdk/deb bionic stable" \
+          && sudo apt-get update \
+          && sudo apt-get install -y \
+              libindy \
+              libnullpay \
+              libvcx \
+              indy-cli
 
     - name: Use Node.js v16.14.2
       if: steps.run_result.outputs.run_result != 'success'
