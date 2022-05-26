@@ -117,6 +117,17 @@ Alice will use credentials and other Indy formats such as schema and definition 
     cactus-example-discounted-asset-trade-blp      | [2022-01-31T16:00:56.208] [INFO] www - listening on *: 5034
     ```
 
+### Dockerless run
+For development purposes, it might be useful to run the sample application outside of docker-compose environment.
+
+1. Configure cactus and start the ledgers as described above.
+1. Run `./script-dockerless-config-patch.sh` from `cactus-example-discounted-asset-trade/` directory. This will patch the configs and copy it to global location.
+1. Start validators (each in separate cmd window).
+    1. `cd packages/cactus-plugin-ledger-connector-fabric-socketio/ && npm run start`
+    1. `cd packages/cactus-plugin-ledger-connector-go-ethereum-socketio/ && npm run start`
+    1. `docker build packages-python/cactus_validator_socketio_indy/ -t indy-validator && docker run -v/etc/cactus/:/etc/cactus --rm --net="indy-testnet_indy_net" -p 10080:8000 indy-validator`
+1. Start asset-trade: `npm run start-dockerless`
+
 ## How to use this application
 
 1. (Optional) Check the balance on Ethereum and the asset ownership on Fabric using the following script:

@@ -1,5 +1,9 @@
 export { LoggerProvider } from "./logging/logger-provider";
 export { Logger, ILoggerOptions } from "./logging/logger";
+export {
+  signValidatorMessageJwt,
+  verifyValidatorMessageJwt,
+} from "./verifier/jwt-message-authentication";
 export { LogLevelDesc } from "loglevel";
 export { Objects } from "./objects";
 export { Strings } from "./strings";

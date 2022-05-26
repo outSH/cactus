@@ -15,46 +15,13 @@ import {
   LoggerProvider,
 } from "@hyperledger/cactus-common";
 import { ISocketApiClient } from "@hyperledger/cactus-core-api";
-
+import { verifyValidatorMessageJwt } from "@hyperledger/cactus-common";
 import { Socket, SocketOptions, ManagerOptions, io } from "socket.io-client";
 import { readFileSync } from "fs";
 import { resolve as resolvePath } from "path";
-import { verify, VerifyOptions, VerifyErrors, JwtPayload } from "jsonwebtoken";
+import { JwtPayload } from "jsonwebtoken";
 import { Observable, ReplaySubject } from "rxjs";
 import { finalize } from "rxjs/operators";
-
-/**
- * Default logic for validating responses from socketio connector (validator).
- * Assumes that message is JWT signed with validator private key.
- * @param publicKey - Validator public key.
- * @param targetData - Signed JWT message to be decoded.
- * @returns Promise resolving to decoded JwtPayload.
- */
-export function verifyValidatorJwt(
-  publicKey: string,
-  targetData: string,
-): Promise<JwtPayload> {
-  return new Promise((resolve, reject) => {
-    const option: VerifyOptions = {
-      algorithms: ["ES256", "ES384", "ES512", "RS256", "RS384", "RS512"],
-    };
-
-    verify(
-      targetData,
-      publicKey,
-      option,
-      (err: VerifyErrors | null, decoded: JwtPayload | undefined) => {
-        if (err) {
-          reject(err);
-        } else if (decoded === undefined) {
-          reject(Error("Decoded message is undefined"));
-        } else {
-          resolve(decoded);
-        }
-      },
-    );
-  });
-}
 
 /**
  * Input parameters for SocketIOApiClient construction.
@@ -96,7 +63,7 @@ export class SocketIOApiClient implements ISocketApiClient<SocketLedgerEvent> {
   checkValidator: (
     publicKey: string,
     data: string,
-  ) => Promise<JwtPayload> = verifyValidatorJwt;
+  ) => Promise<JwtPayload> = verifyValidatorMessageJwt;
 
   /**
    * @param validatorID - (required) ID of validator.

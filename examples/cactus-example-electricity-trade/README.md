@@ -77,6 +77,16 @@ In this example, we use the Sawtooth intkey transaction processor as an applicat
     cactus-example-electricity-trade-blp      | [2022-02-14T15:47:47.399] [INFO] www - listening on *: 5034
     ```
 
+### Dockerless run
+For development purposes, it might be useful to run the sample application outside of docker-compose environment.
+
+1. Configure cactus and start the ledgers as described above.
+1. Run `./script-dockerless-config-patch.sh` from `cactus-example-discounted-asset-trade/` directory. This will patch the configs and copy it to global location.
+1. Start validators (each in separate cmd window).
+    1. `cd packages/cactus-plugin-ledger-connector-go-ethereum-socketio/ && npm run start`
+    1. `cd packages/cactus-plugin-ledger-connector-sawtooth-socketio/ && npm run start`
+1. Start electricity-trade: `npm run start-dockerless`
+
 ## How to use this application
 - Source account on Ethereum: `06fc56347d91c6ad2dae0c3ba38eb12ab0d72e97`
 - The privkey of source account on Ethereum: `cb5d48d371916a4ea1627189d8af4f642a5d72746a06b559780c3f5932658207`

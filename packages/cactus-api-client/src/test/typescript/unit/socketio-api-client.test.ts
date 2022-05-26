@@ -3,7 +3,6 @@
  *    Don't use jest timer mocks here, they do not work well with node http module.
  *    With timer mocks tests will either hang or report open timeout handle.
  * Tests:
- *  - verifyValidatorJwt(),
  *  - SocketIOApiClient construction,
  *  - SocketIOApiClient.sendAsyncRequest(),
  *  - SocketIOApiClient.sendSyncRequest(),
@@ -17,7 +16,6 @@ const setupTimeout = 1000 * 60; // 1 minute timeout for setup
 
 import "jest-extended";
 import { cloneDeep } from "lodash";
-import { sign, JwtPayload } from "jsonwebtoken";
 
 // Unit Test logger setup
 import {
@@ -48,7 +46,7 @@ const defaultConfigOptions = {
 
 // Generate private / public keys for test purposes
 import { generateKeyPairSync } from "crypto";
-const { publicKey, privateKey } = generateKeyPairSync("ec", {
+const { publicKey } = generateKeyPairSync("ec", {
   namedCurve: "P-256",
 });
 const publicKeyString = publicKey.export({
@@ -64,7 +62,6 @@ jest.spyOn(fs, "readFileSync").mockReturnValue(publicKeyString);
 
 import {
   SocketIOApiClient,
-  verifyValidatorJwt,
   SocketLedgerEvent,
 } from "../../../main/typescript/socketio-api-client";
 
@@ -73,81 +70,6 @@ import {
 //////////////////////////////////
 
 jest.setTimeout(testTimeout);
-
-//////////////////////////////////
-// verifyValidatorJwt()
-//////////////////////////////////
-
-describe("verifyValidatorJwt tests", () => {
-  const message = {
-    message: "Hello",
-    from: "Someone",
-  };
-  let signedMessage = "";
-
-  beforeAll(() => {
-    log.debug("input message:", message);
-
-    // Encrypt the message (from validator)
-    signedMessage = sign(
-      message,
-      privateKey.export({ type: "sec1", format: "pem" }),
-      {
-        algorithm: "ES256",
-        expiresIn: "1 day",
-      },
-    );
-    expect(signedMessage).toBeTruthy();
-    log.debug("signedMessage:", signedMessage);
-  }, setupTimeout);
-
-  test("Decrypts the payload from the validator using it's public key", async () => {
-    // Verify (decrypt)
-    const decryptedMessage = await verifyValidatorJwt(
-      publicKeyString,
-      signedMessage,
-    );
-
-    // Assert decrypted message
-    log.debug("decryptedMessage:", decryptedMessage);
-    expect(decryptedMessage).toMatchObject(message);
-    const decryptedJwt = decryptedMessage as JwtPayload;
-    expect(decryptedJwt.iat).toBeNumber();
-    expect(decryptedJwt.exp).toBeNumber();
-  });
-
-  test("Rejects malicious message", () => {
-    // Reverse original message to produce wrong input
-    const maliciousMessage = signedMessage.split("").reverse().join("");
-    log.debug("maliciousMessage", maliciousMessage);
-
-    // Verify (decrypt)
-    return expect(
-      verifyValidatorJwt(publicKeyString, maliciousMessage),
-    ).toReject();
-  });
-
-  test("Rejects expired message", (done) => {
-    // Encrypt the message (from validator) with short expiration time
-    signedMessage = sign(
-      message,
-      privateKey.export({ type: "sec1", format: "pem" }),
-      {
-        algorithm: "ES256",
-        expiresIn: "1",
-      },
-    );
-    expect(signedMessage).toBeTruthy();
-
-    setTimeout(async () => {
-      // Verify after short timeout
-      await expect(
-        verifyValidatorJwt(publicKeyString, signedMessage),
-      ).toReject();
-      done();
-    }, 1000);
-  });
-});
 
 //////////////////////////////////
 // SocketIOApiClient Constructor
