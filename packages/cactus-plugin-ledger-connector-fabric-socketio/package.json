@@ -35,7 +35,7 @@
   },
   "devDependencies": {
     "@hyperledger/cactus-api-client": "1.0.0",
-    "@hyperledger/cactus-cmd-api-server": "1.0.0",
+    "@hyperledger/cactus-test-tooling": "1.0.0",
     "@types/config": "0.0.41",
     "ts-node": "9.1.1"
   }

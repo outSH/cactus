@@ -24,6 +24,7 @@ const sutLogLevel: LogLevelDesc = "info";
 import {
   FabricTestLedgerV1,
   pruneDockerAllIfGithubAction,
+  SelfSignedPkiGenerator,
 } from "@hyperledger/cactus-test-tooling";
 
 import {
@@ -31,8 +32,6 @@ import {
   LoggerProvider,
   Logger,
 } from "@hyperledger/cactus-common";
-
-import { SelfSignedPkiGenerator } from "@hyperledger/cactus-cmd-api-server";
 
 import { SocketIOApiClient } from "@hyperledger/cactus-api-client";
 

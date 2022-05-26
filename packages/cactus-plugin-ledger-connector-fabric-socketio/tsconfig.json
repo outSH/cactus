@@ -17,7 +17,7 @@
       "path": "../cactus-api-client/tsconfig.json"
     },
     {
-      "path": "../cactus-cmd-api-server/tsconfig.json"
+      "path": "../cactus-test-tooling/tsconfig.json"
     }
   ]
 }
