@@ -46,8 +46,8 @@ export class ServerPlugin {
    *       Scope of this function is in this class
    *       Functions that should not be called directly should be implemented outside this class like utilities.
    */
-  isExistFunction(funcName) {
-    if (this[funcName] != undefined) {
+  isExistFunction(funcName: string) {
+    if ((this as any)[funcName]) {
       return true;
     } else {
       return false;
@@ -66,11 +66,11 @@ export class ServerPlugin {
    * }
    * @return {Object} JSON object
    */
-  getNumericBalance(args) {
+  getNumericBalance(args: any) {
     // * The Web3 API can be used synchronously, but each function is always an asynchronous specification because of the use of other APIs such as REST,
     return new Promise((resolve, reject) => {
       logger.info("getNumericBalance start");
-      let retObj = {};
+      let retObj: Record<string, any>;
 
       const referedAddress = args.args.args[0];
       const reqID = args["reqID"];
@@ -138,11 +138,11 @@ export class ServerPlugin {
    * }
    * @return {Object} JSON object
    */
-  transferNumericAsset(args) {
+  transferNumericAsset(args: any) {
     return new Promise((resolve, reject) => {
       logger.info("transferNumericAsset start");
 
-      let retObj = {};
+      let retObj: Record<string, any>;
       let sendArgs = {};
       const sendFunction = "sendTransaction";
       // const funcParam = args;
@@ -230,11 +230,11 @@ export class ServerPlugin {
    * }
    * @return {Object} JSON object
    */
-  getNonce(args) {
+  getNonce(args: any) {
     // * The Web3 API can be used synchronously, but each function is always an asynchronous specification because of the use of other APIs such as REST,
     return new Promise((resolve, reject) => {
       logger.info("getNonce start");
-      let retObj = {};
+      let retObj: Record<string, any>;
 
       const targetAddress = args.args.args.args[0];
       const reqID = args["reqID"];
@@ -315,11 +315,11 @@ export class ServerPlugin {
    * }
    * @return {Object} JSON object
    */
-  toHex(args) {
+  toHex(args: any) {
     // * The Web3 API can be used synchronously, but each function is always an asynchronous specification because of the use of other APIs such as REST,
     return new Promise((resolve, reject) => {
       logger.info("toHex start");
-      let retObj = {};
+      let retObj: Record<string, any>;
 
       const targetValue = args.args.args.args[0];
       const reqID = args["reqID"];
@@ -392,11 +392,11 @@ export class ServerPlugin {
    * }
    * @return {Object} JSON object
    */
-  sendRawTransaction(args) {
+  sendRawTransaction(args: any) {
     return new Promise((resolve, reject) => {
       logger.info("sendRawTransaction(start");
 
-      let retObj = {};
+      let retObj: Record<string, any>;
       const sendArgs = {};
       const sendFunction = "sendTransaction";
       const funcParam = args.args.args[0];
@@ -450,11 +450,11 @@ export class ServerPlugin {
    * }
    * @return {Object} JSON object
    */
-  web3Eth(args) {
+  web3Eth(args: any) {
     return new Promise((resolve, reject) => {
       logger.info("web3Eth start");
 
-      let retObj = {};
+      let retObj: Record<string, any>;
       const sendFunction = args.method.command;
       const sendArgs = args.args.args[0];
       const reqID = args["reqID"];
@@ -517,11 +517,11 @@ export class ServerPlugin {
    * }
    * @return {Object} JSON object
    */
-  contract(args) {
+  contract(args: any) {
     return new Promise((resolve, reject) => {
       logger.info("contract start");
 
-      let retObj = {};
+      let retObj: Record<string, any>;
       const sendCommand = args.method.command;
       const sendFunction = args.method.function;
       const sendArgs = args.args.args;
