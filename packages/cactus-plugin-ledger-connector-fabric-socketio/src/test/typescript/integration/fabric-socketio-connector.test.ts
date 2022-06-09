@@ -61,6 +61,7 @@ import path from "path";
 import os from "os";
 import "jest-extended";
 import { Server as HttpsServer } from "https";
+import { Subscription } from "rxjs";
 
 // Logger setup
 const log: Logger = LoggerProvider.getOrCreate({
@@ -714,6 +715,113 @@ describe("Fabric-SocketIO connector tests", () => {
       apiClient.sendAsyncRequest(contract, method, args);
 
       expect(monitorPromise).toResolve();
+    },
+    60 * 1000,
+  );
+
+  /**
+   * Start monitoring from two distinctive apiClients.
+   * Wait for both to receive the event.
+   * This function needs separate timeout, in case of error (no event was received).
+   */
+   test(
+    "Monitoring for transaction from two separate clients work",
+    async () => {
+      // Get asset data to be transfered
+      const allAssets = await getAllAssets();
+      const assetId = allAssets[3].ID;
+      const newOwnerName = "MonitorChangedXXX";
+      const txFunctionName = "TransferAsset";
+
+      // Start monitoring for the first client
+      let firstSub: Subscription;
+      const monitorPromiseFirstClient = new Promise<void>((resolve, reject) => {
+        firstSub = apiClient.watchBlocksV1().subscribe({
+          next(event) {
+            log.info("Received event on the FIRST client.");
+            expect(event.status).toBe(200);
+
+            const matchingEvents = event.blockData.filter(
+              (e) => e.func === txFunctionName,
+            );
+
+            if (matchingEvents.length > 0) {
+              resolve();
+            }
+          },
+          error(err) {
+            log.error("watchBlocksV1() FIRST client error:", err);
+            reject(err);
+          },
+        });
+      });
+
+      // Start monitoring for the second client
+      let secondSub: Subscription;
+      const anotherApiClient = new SocketIOApiClient(apiClient.options);
+      const monitorPromiseSecondClient = new Promise<void>((resolve, reject) => {
+        secondSub = anotherApiClient.watchBlocksV1().subscribe({
+          next(event) {
+            log.info("Received event on the SECOND client.");
+            expect(event.status).toBe(200);
+
+            const matchingEvents = event.blockData.filter(
+              (e) => e.func === txFunctionName,
+            );
+
+            if (matchingEvents.length > 0) {
+              resolve();
+            }
+          },
+          error(err) {
+            log.error("watchBlocksV1() SECOND client error:", err);
+            reject(err);
+          },
+        });
+      });
+
+      let bothEventsReceived = false;
+      Promise.all([monitorPromiseFirstClient, monitorPromiseSecondClient]).then(() => {
+        if (!firstSub || !secondSub) {
+          throw new Error("One of WatchBlock subscription is missing - FAILED.");
+        }
+
+        log.info("Both monitoring events received - OK");
+        firstSub.unsubscribe();
+        secondSub.unsubscribe();
+        apiClient.close();
+        anotherApiClient.close();
+
+        bothEventsReceived = true;
+      }).catch((err) => {
+        log.error("Monitoring failed:", err);
+        throw err;
+      });
+
+      // Repeat sending transactions until both events are received
+      while (true) {
+        if (bothEventsReceived) {
+          log.info("Break the loop, test finished");
+          break;
+        }
+
+        // Get signed proposal
+        const signedProposal = await getSignedProposal({
+          fcn: txFunctionName,
+          args: [assetId, newOwnerName],
+          chaincodeId: ledgerContractName,
+          channelId: ledgerChannelName,
+        });
+
+        // Send transaction (async)
+        const contract = { channelName: ledgerChannelName };
+        const method = { type: "sendSignedTransaction" };
+        const args = { args: [signedProposal] };
+        apiClient.sendAsyncRequest(contract, method, args);
+
+        // Wait 2 seconds
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+      }
     },
     60 * 1000,
   );
