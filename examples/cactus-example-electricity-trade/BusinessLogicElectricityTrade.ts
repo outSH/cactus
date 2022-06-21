@@ -140,7 +140,7 @@ export class BusinessLogicElectricityTrade extends BusinessLogicBase {
     );
     logger.debug("getVerifierEthereum");
 
-    // Generate parameters for// sendRawTransaction
+    // Generate parameters for// sendSignedTransaction
     logger.debug(`####exec makeRawTransaction!!`);
     makeRawTransaction(txParam)
       .then((result) => {
@@ -149,7 +149,7 @@ export class BusinessLogicElectricityTrade extends BusinessLogicBase {
         // Set Parameter
         logger.debug("remittanceTransaction data : " + json2str(result.data));
         const contract = {}; // NOTE: Since contract does not need to be specified, specify an empty object.
-        const method = { type: "web3Eth", command: "sendRawTransaction" };
+        const method = { type: "web3Eth", command: "sendSignedTransaction" };
         const args = { args: [result.data["serializedTx"]] };
 
         // Run Verifier (Ethereum)

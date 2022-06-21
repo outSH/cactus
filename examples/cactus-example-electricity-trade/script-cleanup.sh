@@ -26,4 +26,9 @@ docker network rm sawtooth_net \
                     geth1net \
                     geth-testnet_default
 
+echo ">> Remove geth files"
+pushd ../../tools/docker/geth-testnet/
+rm -fr ./data-geth1/geth/
+popd
+
 echo "Cleanup done."

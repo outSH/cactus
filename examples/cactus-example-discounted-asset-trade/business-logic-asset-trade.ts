@@ -315,7 +315,7 @@ export class BusinessLogicAssetTrade extends BusinessLogicBase {
     // TODO: Get address of escrow and set parameter
     const escrowAddress = config.assetTradeInfo.ethereum.escrowAddress;
 
-    // Generate parameters for// sendRawTransaction
+    // Generate parameters for// sendSignedTransaction
     const txParam: {
       fromAddress: string;
       fromAddressPkey: string;
@@ -348,11 +348,11 @@ export class BusinessLogicAssetTrade extends BusinessLogicBase {
         // Set Parameter
         logger.debug("firstTransaction data : " + JSON.stringify(result.data));
         const contract = {}; // NOTE: Since contract does not need to be specified, specify an empty object.
-        const method = { type: "web3Eth", command: "sendRawTransaction" };
+        const method = { type: "web3Eth", command: "sendSignedTransaction" };
         const template = "default";
         const args = { args: [result.data["serializedTx"]] };
         // const method = "default";
-        // const args = {"method": {type: "web3Eth", command: "sendRawTransaction"},"args": {"args": [result.data["serializedTx"]]}};
+        // const args = {"method": {type: "web3Eth", command: "sendSignedTransaction"},"args": {"args": [result.data["serializedTx"]]}};
 
         // Run Verifier (Ethereum)
         verifierEthereum
@@ -475,7 +475,7 @@ export class BusinessLogicAssetTrade extends BusinessLogicBase {
     // TODO: get escrow secret key
     const escrowAddressPkey = config.assetTradeInfo.ethereum.escrowAddressPkey;
 
-    // Generate parameters for sendRawTransaction
+    // Generate parameters for sendSignedTransaction
     const txParam: {
       fromAddress: string;
       fromAddressPkey: string;
@@ -507,7 +507,7 @@ export class BusinessLogicAssetTrade extends BusinessLogicBase {
         // Set LedgerOperation
         logger.debug("thirdTransaction data : " + JSON.stringify(result.data));
         const ledgerOperation: LedgerOperation = new LedgerOperation(
-          "sendRawTransaction",
+          "sendSignedTransaction",
           "",
           result.data
         );
@@ -518,11 +518,11 @@ export class BusinessLogicAssetTrade extends BusinessLogicBase {
         // TODO: Neo!!
         // Set Parameter
         const contract = {}; // NOTE: Since contract does not need to be specified, specify an empty object.
-        const method = { type: "web3Eth", command: "sendRawTransaction" };
+        const method = { type: "web3Eth", command: "sendSignedTransaction" };
         const template = "default";
         const args = { args: [result.data["serializedTx"]] };
         // const method = "default";
-        // const args = {"method": {type: "web3Eth", command: "sendRawTransaction"}, "args": {"args": [result.data["serializedTx"]]}};
+        // const args = {"method": {type: "web3Eth", command: "sendSignedTransaction"}, "args": {"args": [result.data["serializedTx"]]}};
 
         // Run Verifier (Ethereum)
         verifierEthereum

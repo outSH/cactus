@@ -22,7 +22,7 @@ logger.level = configRead<string>("logLevel", "info");
 
 import { getClientAndChannel, getSubmitterAndEnroll } from "./fabricaccess";
 import Client, { ProposalRequest } from "fabric-client";
-import safeStringify from "fast-safe-stringify";
+import { safeStringifyException } from "@hyperledger/cactus-common";
 
 const path = require("path");
 const { FileSystemWallet, Gateway } = require("fabric-network");
@@ -151,7 +151,7 @@ export class ServerPlugin {
           retObj = {
             resObj: {
               status: 504,
-              errorDetail: safeStringify(err),
+              errorDetail: safeStringifyException(err),
             },
           };
           logger.error(err);
@@ -224,7 +224,7 @@ export class ServerPlugin {
         .catch((err) => {
           retObj = {
             status: 504,
-            errorDetail: safeStringify(err),
+            errorDetail: safeStringifyException(err),
           };
           logger.error(err);
           return reject(retObj);
@@ -295,7 +295,7 @@ export class ServerPlugin {
           retObj = {
             resObj: {
               status: 504,
-              errorDetail: safeStringify(err),
+              errorDetail: safeStringifyException(err),
             },
           };
           logger.error(err);

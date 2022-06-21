@@ -25,7 +25,7 @@ import { getLogger } from "log4js";
 const logger = getLogger("ServerMonitorPlugin[" + process.pid + "]");
 logger.level = configRead<string>("logLevel", "info");
 // utility
-import safeStringify from "fast-safe-stringify";
+import { safeStringifyException } from "@hyperledger/cactus-common";
 
 export type MonitorCallback = (callback: {
   status: number;
@@ -152,7 +152,7 @@ export class ServerMonitorPlugin {
           logger.error(err);
           const errObj = {
             status: 504,
-            errorDetail: safeStringify(err),
+            errorDetail: safeStringifyException(err),
           };
           cb(errObj);
         });
