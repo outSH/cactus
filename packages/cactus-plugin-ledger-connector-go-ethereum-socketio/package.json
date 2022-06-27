@@ -25,7 +25,8 @@
     "serve-favicon": "2.4.5",
     "shelljs": "0.8.5",
     "socket.io": "4.4.1",
-    "web3": "0.20.7"
+    "web3": "0.20.7",
+    "http-errors": "1.6.3"
   },
   "devDependencies": {
     "@types/config": "0.0.41"
