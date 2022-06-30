@@ -1,3 +1,7 @@
+/**
+ * Helper utils for setting up and starting Sawtooth ledger for testing.
+ */
+
 import { EventEmitter } from "events";
 import Docker, { Container, ContainerCreateOptions } from "dockerode";
 import {
@@ -8,10 +12,15 @@ import {
 } from "@hyperledger/cactus-common";
 import { ITestLedger } from "../i-test-ledger";
 import { Containers } from "../common/containers";
+import { v4 as internalIpV4 } from "internal-ip";
 
-export interface IQuorumMultiPartyTestLedgerOptions {
+/**
+ * Type of input parameters to `SawtoothTestLedger` constructor.
+ */
+export interface ISawtoothTestLedgerOptions {
   readonly containerImageName?: string;
   readonly containerImageVersion?: string;
+  readonly ledgerApiPort?: number;
   readonly logLevel?: LogLevelDesc;
   readonly emitContainerLogs?: boolean;
   readonly envVars?: string[];
@@ -19,9 +28,28 @@ export interface IQuorumMultiPartyTestLedgerOptions {
   readonly useRunningLedger?: boolean;
 }
 
-export class QuorumMultiPartyTestLedger implements ITestLedger {
+/**
+ * Default options for Sawtooth test ledger.
+ */
+const DEFAULTS = Object.freeze({
+  // @todo Replace with hyperledger ghcr link when available
+  containerImageName: "ghcr.io/outsh/cactus-sawtooth-all-in-one",
+  containerImageVersion: "dev1",
+  ledgerApiPort: 8008,
+  logLevel: "info" as LogLevelDesc,
+  emitContainerLogs: false,
+  envVars: [],
+  useRunningLedger: false,
+});
+export const SAWTOOTH_LEDGER_DEFAULT_OPTIONS = DEFAULTS;
+
+/**
+ * Class for running a test sawtooth ledger in a container.
+ */
+export class SawtoothTestLedger implements ITestLedger {
   public readonly containerImageName: string;
   public readonly containerImageVersion: string;
+  private readonly ledgerApiPort: number;
   private readonly logLevel: LogLevelDesc;
   private readonly emitContainerLogs: boolean;
   private readonly useRunningLedger: boolean;
@@ -31,40 +59,50 @@ export class QuorumMultiPartyTestLedger implements ITestLedger {
   public container: Container | undefined;
   public containerId: string | undefined;
 
-  constructor(public readonly options: IQuorumMultiPartyTestLedgerOptions) {
+  constructor(public readonly options: ISawtoothTestLedgerOptions) {
     this.containerImageName =
-      options?.containerImageName ||
-      "ghcr.io/hyperledger/cactus-quorum-multi-party-all-in-one";
+      options?.containerImageName || DEFAULTS.containerImageName;
 
     this.containerImageVersion =
-      options?.containerImageVersion || "2022-03-30--1928";
+      options?.containerImageVersion || DEFAULTS.containerImageVersion;
 
-    this.logLevel = options?.logLevel || "info";
+    this.ledgerApiPort = options?.ledgerApiPort || DEFAULTS.ledgerApiPort;
+
+    this.logLevel = options?.logLevel || DEFAULTS.logLevel;
 
     this.emitContainerLogs = Bools.isBooleanStrict(options.emitContainerLogs)
       ? (options.emitContainerLogs as boolean)
-      : true;
+      : DEFAULTS.emitContainerLogs;
 
     this.useRunningLedger = Bools.isBooleanStrict(options.useRunningLedger)
       ? (options.useRunningLedger as boolean)
-      : false;
+      : DEFAULTS.useRunningLedger;
 
-    this.envVars = options?.envVars || [];
+    this.envVars = options?.envVars || DEFAULTS.envVars;
 
     this.log = LoggerProvider.getOrCreate({
       level: this.logLevel,
-      label: "quorum-multi-party-test-ledger",
+      label: "sawtooth-test-ledger",
     });
   }
 
+  /**
+   * Sawtooth ledger image name and tag
+   */
   public get fullContainerImageName(): string {
     return [this.containerImageName, this.containerImageVersion].join(":");
   }
 
+  /**
+   * Start a test sawtooth ledger.
+   *
+   * @param omitPull Don't pull docker image from upstream if true.
+   * @returns Promise<Container>
+   */
   public async start(omitPull = false): Promise<Container> {
     if (this.useRunningLedger) {
       this.log.info(
-        "Search for already running Quorum Test Ledger because 'useRunningLedger' flag is enabled.",
+        "Search for already running Sawtooth Test Ledger because 'useRunningLedger' flag is enabled.",
       );
       this.log.info(
         "Search criteria - image name: ",
@@ -98,21 +136,9 @@ export class QuorumMultiPartyTestLedger implements ITestLedger {
 
     const createOptions: ContainerCreateOptions = {
       ExposedPorts: {
-        "8545/tcp": {}, // HTTP RPC
-        "8546/tcp": {}, // WS RPC
-        "20000/tcp": {}, // Member1 HTTP RPC
-        "20001/tcp": {}, // Member1 WS RPC
-        "9081/tcp": {}, // Member1 Tessera
-        "20002/tcp": {}, // Member2 HTTP RPC
-        "20003/tcp": {}, // Member2 WS RPC
-        "9082/tcp": {}, // Member2 Tessera
-        "20004/tcp": {}, // Member3 HTTP RPC
-        "20005/tcp": {}, // Member3 WS RPC
-        "9083/tcp": {}, // Member3 Tessera
+        "8008/tcp": {}, // Rest API
       },
-
       Env: this.envVars,
-
       HostConfig: {
         PublishAllPorts: true,
         Privileged: true,
@@ -158,6 +184,11 @@ export class QuorumMultiPartyTestLedger implements ITestLedger {
     });
   }
 
+  /**
+   * Stop a test sawtooth ledger.
+   *
+   * @returns Stop operation results.
+   */
   public stop(): Promise<unknown> {
     if (this.useRunningLedger) {
       this.log.info("Ignore stop request because useRunningLedger is enabled.");
@@ -167,12 +198,17 @@ export class QuorumMultiPartyTestLedger implements ITestLedger {
     } else {
       return Promise.reject(
         new Error(
-          `QuorumMultiPartyTestLedger#destroy() Container was never created, nothing to stop.`,
+          `SawtoothTestLedger#destroy() Container was never created, nothing to stop.`,
         ),
       );
     }
   }
 
+  /**
+   * Destroy a test sawtooth ledger.
+   *
+   * @returns Destroy operation results.
+   */
   public destroy(): Promise<unknown> {
     if (this.useRunningLedger) {
       this.log.info(
@@ -184,71 +220,36 @@ export class QuorumMultiPartyTestLedger implements ITestLedger {
     } else {
       return Promise.reject(
         new Error(
-          `QuorumMultiPartyTestLedger#destroy() Container was never created, nothing to destroy.`,
+          `SawtoothTestLedger#destroy() Container was never created, nothing to destroy.`,
         ),
       );
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-  public async getKeys() {
-    if (!this.containerId) {
-      throw new Error("Missing container ID");
+  /**
+   * Get localhost port that can be used to access ledger rest API in the container.
+   *
+   * @returns port
+   */
+  private async getRestApiPort() {
+    if (this.containerId) {
+      const cInfo = await Containers.getById(this.containerId);
+      return Containers.getPublicPort(this.ledgerApiPort, cInfo);
+    } else {
+      throw new Error(
+        "getRestApiPort(): Container ID not set. Did you call start()?",
+      );
     }
+  }
 
-    const container = await Containers.getById(this.containerId);
-
-    const member1HttpPort = await Containers.getPublicPort(20000, container);
-    const member1WsPort = await Containers.getPublicPort(20001, container);
-    const member1PrivPort = await Containers.getPublicPort(9081, container);
-
-    const member2HttpPort = await Containers.getPublicPort(20002, container);
-    const member2WsPort = await Containers.getPublicPort(20003, container);
-    const member2PrivPort = await Containers.getPublicPort(9082, container);
-
-    const member3HttpPort = await Containers.getPublicPort(20004, container);
-    const member3WsPort = await Containers.getPublicPort(20005, container);
-    const member3PrivPort = await Containers.getPublicPort(9083, container);
-
-    // This configuration comes from quorum-dev-quickstart@smart_contracts/scripts/keys.js
-    return {
-      tessera: {
-        member1: {
-          publicKey: "BULeR8JyUWhiuuCMU/HLA0Q5pzkYT+cHII3ZKBey3Bo=",
-        },
-        member2: {
-          publicKey: "QfeDAys9MPDs2XHExtc84jKGHxZg/aj52DTh0vtA3Xc=",
-        },
-        member3: {
-          publicKey: "1iTZde/ndBHvzhcl7V68x44Vx7pl8nwx9LqnM/AfJUg=",
-        },
-      },
-      quorum: {
-        member1: {
-          url: `http://127.0.0.1:${member1HttpPort}`,
-          wsUrl: `ws://127.0.0.1:${member1WsPort}`,
-          privateUrl: `http://127.0.0.1:${member1PrivPort}`,
-          privateKey:
-            "b9a4bd1539c15bcc83fa9078fe89200b6e9e802ae992f13cd83c853f16e8bed4",
-          accountAddress: "f0e2db6c8dc6c681bb5d6ad121a107f300e9b2b5",
-        },
-        member2: {
-          url: `http://127.0.0.1:${member2HttpPort}`,
-          wsUrl: `ws://127.0.0.1:${member2WsPort}`,
-          privateUrl: `http://127.0.0.1:${member2PrivPort}`,
-          privateKey:
-            "f18166704e19b895c1e2698ebc82b4e007e6d2933f4b31be23662dd0ec602570",
-          accountAddress: "ca843569e3427144cead5e4d5999a3d0ccf92b8e",
-        },
-        member3: {
-          url: `http://127.0.0.1:${member3HttpPort}`,
-          wsUrl: `ws://127.0.0.1:${member3WsPort}`,
-          privateUrl: `http://127.0.0.1:${member3PrivPort}`,
-          privateKey:
-            "4107f0b6bf67a3bc679a15fe36f640415cf4da6a4820affaac89c8b280dfd1b3",
-          accountAddress: "0fbdc686b912d7722dc86510934589e0aaf3b55a",
-        },
-      },
-    };
+  /**
+   * Get localhost URL that can be used to access ledger rest API in the container.
+   *
+   * @returns Sawtooth Rest API URL.
+   */
+  public async getRestApiHost() {
+    const port = this.getRestApiPort();
+    const lanAddress = (await internalIpV4()) ?? "127.0.0.1";
+    return `http://${lanAddress}:${port}`;
   }
 }
