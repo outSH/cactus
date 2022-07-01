@@ -2,6 +2,9 @@
   "name": "@hyperledger/cactus-plugin-ledger-connector-sawtooth-socketio",
   "version": "1.0.0",
   "license": "Apache-2.0",
+  "main": "dist/common/core/bin/indes.js",
+  "module": "dist/common/core/bin/indes.js",
+  "types": "dist/common/core/bin/indes.d.ts",
   "scripts": {
     "start": "cd ./dist && node common/core/bin/www.js",
     "debug": "nodemon --inspect ./dist/common/core/bin/www.js",
@@ -28,6 +31,7 @@
     "xmlhttprequest": "1.8.0"
   },
   "devDependencies": {
+    "@hyperledger/cactus-api-client": "1.0.0",
     "@types/config": "0.0.41"
   }
 }
