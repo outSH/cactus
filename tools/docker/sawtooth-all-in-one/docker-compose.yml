@@ -3,7 +3,7 @@ version: "3.5"
 services:
  sawtooth-all-in-one-ledger-1x:
     container_name: ${CACTUS_SAWTOOTH_LEDGER_CONTAINER_NAME:-sawtooth_all_in_one_ledger_1x}
-    image: ${CACTUS_SAWTOOTH_LEDGER_IMAGE_NAME:-sawtooth_aio_1x}
+    image: ${CACTUS_SAWTOOTH_LEDGER_IMAGE_NAME:-sawtooth_aio_1x:1.0.0}
     privileged: true
     build:
       context: ./

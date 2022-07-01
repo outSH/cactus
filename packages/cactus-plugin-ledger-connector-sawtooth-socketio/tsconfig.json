@@ -18,6 +18,9 @@
   "references": [
     {
       "path": "../cactus-cmd-socketio-server/tsconfig.json"
+    },
+    {
+      "path": "../cactus-api-client/tsconfig.json"
     }
   ]
 }

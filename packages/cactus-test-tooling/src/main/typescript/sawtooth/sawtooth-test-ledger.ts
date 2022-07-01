@@ -248,8 +248,90 @@ export class SawtoothTestLedger implements ITestLedger {
    * @returns Sawtooth Rest API URL.
    */
   public async getRestApiHost() {
-    const port = this.getRestApiPort();
+    const port = await this.getRestApiPort();
     const lanAddress = (await internalIpV4()) ?? "127.0.0.1";
     return `http://${lanAddress}:${port}`;
+  }
+
+  /**
+   * Execute Sawtooth shell command on the ledger.
+   *
+   * @param cmd Tokenized command to be executed.
+   * @param timeout Docker exec timeout (default: 1 minute)
+   * @param workdir Where to execute the command from (default: undefined)
+   *
+   * @returns Command response.
+   */
+  public async runSawtoothShell(
+    cmd: string[],
+    timeout = 60 * 1000,
+    workdir?: string,
+  ) {
+    if (this.container) {
+      // Pass the command to shell helper script in the container
+      cmd.unshift("shell");
+
+      if (!cmd.includes("--url")) {
+        this.log.debug("Append URL argument to the shell command");
+        cmd.push("--url", "http://rest-api:8008");
+      }
+
+      this.log.debug("Run Sawtooth shell command:", cmd);
+
+      return Containers.exec(
+        this.container,
+        cmd,
+        timeout,
+        this.logLevel,
+        workdir,
+      );
+    } else {
+      throw new Error(
+        "runSawtoothShell(): Container not set. Did you call start()?",
+      );
+    }
+  }
+
+  /**
+   * Check transaction status when supplied with sawtooth status check URL.
+   * Will execute curl on the URL and block until status is other then PENDING.
+   *
+   * @param url Sawtooth batch statuses URL for given transaction (like http://rest-api:8008/batch_statuses?id=<LONG-ID>)
+   * @param timeout How many seconds to wait for transaction commit.
+   *
+   * @returns Transaction status.
+   */
+  public async waitOnTransaction(url: string, timeout = 30): Promise<string> {
+    this.log.debug("Wait on transaction with URL", url);
+
+    const checkStatus = async () => {
+      // Fetch status
+      const curlResponse = await this.runSawtoothShell(["curl", url]);
+      this.log.debug("CURL response:", curlResponse);
+      // Clear response (it's a string with request status appended at the end)
+      const responseObject = curlResponse.match(/{[\s\S]*}/g) as any;
+      const parsedResponse = JSON.parse(responseObject);
+      this.log.debug("Parsed response:", parsedResponse);
+      return parsedResponse.data[0].status;
+    };
+
+    const currentCount = 0;
+    let status = await checkStatus();
+    this.log.debug("Init status:", status);
+    while (status === "PENDING") {
+      if (currentCount >= timeout) {
+        throw new Error(`waitOnTransaction(): timeout for URL '${url}'`);
+      }
+
+      // Sleep 1 second
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      status = await checkStatus();
+      this.log.debug("New status:", status);
+      timeout++;
+    }
+
+    this.log.info("TX finished. Status:", status);
+    return status;
   }
 }

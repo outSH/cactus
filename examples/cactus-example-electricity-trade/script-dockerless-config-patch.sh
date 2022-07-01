@@ -13,7 +13,7 @@ sudo chown -hR $(whoami) "$COMMON_CACTUS_CONFIG"
 
 echo "Patch validators..."
 sed -i 's/geth1/localhost/g' "${COMMON_CACTUS_CONFIG}/connector-go-ethereum-socketio/default.yaml"
-sed -i 's/rest-api/localhost/g' "${COMMON_CACTUS_CONFIG}/connector-sawtooth-socketio/default.yaml"
+sed -i 's/sawtooth_all_in_one_ledger_1x/localhost/g' "${COMMON_CACTUS_CONFIG}/connector-sawtooth-socketio/default.yaml"
 
 echo "Patch validator-registry-config.yaml..."
 sed -i 's/ethereum-validator/localhost/g' "${COMMON_CACTUS_CONFIG}/validator-registry-config.yaml"
