@@ -17,10 +17,8 @@
 
 import { ConfigUtil } from "@hyperledger/cactus-cmd-socket-server";
 import { Verifier } from "@hyperledger/cactus-verifier-client";
+import { signProposal } from "./sign-utils"
 
-const fs = require("fs");
-const path = require("path");
-const yaml = require("js-yaml");
 import { FileSystemWallet } from "fabric-network";
 
 //const config: any = JSON.parse(fs.readFileSync("/etc/cactus/default.json", 'utf8'));
@@ -34,12 +32,7 @@ export function makeSignedProposal<T>(
   ccFncName: string,
   ccArgs: string[],
   verifierFabric: Verifier<T>,
-): Promise<{ data: {}; txId: string }> {
-  // exports.Invoke = async function(reqBody, isWait){
-  // let eventhubs = []; // For the time being, give up the eventhub connection of multiple peers.
-  let invokeResponse; // Return value from chain code
-  let channel;
-
+): Promise<{ signedTxArgs: {}; txId: string }> {
   return new Promise(async (resolve, reject) => {
     try {
       /*
@@ -67,41 +60,86 @@ export function makeSignedProposal<T>(
         privateKeyPem = (submitterIdentity as any).privateKey;
       }
 
-      // const signedTx = await TransactionSigner.signTxFabric(transactionProposalReq, certPem, privateKeyPem);
-      const contract = { channelName: config.assetTradeInfo.fabric.channelName };
-      const method = { type: "function", command: "sendSignedProposal" };
-      const template = "default";
-      const argsParam: {} = {
+      if (!certPem || !privateKeyPem) {
+        throw new Error("Could not read certPem or privateKeyPem from BLP fabric wallet.");
+      }
+
+      // Get unsigned proposal
+      const contractUnsignedProp = { channelName: config.assetTradeInfo.fabric.channelName };
+      const methodUnsignedProp = { type: "function", command: "generateUnsignedProposal" };
+      const argsUnsignedProp = {
         args: {
-          transactionProposalReq: transactionProposalReq,
-          certPem: certPem,
-          privateKeyPem: privateKeyPem,
+          transactionProposalReq,
+          certPem,
         },
       };
-      verifierFabric
-        .sendSyncRequest(contract, method, argsParam)
-        .then((resp) => {
-          // logger.debug(`##makeSignedProposal: resp: ${JSON.stringify(resp)}`);
-          // logger.debug(`##makeSignedProposal: resp.data: ${JSON.stringify(resp.data)}`);
-          logger.debug(`Successfully build endorse and commit`);
 
-          const args: {} = {
-            // signedCommitProposal: resp["signedCommitProposal"],
-            signedCommitProposal: resp.data["signedCommitProposal"],
-            // commitReq: resp["commitReq"]
-            commitReq: resp.data["commitReq"],
-          };
-          const result: { data: {}; txId: string } = {
-            data: args,
-            // txId: resp["txId"]
-            txId: resp.data["txId"],
-          };
-          return resolve(result);
-        })
-        .catch((err) => {
-          logger.error(`##makeSignedProposal: err: ${err}`);
-          reject(err);
-        });
+      logger.debug("Sending fabric.generateUnsignedProposal");
+      const responseUnsignedProp = await verifierFabric.sendSyncRequest(
+        contractUnsignedProp,
+        methodUnsignedProp,
+        argsUnsignedProp,
+      );
+      const proposalBuffer = Buffer.from(responseUnsignedProp.data.proposalBuffer);
+      const proposal = responseUnsignedProp.data.proposal;
+      const txId = responseUnsignedProp.data.txId;
+
+      // Prepare signed proposal
+      const signedProposal = signProposal(proposalBuffer, privateKeyPem);
+
+      // Call sendSignedProposalV2
+      const contractSignedProposal = { channelName: config.assetTradeInfo.fabric.channelName };
+      const methodSignedProposal = { type: "function", command: "sendSignedProposalV2" };
+      const argsSignedProposal = {
+        args: {
+          signedProposal,
+        },
+      };
+
+      logger.debug("Sending fabric.sendSignedProposalV2");
+      const responseSignedEndorse = await verifierFabric.sendSyncRequest(
+        contractSignedProposal,
+        methodSignedProposal,
+        argsSignedProposal,
+      );
+
+      if (!responseSignedEndorse.data.endorsmentStatus) {
+        throw new Error("Fabric TX endorsment was not OK.");
+      }
+      const proposalResponses = responseSignedEndorse.data.proposalResponses;
+
+      // Get unsigned commit (transaction) proposal
+      const contractUnsignedTx = { channelName: config.assetTradeInfo.fabric.channelName };
+      const methodUnsignedTx = { type: "function", command: "generateUnsignedTransaction" };
+      const argsUnsignedTx = {
+        args: {
+          proposal: proposal,
+          proposalResponses: proposalResponses,
+        },
+      };
+
+      logger.debug("Sending fabric.generateUnsignedTransaction");
+      const responseUnsignedTx = await verifierFabric.sendSyncRequest(
+        contractUnsignedTx,
+        methodUnsignedTx,
+        argsUnsignedTx,
+      );
+
+      const commitProposalBuffer = Buffer.from(responseUnsignedTx.data.txProposalBuffer);
+
+      // Prepare signed commit proposal
+      const signedCommitProposal = signProposal(commitProposalBuffer, privateKeyPem);
+
+      const signedTxArgs = {
+        signedCommitProposal,
+        proposal,
+        proposalResponses,
+      }
+
+      return resolve({
+        txId,
+        signedTxArgs
+      });
     } catch (e) {
       logger.error(`error at Invoke: err=${e}`);
       return reject(e);

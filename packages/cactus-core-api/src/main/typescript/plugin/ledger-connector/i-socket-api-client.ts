@@ -7,23 +7,11 @@ import type { Observable } from "rxjs";
  * It's possible there's no need for send requests abstractions
  */
 export interface ISocketApiClient<BlockType> {
-  sendAsyncRequest?(
-    contract: Record<string, unknown>,
-    method: Record<string, unknown>,
-    args: any,
-  ): void;
+  sendAsyncRequest?(contract: any, method: any, args: any): void;
 
-  sendSyncRequest?(
-    contract: Record<string, unknown>,
-    method: Record<string, unknown>,
-    args: any,
-  ): Promise<any>;
+  sendSyncRequest?(contract: any, method: any, args: any): Promise<any>;
 
-  watchBlocksV1?(
-    monitorOptions?: Record<string, unknown>,
-  ): Observable<BlockType>;
+  watchBlocksV1?(monitorOptions?: any): Observable<BlockType>;
 
-  watchBlocksAsyncV1?(
-    monitorOptions?: Record<string, unknown>,
-  ): Promise<Observable<BlockType>>;
+  watchBlocksAsyncV1?(monitorOptions?: any): Promise<Observable<BlockType>>;
 }

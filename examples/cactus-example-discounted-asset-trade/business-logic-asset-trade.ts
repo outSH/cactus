@@ -405,7 +405,6 @@ export class BusinessLogicAssetTrade extends BusinessLogicBase {
     ];
     makeSignedProposal(ccFncName, ccArgs, verifierFabric)
       .then((result) => {
-        // logger.info(`##ret makeSignedProposal: result: ${JSON.stringify(result)}`);
         logger.info("secondTransaction txId : " + result.txId);
 
         // Register transaction data in DB
@@ -419,23 +418,15 @@ export class BusinessLogicAssetTrade extends BusinessLogicBase {
           transactionData
         );
 
-        // NOTE: Convert properties to binary.
-        //       If you do not convert the following, you will get an error.
-        result.data["signedCommitProposal"].signature = Buffer.from(
-          result.data["signedCommitProposal"].signature
-        );
-        result.data["signedCommitProposal"].proposal_bytes = Buffer.from(
-          result.data["signedCommitProposal"].proposal_bytes
-        );
-
-        // Set Parameter
-        //logger.debug('secondTransaction data : ' + JSON.stringify(result.data));
-        const contract = { channelName: "mychannel" };
-        const method = { type: "sendSignedTransaction" };
-        const template = "default";
-        const args = { args: [result.data] };
+        // Call sendSignedTransactionV2
+        const contract = { channelName: config.assetTradeInfo.fabric.channelName };
+        const method = { type: "function", command: "sendSignedTransactionV2" };
+        const args = {
+          args: result.signedTxArgs,
+        };
 
         // Run Verifier (Fabric)
+        logger.debug("Sending fabric.sendSignedTransactionV2");
         verifierFabric
           .sendAsyncRequest(contract, method, args)
           .then(() => {
