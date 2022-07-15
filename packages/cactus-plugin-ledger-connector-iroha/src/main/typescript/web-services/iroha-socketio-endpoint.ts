@@ -10,7 +10,7 @@ import {
   IrohaBaseConfig,
 } from "../generated/openapi/typescript-axios";
 import {
-  IrohaSocketSessionEvent,
+  WatchBlocksV1,
   IrohaQuery,
 } from "../generated/openapi/typescript-axios";
 
@@ -126,13 +126,13 @@ export class IrohaSocketIOEndpoint {
       this.log.debug(`New block found`);
       transactionReceipt = response.transactionReceipt;
       next = { transactionReceipt };
-      this.socket.emit(IrohaSocketSessionEvent.Next, next);
+      this.socket.emit(WatchBlocksV1.Next, next);
       this.currentBlockHeight++;
     }
   }
 
   public async startMonitor(monitorOptions: any): Promise<void> {
-    this.log.debug(`${IrohaSocketSessionEvent.Subscribe} => ${this.socket.id}`);
+    this.log.debug(`${WatchBlocksV1.Subscribe} => ${this.socket.id}`);
     this.log.info(`Starting monitoring blocks...`);
 
     this.monitorModeEnabled = true;

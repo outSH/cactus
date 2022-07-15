@@ -45,6 +45,8 @@ import { Server as SocketIoServer } from "socket.io";
 
 const logLevel: LogLevelDesc = "DEBUG";
 
+const requestTimoutLimit = 10 * 1000; // 10 seconds
+
 const log: Logger = LoggerProvider.getOrCreate({
   label: "socket-api.test",
   level: logLevel,
@@ -106,7 +108,7 @@ async function setupIrohaTestLedger(postgres: any): Promise<any> {
   });
 
   log.debug("Starting Iroha test ledger");
-  await iroha.start(true);
+  await iroha.start();
 
   const adminAccount = iroha.getDefaultAdminAccount();
   const irohaHost = await internalIpV4();
@@ -154,6 +156,7 @@ describe("Iroha SocketIo TestSuite", () => {
   let iroha: IrohaLedgerInfo;
   let apiClient: IrohaApiClient;
   let server: http.Server;
+  let wsApi: SocketIoServer;
 
   beforeAll(async () => {
     const pruning = await pruneDockerAllIfGithubAction({ logLevel });
@@ -197,7 +200,7 @@ describe("Iroha SocketIo TestSuite", () => {
     expressApp.use(bodyParser.json({ limit: "250mb" }));
     server = http.createServer(expressApp);
 
-    const wsApi = new SocketIoServer(server, {
+    wsApi = new SocketIoServer(server, {
       path: Constants.SocketIoConnectionPathV1,
     });
 
@@ -289,7 +292,7 @@ describe("Iroha SocketIo TestSuite", () => {
         creatorAccountId: `${iroha.adminAccount}@${iroha.domain}`,
         privKey: [iroha.adminPriv],
         quorum: 1,
-        timeoutLimit: 5000,
+        timeoutLimit: requestTimoutLimit,
         tls: false,
       },
       params: [assetId, iroha.domain, 3],
@@ -305,7 +308,7 @@ describe("Iroha SocketIo TestSuite", () => {
         creatorAccountId: `${iroha.adminAccount}@${iroha.domain}`,
         privKey: [iroha.adminPriv],
         quorum: 1,
-        timeoutLimit: 10000,
+        timeoutLimit: requestTimoutLimit,
       },
       pollTime: 5000,
     };
@@ -358,7 +361,7 @@ describe("Iroha SocketIo TestSuite", () => {
         creatorAccountId: `${iroha.adminAccount}@${iroha.domain}`,
         privKey: [iroha.adminPriv],
         quorum: 1,
-        timeoutLimit: 10000,
+        timeoutLimit: requestTimoutLimit,
       },
       pollTime: 3000,
     };
@@ -374,12 +377,12 @@ describe("Iroha SocketIo TestSuite", () => {
       creatorAccountId: `${iroha.adminAccount}@${iroha.domain}`,
       privKey: [iroha.adminPriv],
       quorum: 1,
-      timeoutLimit: 5000,
+      timeoutLimit: requestTimoutLimit,
     };
     const params = [assetID, iroha.domain, 3];
 
     log.debug(`Sending Async Request with ${commandName} command.`);
-    apiClient.sendAsyncRequest(params, commandName, baseConfig);
+    apiClient.sendAsyncRequest(commandName, params, baseConfig);
 
     const arrivedBlock = await new Promise<IrohaBlockResponse>(
       (resolve, reject) => {
@@ -413,14 +416,14 @@ describe("Iroha SocketIo TestSuite", () => {
       creatorAccountId: `${iroha.adminAccount}@${iroha.domain}`,
       privKey: [iroha.adminPriv],
       quorum: 1,
-      timeoutLimit: 10000,
+      timeoutLimit: requestTimoutLimit,
     };
     const params = [assetID, iroha.domain, 3];
 
     log.debug(`Sending Sync Request with ${commandName} command.`);
     const response = await apiClient.sendSyncRequest(
-      params,
       commandName,
+      params,
       baseConfig,
     );
 
@@ -432,14 +435,32 @@ describe("Iroha SocketIo TestSuite", () => {
   });
 
   afterAll(async () => {
-    // Remove Iroha after all tests are done
-    await iroha.testLedger.stop();
-    await iroha.testLedger.destroy();
+    if (wsApi) {
+      log.info("Stop the SocketIO server connector...");
+      await new Promise<void>((resolve) => wsApi.close(() => resolve()));
+    }
 
-    await postgres.container.stop();
-    await postgres.container.destroy();
+    if (server) {
+      log.info("Stop the HTTP server connector...");
+      await new Promise<void>((resolve) => server.close(() => resolve()));
+    }
+
+    if (iroha) {
+      log.debug("Stop Iroha ledger...");
+      await iroha.testLedger.stop();
+    }
+
+    if (postgres) {
+      log.debug("Stop Postgres container...");
+      await postgres.container.stop();
+    }
 
     const pruning = await pruneDockerAllIfGithubAction({ logLevel });
     expect(pruning).toBeTruthy();
+
+    log.debug("Wait for send request timeouts to expire...");
+    await new Promise((resolve) => setTimeout(resolve, 2 * requestTimoutLimit));
+
+    log.debug("All done.");
   });
 });

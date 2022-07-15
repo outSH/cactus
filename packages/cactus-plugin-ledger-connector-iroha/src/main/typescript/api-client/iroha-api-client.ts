@@ -6,7 +6,8 @@ import { LogLevelDesc, LoggerProvider } from "@hyperledger/cactus-common";
 import { Constants, ISocketApiClient } from "@hyperledger/cactus-core-api";
 import {
   DefaultApi,
-  IrohaSocketSessionEvent,
+  WatchBlocksV1,
+  IrohaSocketIOTransactV1,
   IrohaBlockProgress,
   IrohaBaseConfig,
 } from "../generated/openapi/typescript-axios";
@@ -67,13 +68,13 @@ export class IrohaApiClient
     const socket: Socket = io(this.wsApiHost, { path: this.wsApiPath });
     const subject = new ReplaySubject<IrohaBlockProgress>(0);
     this.log.debug(monitorOptions);
-    socket.on(IrohaSocketSessionEvent.Next, (data: IrohaBlockProgress) => {
+    socket.on(WatchBlocksV1.Next, (data: IrohaBlockProgress) => {
       subject.next(data);
     });
 
     socket.on("connect", () => {
       this.log.debug("connected OK...");
-      socket.emit(IrohaSocketSessionEvent.Subscribe, monitorOptions);
+      socket.emit(WatchBlocksV1.Subscribe, monitorOptions);
     });
 
     socket.connect();
@@ -90,10 +91,16 @@ export class IrohaApiClient
       subject.error(err);
     });
 
+    socket.on("error", (err: unknown) => {
+      this.log.error("Error: ", err);
+      socket.disconnect();
+      subject.error(err);
+    });
+
     return subject.pipe(
       finalize(() => {
         this.log.info("FINALIZE - unsubscribing from the stream...");
-        socket.emit(IrohaSocketSessionEvent.Unsubscribe);
+        socket.emit(WatchBlocksV1.Unsubscribe);
         socket.disconnect();
       }),
       share(),
@@ -105,11 +112,11 @@ export class IrohaApiClient
    * @param args - arguments.
    * @param method - function / method to be executed by validator.
    * @param baseConfig - baseConfig needed to properly connect to ledger
-   
+
    */
   public sendAsyncRequest(
-    args: any,
     method: Record<string, unknown>,
+    args: any,
     baseConfig?: IrohaBaseConfig,
   ): void {
     this.log.debug(`inside: sendAsyncRequest()`);
@@ -117,24 +124,20 @@ export class IrohaApiClient
     this.log.debug(`methodName=${method.methodName}`);
     this.log.debug(`args=${args}`);
 
-    if (baseConfig === undefined || baseConfig === {}) {
+    if (!baseConfig) {
       throw new RuntimeError("baseConfig object must exist and not be empty");
     }
 
-    if (
-      baseConfig.privKey === undefined ||
-      baseConfig.creatorAccountId === undefined ||
-      baseConfig.irohaHost === undefined ||
-      baseConfig.irohaPort === undefined ||
-      baseConfig.quorum === undefined ||
-      baseConfig.timeoutLimit === undefined
-    ) {
-      throw new RuntimeError("Some fields in baseConfig are undefined");
-    }
-
-    if (method.methodName === undefined || method.methodName === "") {
-      throw new RuntimeError("methodName parameter must be specified");
-    }
+    Checks.truthy(baseConfig.privKey, "privKey in baseConfig");
+    Checks.truthy(
+      baseConfig.creatorAccountId,
+      "creatorAccountId in baseConfig",
+    );
+    Checks.truthy(baseConfig.irohaHost, "irohaHost in baseConfig");
+    Checks.truthy(baseConfig.irohaPort, "irohaPort in baseConfig");
+    Checks.truthy(baseConfig.quorum, "quorum in baseConfig");
+    Checks.truthy(baseConfig.timeoutLimit, "timeoutLimit in baseConfig");
+    Checks.nonBlankString(method.methodName, "methodName");
 
     const socket: Socket = io(this.wsApiHost, { path: this.wsApiPath });
     const asyncRequestData = {
@@ -146,7 +149,15 @@ export class IrohaApiClient
     this.log.debug("requestData:", asyncRequestData);
 
     try {
-      socket.emit(IrohaSocketSessionEvent.SendAsyncRequest, asyncRequestData);
+      socket.emit(IrohaSocketIOTransactV1.SendAsyncRequest, asyncRequestData);
+
+      // Connector should disconnect us after receiving this request.
+      // If he doesn't, disconnect after specified amount of time.
+      setTimeout(() => {
+        if (socket.connected) {
+          socket.disconnect();
+        }
+      }, baseConfig.timeoutLimit ?? 10 * 1000);
     } catch (err) {
       this.log.error("Exception in: sendAsyncRequest(): ", err);
       throw err;
@@ -161,8 +172,8 @@ export class IrohaApiClient
    * @returns Promise that will resolve with response from the ledger, or reject when error occurred.
    */
   public sendSyncRequest(
-    args: any,
     method: Record<string, unknown>,
+    args: any,
     baseConfig?: IrohaBaseConfig,
   ): Promise<any> {
     this.log.debug(`inside: sendSyncRequest()`);
@@ -170,24 +181,20 @@ export class IrohaApiClient
     this.log.debug(`method=${method}`);
     this.log.debug(`args=${args}`);
 
-    if (baseConfig === undefined || baseConfig === {}) {
+    if (!baseConfig) {
       throw new RuntimeError("baseConfig object must exist and not be empty");
     }
 
-    if (
-      baseConfig.privKey === undefined ||
-      baseConfig.creatorAccountId === undefined ||
-      baseConfig.irohaHost === undefined ||
-      baseConfig.irohaPort === undefined ||
-      baseConfig.quorum === undefined ||
-      baseConfig.timeoutLimit === undefined
-    ) {
-      throw new RuntimeError("Some fields in baseConfig are undefined");
-    }
-
-    if (method.methodName === undefined || method.methodName === "") {
-      throw new RuntimeError("methodName parameter must be specified");
-    }
+    Checks.truthy(baseConfig.privKey, "privKey in baseConfig");
+    Checks.truthy(
+      baseConfig.creatorAccountId,
+      "creatorAccountId in baseConfig",
+    );
+    Checks.truthy(baseConfig.irohaHost, "irohaHost in baseConfig");
+    Checks.truthy(baseConfig.irohaPort, "irohaPort in baseConfig");
+    Checks.truthy(baseConfig.quorum, "quorum in baseConfig");
+    Checks.truthy(baseConfig.timeoutLimit, "timeoutLimit in baseConfig");
+    Checks.nonBlankString(method.methodName, "methodName");
 
     const socket: Socket = io(this.wsApiHost, { path: this.wsApiPath });
 
@@ -207,14 +214,20 @@ export class IrohaApiClient
           reject(err);
         });
 
+        socket.on("error", (err: unknown) => {
+          socket.disconnect();
+          reject(err);
+        });
+
         socket.on("response", (result: any) => {
-          this.log.debug("#[recv]response, res:", result);
           responseFlag = true;
+          this.log.debug("#[recv]response, res:", result);
           const resultObj = {
             status: result.status,
             data: result.txHash,
           };
           this.log.debug("resultObj =", resultObj);
+          socket.disconnect();
           resolve(resultObj);
         });
 
@@ -227,7 +240,7 @@ export class IrohaApiClient
         this.log.debug("requestData:", syncRequestData);
 
         try {
-          socket.emit(IrohaSocketSessionEvent.SendSyncRequest, syncRequestData);
+          socket.emit(IrohaSocketIOTransactV1.SendSyncRequest, syncRequestData);
         } catch (err) {
           this.log.error("Exception in: sendAsyncRequest(): ", err);
           throw err;
@@ -235,6 +248,7 @@ export class IrohaApiClient
 
         setTimeout(() => {
           if (responseFlag === false) {
+            socket.disconnect();
             resolve({ status: 504 });
           }
         }, baseConfig.timeoutLimit);

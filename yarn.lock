@@ -9694,11 +9694,6 @@ electron-to-chromium@^1.4.71:
   resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.4.73.tgz#422f6f514315bcace9615903e4a9b6b9fa283137"
   integrity sha512-RlCffXkE/LliqfA5m29+dVDPB2r72y2D2egMMfIy3Le8ODrxjuZNVo4NIC2yPL01N4xb4nZQLwzi6Z5tGIGLnA==
 
-electron-to-chromium@^1.4.84:
-  version "1.4.107"
-  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.4.107.tgz#564257014ab14033b4403a309c813123c58a3fb9"
-  integrity "sha1-VkJXAUqxQDO0QDownIExI8WKP7k= sha512-Huen6taaVrUrSy8o7mGStByba8PfOWWluHNxSHGBrCgEdFVLtvdQDBr9LBCF9Uci8SYxh28QNNMO0oC17wbGAg=="
-
 electron@15.5.5:
   version "15.5.5"
   resolved "https://registry.yarnpkg.com/electron/-/electron-15.5.5.tgz#796b7822bfb2b045b504e40657674f2869361681"
@@ -16767,6 +16762,11 @@ mute-stream@0.0.8, mute-stream@~0.0.4:
   version "0.0.8"
   resolved "https://registry.yarnpkg.com/mute-stream/-/mute-stream-0.0.8.tgz#1630c42b2251ff81e2a283de96a5497ea92e5e0d"
   integrity sha512-nnbWWOkoWyUsTjKrhgD0dcz22mdkSnpYqbEjIm2nhwhuxlSkpywJmBo8h0ZqJdkp73mb90SssHkN4rsRaBAfAA==
+
+nan@^2.11.1:
+  version "2.16.0"
+  resolved "https://registry.yarnpkg.com/nan/-/nan-2.16.0.tgz#664f43e45460fb98faf00edca0bb0d7b8dce7916"
+  integrity sha512-UdAqHyFngu7TfQKsCBgAA6pWDkT8MAO7d0jyOecVhN5354xbLqdn8mV9Tat9gepAupm0bt2DbeaSC8vS52MuFA==
 
 nan@^2.13.2, nan@^2.14.0, nan@^2.14.1, nan@^2.15.0, nan@^2.2.1:
   version "2.15.0"

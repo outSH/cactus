@@ -1,10 +1,11 @@
-import { Logger } from "@hyperledger/cactus-common";
+import { Checks, Logger } from "@hyperledger/cactus-common";
 import {
   LoggerProvider,
   LogLevelDesc,
   Http405NotAllowedError,
 } from "@hyperledger/cactus-common";
 import {
+  IrohaBaseConfig,
   IrohaCommand,
   IrohaQuery,
   RunTransactionRequestV1,
@@ -43,23 +44,20 @@ export class IrohaTransactionWrapper {
     this.log = LoggerProvider.getOrCreate({ level, label });
   }
 
-  public async transact(
-    req: RunTransactionRequestV1,
-  ): Promise<RunTransactionResponse> {
-    const { baseConfig } = req;
-    if (
-      !baseConfig ||
-      !baseConfig.privKey ||
-      !baseConfig.creatorAccountId ||
-      !baseConfig.irohaHost ||
-      !baseConfig.irohaPort ||
-      !baseConfig.quorum ||
-      !baseConfig.timeoutLimit
-    ) {
-      this.log.debug(
-        "Certain field within the Iroha basic configuration is missing!",
-      );
-      throw new RuntimeError("Some fields in baseConfig are undefined");
+  /**
+   * Create instances of Iroha SDK CommandService and QueryService from input base config.
+   *
+   * @param baseConfig iroha configuration from request, must contain Iroha URL information.
+   * @returns {commandService, queryService}
+   */
+  public static getIrohaServices(
+    baseConfig: IrohaBaseConfig,
+  ): {
+    commandService: CommandService;
+    queryService: QueryService;
+  } {
+    if (!baseConfig || !baseConfig.irohaHost || !baseConfig.irohaPort) {
+      throw new RuntimeError("Missing Iroha URL information.");
     }
     const irohaHostPort = `${baseConfig.irohaHost}:${baseConfig.irohaPort}`;
 
@@ -69,12 +67,40 @@ export class IrohaTransactionWrapper {
     } else {
       grpcCredentials = grpc.credentials.createInsecure();
     }
+
     const commandService = new CommandService(
       irohaHostPort,
       //TODO:do something in the production environment
       grpcCredentials,
     );
     const queryService = new QueryService(irohaHostPort, grpcCredentials);
+
+    return { commandService, queryService };
+  }
+
+  public async transact(
+    req: RunTransactionRequestV1,
+  ): Promise<RunTransactionResponse> {
+    const { baseConfig } = req;
+    Checks.truthy(baseConfig, "baseConfig");
+    Checks.truthy(baseConfig.privKey, "privKey in baseConfig");
+    Checks.truthy(
+      baseConfig.creatorAccountId,
+      "creatorAccountId in baseConfig",
+    );
+    Checks.truthy(baseConfig.quorum, "quorum in baseConfig");
+    Checks.truthy(baseConfig.timeoutLimit, "timeoutLimit in baseConfig");
+
+    if (!baseConfig.privKey || !baseConfig.timeoutLimit) {
+      // narrow the types
+      throw new Error("Should never happen - Checks should catch this first");
+    }
+
+    const {
+      commandService,
+      queryService,
+    } = IrohaTransactionWrapper.getIrohaServices(baseConfig);
+
     const commandOptions = {
       privateKeys: baseConfig.privKey, //need an array of keys for command
       creatorAccountId: baseConfig.creatorAccountId,
@@ -82,6 +108,7 @@ export class IrohaTransactionWrapper {
       commandService: commandService,
       timeoutLimit: baseConfig.timeoutLimit,
     };
+
     const queryOptions = {
       privateKey: baseConfig.privKey[0], //only need 1 key for query
       creatorAccountId: baseConfig.creatorAccountId as string,
@@ -98,8 +125,8 @@ export class IrohaTransactionWrapper {
             publicKey: req.params[2],
           });
           return { transactionReceipt: response };
-        } catch (err: any) {
-          throw new RuntimeError(err);
+        } catch (err) {
+          throw new RuntimeError(err as any);
         }
       }
       case IrohaCommand.SetAccountDetail: {
@@ -110,8 +137,8 @@ export class IrohaTransactionWrapper {
             value: req.params[2],
           });
           return { transactionReceipt: response };
-        } catch (err: any) {
-          throw new RuntimeError(err);
+        } catch (err) {
+          throw new RuntimeError(err as any);
         }
       }
       case IrohaCommand.CompareAndSetAccountDetail: {
@@ -126,8 +153,8 @@ export class IrohaTransactionWrapper {
             },
           );
           return { transactionReceipt: response };
-        } catch (err: any) {
-          throw new RuntimeError(err);
+        } catch (err) {
+          throw new RuntimeError(err as any);
         }
       }
       case IrohaCommand.CreateAsset: {
@@ -139,8 +166,8 @@ export class IrohaTransactionWrapper {
               precision: req.params[2],
             });
           return { transactionReceipt: response };
-        } catch (err: any) {
-          throw new RuntimeError(err);
+        } catch (err) {
+          throw new RuntimeError(err as any);
         }
       }
       case IrohaCommand.CreateDomain: {
@@ -150,8 +177,8 @@ export class IrohaTransactionWrapper {
             defaultRole: req.params[1],
           });
           return { transactionReceipt: response };
-        } catch (err: any) {
-          throw new RuntimeError(err);
+        } catch (err) {
+          throw new RuntimeError(err as any);
         }
       }
       case IrohaCommand.SetAccountQuorum: {
@@ -161,8 +188,8 @@ export class IrohaTransactionWrapper {
             quorum: req.params[1],
           });
           return { transactionReceipt: response };
-        } catch (err: any) {
-          throw new RuntimeError(err);
+        } catch (err) {
+          throw new RuntimeError(err as any);
         }
       }
       case IrohaCommand.AddAssetQuantity: {
@@ -172,8 +199,8 @@ export class IrohaTransactionWrapper {
             amount: req.params[1],
           });
           return { transactionReceipt: response };
-        } catch (err: any) {
-          throw new RuntimeError(err);
+        } catch (err) {
+          throw new RuntimeError(err as any);
         }
       }
       case IrohaCommand.SubtractAssetQuantity: {
@@ -186,8 +213,8 @@ export class IrohaTransactionWrapper {
             },
           );
           return { transactionReceipt: response };
-        } catch (err: any) {
-          throw new RuntimeError(err);
+        } catch (err) {
+          throw new RuntimeError(err as any);
         }
       }
       case IrohaCommand.TransferAsset: {
@@ -200,8 +227,8 @@ export class IrohaTransactionWrapper {
             amount: req.params[4],
           });
           return { transactionReceipt: response };
-        } catch (err: any) {
-          throw new RuntimeError(err);
+        } catch (err) {
+          throw new RuntimeError(err as any);
         }
       }
       case IrohaQuery.GetSignatories: {
@@ -210,8 +237,8 @@ export class IrohaTransactionWrapper {
             accountId: req.params[0],
           });
           return { transactionReceipt: queryRes };
-        } catch (err: any) {
-          throw new RuntimeError(err);
+        } catch (err) {
+          throw new RuntimeError(err as any);
         }
       }
       case IrohaQuery.GetAccount: {
@@ -220,8 +247,8 @@ export class IrohaTransactionWrapper {
             accountId: req.params[0],
           });
           return { transactionReceipt: queryRes };
-        } catch (err: any) {
-          throw new RuntimeError(err);
+        } catch (err) {
+          throw new RuntimeError(err as any);
         }
       }
       case IrohaQuery.GetAccountDetail: {
@@ -235,8 +262,8 @@ export class IrohaTransactionWrapper {
             paginationWriter: req.params[5],
           });
           return { transactionReceipt: queryRes };
-        } catch (err: any) {
-          throw new RuntimeError(err);
+        } catch (err) {
+          throw new RuntimeError(err as any);
         }
       }
       case IrohaQuery.GetAssetInfo: {
@@ -245,8 +272,8 @@ export class IrohaTransactionWrapper {
             assetId: req.params[0],
           });
           return { transactionReceipt: queryRes };
-        } catch (err: any) {
-          throw new RuntimeError(err);
+        } catch (err) {
+          throw new RuntimeError(err as any);
         }
       }
       case IrohaQuery.GetAccountAssets: {
@@ -257,8 +284,8 @@ export class IrohaTransactionWrapper {
             firstAssetId: req.params[2],
           });
           return { transactionReceipt: queryRes };
-        } catch (err: any) {
-          throw new RuntimeError(err);
+        } catch (err) {
+          throw new RuntimeError(err as any);
         }
       }
       case IrohaCommand.AddSignatory: {
@@ -268,8 +295,8 @@ export class IrohaTransactionWrapper {
             publicKey: req.params[1],
           });
           return { transactionReceipt: response };
-        } catch (err: any) {
-          throw new RuntimeError(err);
+        } catch (err) {
+          throw new RuntimeError(err as any);
         }
       }
       case IrohaCommand.RemoveSignatory: {
@@ -279,16 +306,16 @@ export class IrohaTransactionWrapper {
             publicKey: req.params[1],
           });
           return { transactionReceipt: response };
-        } catch (err: any) {
-          throw new RuntimeError(err);
+        } catch (err) {
+          throw new RuntimeError(err as any);
         }
       }
       case IrohaQuery.GetRoles: {
         try {
           const response = await queries.getRoles(queryOptions);
           return { transactionReceipt: response };
-        } catch (err: any) {
-          throw new RuntimeError(err);
+        } catch (err) {
+          throw new RuntimeError(err as any);
         }
       }
       case IrohaCommand.CreateRole: {
@@ -298,8 +325,8 @@ export class IrohaTransactionWrapper {
             permissionsList: req.params[1],
           });
           return { transactionReceipt: response };
-        } catch (err: any) {
-          throw new RuntimeError(err);
+        } catch (err) {
+          throw new RuntimeError(err as any);
         }
       }
       case IrohaCommand.AppendRole: {
@@ -309,8 +336,8 @@ export class IrohaTransactionWrapper {
             roleName: req.params[1],
           });
           return { transactionReceipt: response };
-        } catch (err: any) {
-          throw new RuntimeError(err);
+        } catch (err) {
+          throw new RuntimeError(err as any);
         }
       }
       case IrohaCommand.DetachRole: {
@@ -320,8 +347,8 @@ export class IrohaTransactionWrapper {
             roleName: req.params[1],
           });
           return { transactionReceipt: response };
-        } catch (err: any) {
-          throw new RuntimeError(err);
+        } catch (err) {
+          throw new RuntimeError(err as any);
         }
       }
       case IrohaQuery.GetRolePermissions: {
@@ -330,8 +357,8 @@ export class IrohaTransactionWrapper {
             roleId: req.params[0],
           });
           return { transactionReceipt: response };
-        } catch (err: any) {
-          throw new RuntimeError(err);
+        } catch (err) {
+          throw new RuntimeError(err as any);
         }
       }
       case IrohaCommand.GrantPermission: {
@@ -342,8 +369,8 @@ export class IrohaTransactionWrapper {
             permission: GrantablePermission[req.params[1] as permission],
           });
           return { transactionReceipt: response };
-        } catch (err: any) {
-          throw new RuntimeError(err);
+        } catch (err) {
+          throw new RuntimeError(err as any);
         }
       }
       case IrohaCommand.RevokePermission: {
@@ -354,8 +381,8 @@ export class IrohaTransactionWrapper {
             permission: GrantablePermission[req.params[1] as permission],
           });
           return { transactionReceipt: response };
-        } catch (err: any) {
-          throw new RuntimeError(err);
+        } catch (err) {
+          throw new RuntimeError(err as any);
         }
       }
       case IrohaCommand.SetSettingValue: {
@@ -367,8 +394,8 @@ export class IrohaTransactionWrapper {
             txHashesList: req.params[0],
           });
           return { transactionReceipt: response };
-        } catch (err: any) {
-          throw new RuntimeError(err);
+        } catch (err) {
+          throw new RuntimeError(err as any);
         }
       }
       case IrohaQuery.GetPendingTransactions: {
@@ -378,8 +405,8 @@ export class IrohaTransactionWrapper {
             firstTxHash: req.params[1],
           });
           return { transactionReceipt: response };
-        } catch (err: any) {
-          throw new RuntimeError(err);
+        } catch (err) {
+          throw new RuntimeError(err as any);
         }
       }
       case IrohaQuery.GetAccountTransactions: {
@@ -390,8 +417,8 @@ export class IrohaTransactionWrapper {
             firstTxHash: req.params[2],
           });
           return { transactionReceipt: response };
-        } catch (err: any) {
-          throw new RuntimeError(err);
+        } catch (err) {
+          throw new RuntimeError(err as any);
         }
       }
       case IrohaQuery.GetAccountAssetTransactions: {
@@ -406,8 +433,8 @@ export class IrohaTransactionWrapper {
             },
           );
           return { transactionReceipt: response };
-        } catch (err: any) {
-          throw new RuntimeError(err);
+        } catch (err) {
+          throw new RuntimeError(err as any);
         }
       }
       case IrohaQuery.GetBlock: {
@@ -437,8 +464,8 @@ export class IrohaTransactionWrapper {
             input: req.params[3],
           });
           return { transactionReceipt: response };
-        } catch (err: any) {
-          throw new RuntimeError(err);
+        } catch (err) {
+          throw new RuntimeError(err as any);
         }
       }
       case IrohaQuery.GetEngineReceipts: {
@@ -447,16 +474,16 @@ export class IrohaTransactionWrapper {
             txHash: req.params[0],
           });
           return { transactionReceipt: response };
-        } catch (err: any) {
-          throw new RuntimeError(err);
+        } catch (err) {
+          throw new RuntimeError(err as any);
         }
       }
       case IrohaQuery.FetchCommits: {
         try {
           const response = await queries.fetchCommits(queryOptions);
           return { transactionReceipt: response };
-        } catch (err: any) {
-          throw new RuntimeError(err);
+        } catch (err) {
+          throw new RuntimeError(err as any);
         }
       }
       case IrohaCommand.AddPeer: {
@@ -466,8 +493,8 @@ export class IrohaTransactionWrapper {
             peerKey: req.params[1],
           });
           return { transactionReceipt: response };
-        } catch (err: any) {
-          throw new RuntimeError(err);
+        } catch (err) {
+          throw new RuntimeError(err as any);
         }
       }
       case IrohaCommand.RemovePeer: {
@@ -476,16 +503,16 @@ export class IrohaTransactionWrapper {
             publicKey: req.params[0],
           });
           return { transactionReceipt: response };
-        } catch (err: any) {
-          throw new RuntimeError(err);
+        } catch (err) {
+          throw new RuntimeError(err as any);
         }
       }
       case IrohaQuery.GetPeers: {
         try {
           const response = await queries.getPeers(queryOptions);
           return { transactionReceipt: response };
-        } catch (err: any) {
-          throw new RuntimeError(err);
+        } catch (err) {
+          throw new RuntimeError(err as any);
         }
       }
       default: {
