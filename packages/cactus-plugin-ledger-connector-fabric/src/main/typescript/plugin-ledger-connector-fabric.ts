@@ -15,12 +15,17 @@ import {
   DefaultEventHandlerOptions,
   DefaultEventHandlerStrategies,
   Gateway,
-  GatewayOptions,
+  GatewayOptions as FabricGatewayOptions,
   Wallets,
   X509Identity,
   TransientMap,
   Wallet,
 } from "fabric-network";
+
+import type {
+  Server as SocketIoServer,
+  Socket as SocketIoSocket,
+} from "socket.io";
 
 import OAS from "../json/openapi.json";
 
@@ -55,6 +60,8 @@ import {
   GetPrometheusExporterMetricsEndpointV1,
 } from "./get-prometheus-exporter-metrics/get-prometheus-exporter-metrics-endpoint-v1";
 
+import { WatchBlocksV1Endpoint } from "./watch-blocks/watch-blocks-v1-endpoint";
+
 import {
   ConnectionProfile,
   GatewayDiscoveryOptions,
@@ -72,6 +79,9 @@ import {
   DefaultEventHandlerStrategy,
   FabricSigningCredentialType,
   GetTransactionReceiptResponse,
+  GatewayOptions,
+  WatchBlocksV1,
+  WatchBlocksOptionsV1,
 } from "./generated/openapi/typescript-axios/index";
 
 import {
@@ -161,6 +171,7 @@ export class PluginLedgerConnectorFabric
   private endpoints: IWebServiceEndpoint[] | undefined;
   private readonly secureIdentity: SecureIdentityProviders;
   private readonly certStore: CertDatastore;
+  private runningWatchBlocksMonitors = new Set<WatchBlocksV1Endpoint>();
 
   public get className(): string {
     return PluginLedgerConnectorFabric.CLASS_NAME;
@@ -214,7 +225,8 @@ export class PluginLedgerConnectorFabric
   }
 
   public async shutdown(): Promise<void> {
-    return;
+    this.runningWatchBlocksMonitors.forEach((m) => m.close());
+    this.runningWatchBlocksMonitors.clear();
   }
 
   public getPrometheusExporter(): PrometheusExporter {
@@ -780,9 +792,70 @@ export class PluginLedgerConnectorFabric
     }
   }
 
-  async registerWebServices(app: Express): Promise<IWebServiceEndpoint[]> {
+  /**
+   * Register WatchBlocksV1 endpoint, will be triggered in response to
+   * dedicated socketio request.
+   *
+   * Adds and removes monitors from `this.runningWatchBlocksMonitors`.
+   *
+   * @param socket connected client socket.
+   * @returns socket from argument.
+   */
+  private registerWatchBlocksSocketIOEndpoint(
+    socket: SocketIoSocket,
+  ): SocketIoSocket {
+    this.log.debug("Register WatchBlocks.Subscribe handler.");
+
+    socket.on(
+      WatchBlocksV1.Subscribe,
+      async (options: WatchBlocksOptionsV1) => {
+        // Start monitoring
+        const monitor = new WatchBlocksV1Endpoint({
+          socket,
+          logLevel: this.opts.logLevel,
+          gateway: await this.createGatewayWithOptions(options.gatewayOptions),
+        });
+        this.runningWatchBlocksMonitors.add(monitor);
+        await monitor.subscribe(options);
+        this.log.debug(
+          "Running monitors count:",
+          this.runningWatchBlocksMonitors.size,
+        );
+
+        socket.on("disconnect", () => {
+          this.runningWatchBlocksMonitors.delete(monitor);
+          this.log.debug(
+            "Running monitors count:",
+            this.runningWatchBlocksMonitors.size,
+          );
+        });
+      },
+    );
+
+    return socket;
+  }
+
+  /**
+   * Register HTTP and SocketIO service endpoints.
+   *
+   * @param app express server.
+   * @param wsApi socketio server.
+   * @returns list of http endpoints.
+   */
+  async registerWebServices(
+    app: Express,
+    wsApi?: SocketIoServer,
+  ): Promise<IWebServiceEndpoint[]> {
     const webServices = await this.getOrCreateWebServices();
     await Promise.all(webServices.map((ws) => ws.registerExpress(app)));
+
+    if (wsApi) {
+      wsApi.on("connection", (socket: SocketIoSocket) => {
+        this.log.debug(`New Socket connected. ID=${socket.id}`);
+        this.registerWatchBlocksSocketIOEndpoint(socket);
+      });
+    }
+
     return webServices;
   }
 
@@ -823,6 +896,7 @@ export class PluginLedgerConnectorFabric
       const endpoint = new RunTransactionEndpointV1(opts);
       endpoints.push(endpoint);
     }
+
     {
       const opts: IRunTransactionEndpointV1Options = {
         connector: this,
@@ -847,30 +921,62 @@ export class PluginLedgerConnectorFabric
     return endpoints;
   }
 
+  /**
+   * Create gateway from request (will choose logic based on request)
+   *
+   * @node It seems that Gateway is not supposed to be created and destroyed rapidly, but
+   * rather kept around for longer. Possible issues:
+   *  - Disconnect is async and takes a while until all internal services are closed.
+   *  - Possible memory and connection pool leak (see https://github.com/hyperledger/fabric-sdk-node/issues/529).
+   *  - Performance: there's a setup overhead that might be significant after scaling up. Hence...
+   * @todo Cache and reuse gateways (destroy only ones not used for a while).
+   * Or maybe add separate methods "start/stopSession" that would leave session management to the client?
+   *
+   * @param req must contain either gatewayOptions or signingCredential.
+   * @returns Fabric SDK Gateway
+   */
   protected async createGateway(req: RunTransactionRequest): Promise<Gateway> {
     if (req.gatewayOptions) {
-      return createGateway({
-        logLevel: this.opts.logLevel,
-        pluginRegistry: this.opts.pluginRegistry,
-        defaultConnectionProfile: this.opts.connectionProfile,
-        defaultDiscoveryOptions: this.opts.discoveryOptions || {
-          enabled: true,
-          asLocalhost: true,
-        },
-        defaultEventHandlerOptions: this.opts.eventHandlerOptions || {
-          endorseTimeout: 300,
-          commitTimeout: 300,
-          strategy: DefaultEventHandlerStrategy.NetworkScopeAllfortx,
-        },
-        gatewayOptions: req.gatewayOptions,
-        secureIdentity: this.secureIdentity,
-        certStore: this.certStore,
-      });
+      return this.createGatewayWithOptions(req.gatewayOptions);
     } else {
       return this.createGatewayLegacy(req.signingCredential);
     }
   }
 
+  /**
+   * Create Gateway from dedicated gateway options.
+   *
+   * @param options gateway options
+   * @returns Fabric SDK Gateway
+   */
+  protected async createGatewayWithOptions(
+    options: GatewayOptions,
+  ): Promise<Gateway> {
+    return createGateway({
+      logLevel: this.opts.logLevel,
+      pluginRegistry: this.opts.pluginRegistry,
+      defaultConnectionProfile: this.opts.connectionProfile,
+      defaultDiscoveryOptions: this.opts.discoveryOptions || {
+        enabled: true,
+        asLocalhost: true,
+      },
+      defaultEventHandlerOptions: this.opts.eventHandlerOptions || {
+        endorseTimeout: 300,
+        commitTimeout: 300,
+        strategy: DefaultEventHandlerStrategy.NetworkScopeAllfortx,
+      },
+      gatewayOptions: options,
+      secureIdentity: this.secureIdentity,
+      certStore: this.certStore,
+    });
+  }
+
+  /**
+   * Create Gateway from signing credential (legacy, can be done with gateway options)
+   *
+   * @param signingCredential sign data.
+   * @returns Fabric SDK Gateway
+   */
   protected async createGatewayLegacy(
     signingCredential: FabricSigningCredential,
   ): Promise<Gateway> {
@@ -933,7 +1039,7 @@ export class PluginLedgerConnectorFabric
         DefaultEventHandlerStrategies[eho.strategy];
     }
 
-    const gatewayOptions: GatewayOptions = {
+    const gatewayOptions: FabricGatewayOptions = {
       discovery: this.opts.discoveryOptions,
       eventHandlerOptions,
       identity: identity,
