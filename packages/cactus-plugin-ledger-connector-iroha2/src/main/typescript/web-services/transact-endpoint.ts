@@ -6,7 +6,6 @@ import {
   LogLevelDesc,
   LoggerProvider,
   IAsyncProvider,
-  Http405NotAllowedError,
 } from "@hyperledger/cactus-common";
 import {
   IEndpointAuthzOptions,
@@ -15,25 +14,25 @@ import {
 } from "@hyperledger/cactus-core-api";
 import { registerWebServiceEndpoint } from "@hyperledger/cactus-core";
 
-import { PluginLedgerConnectorIroha } from "../plugin-ledger-connector-iroha";
+import { PluginLedgerConnectorIroha2 } from "../plugin-ledger-connector-iroha2";
 
 import OAS from "../../json/openapi.json";
 
-export interface IRunTransactionEndpointOptions {
+export interface ITransactEndpointOptions {
   logLevel?: LogLevelDesc;
-  connector: PluginLedgerConnectorIroha;
+  connector: PluginLedgerConnectorIroha2;
 }
 
-export class RunTransactionEndpoint implements IWebServiceEndpoint {
-  public static readonly CLASS_NAME = "RunTransactionEndpoint";
+export class TransactEndpoint implements IWebServiceEndpoint {
+  public static readonly CLASS_NAME = "TransactEndpoint";
 
   private readonly log: Logger;
 
   public get className(): string {
-    return RunTransactionEndpoint.CLASS_NAME;
+    return TransactEndpoint.CLASS_NAME;
   }
 
-  constructor(public readonly options: IRunTransactionEndpointOptions) {
+  constructor(public readonly options: ITransactEndpointOptions) {
     const fnTag = `${this.className}#constructor()`;
     Checks.truthy(options, `${fnTag} arg options`);
     Checks.truthy(options.connector, `${fnTag} arg options.connector`);
@@ -45,7 +44,7 @@ export class RunTransactionEndpoint implements IWebServiceEndpoint {
 
   public getOasPath() {
     return OAS.paths[
-      "/api/v1/plugins/@hyperledger/cactus-plugin-ledger-connector-iroha/run-transaction"
+      "/api/v1/plugins/@hyperledger/cactus-plugin-ledger-connector-iroha2/transact"
     ];
   }
 
@@ -92,27 +91,18 @@ export class RunTransactionEndpoint implements IWebServiceEndpoint {
       const resBody = await this.options.connector.transact(reqBody);
       res.json(resBody);
     } catch (ex) {
-      if (ex instanceof Http405NotAllowedError) {
-        this.log.debug("Sending back HTTP405 Method Not Allowed error.");
-        res.status(405);
-        res.json(ex);
-        return;
-      }
-      /**
-       * An example output of the error message looks like:
-       * "Error: Error: Command response error: expected=COMMITTED, actual=REJECTED"
-       * @see https://iroha.readthedocs.io/en/main/develop/api/commands.html?highlight=CallEngine#id18
-       */
-      if (ex.message.includes("Error: Command response error")) {
-        this.log.debug("Sending back HTTP400 Bad Request error.");
-        res.status(400);
-        res.json(ex);
-        return;
-      }
       this.log.error(`Crash while serving ${reqTag}`, ex);
+
+      if (ex instanceof Error) {
+        res.status(500).json({
+          message: "Internal Server Error",
+          error: ex?.stack || ex?.message,
+        });
+      }
+
       res.status(500).json({
         message: "Internal Server Error",
-        error: ex?.stack || ex?.message,
+        error: "(unknown)",
       });
     }
   }

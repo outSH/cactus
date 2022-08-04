@@ -1,10 +1,7 @@
 export {
-  E_KEYCHAIN_NOT_FOUND,
-  IPluginLedgerConnectorIrohaOptions,
-  PluginLedgerConnectorIroha,
-} from "./plugin-ledger-connector-iroha";
-
-export { signIrohaTransaction } from "./iroha-sign-utils";
+  IPluginLedgerConnectorIroha2Options,
+  PluginLedgerConnectorIroha2,
+} from "./plugin-ledger-connector-iroha2";
 
 export { PluginFactoryLedgerConnector } from "./plugin-factory-ledger-connector";
 

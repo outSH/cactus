@@ -43,53 +43,92 @@ export interface ErrorExceptionResponseV1 {
 /**
  * 
  * @export
- * @interface IrohaBaseConfig
+ * @interface Iroha2AccountId
  */
-export interface IrohaBaseConfig {
+export interface Iroha2AccountId {
+    /**
+     * 
+     * @type {string}
+     * @memberof Iroha2AccountId
+     */
+    name?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof Iroha2AccountId
+     */
+    domainId?: string;
+}
+/**
+ * 
+ * @export
+ * @interface Iroha2BaseConfig
+ */
+export interface Iroha2BaseConfig {
     [key: string]: object | any;
 
     /**
      * 
+     * @type {Iroha2BaseConfigTorii}
+     * @memberof Iroha2BaseConfig
+     */
+    torii?: Iroha2BaseConfigTorii;
+    /**
+     * 
+     * @type {Iroha2AccountId}
+     * @memberof Iroha2BaseConfig
+     */
+    accountId?: Iroha2AccountId;
+    /**
+     * 
+     * @type {Iroha2KeyJson}
+     * @memberof Iroha2BaseConfig
+     */
+    privateKey?: Iroha2KeyJson;
+    /**
+     * 
      * @type {string}
-     * @memberof IrohaBaseConfig
+     * @memberof Iroha2BaseConfig
      */
-    irohaHost?: string;
-    /**
-     * 
-     * @type {number}
-     * @memberof IrohaBaseConfig
-     */
-    irohaPort?: number;
+    publicKey?: string;
+}
+/**
+ * 
+ * @export
+ * @interface Iroha2BaseConfigTorii
+ */
+export interface Iroha2BaseConfigTorii {
     /**
      * 
      * @type {string}
-     * @memberof IrohaBaseConfig
+     * @memberof Iroha2BaseConfigTorii
      */
-    creatorAccountId?: string;
+    apiURL?: string;
     /**
      * 
-     * @type {Array<any>}
-     * @memberof IrohaBaseConfig
+     * @type {string}
+     * @memberof Iroha2BaseConfigTorii
      */
-    privKey?: Array<any>;
+    telemetryURL?: string;
+}
+/**
+ * 
+ * @export
+ * @interface Iroha2KeyJson
+ */
+export interface Iroha2KeyJson {
     /**
      * 
-     * @type {number}
-     * @memberof IrohaBaseConfig
+     * @type {string}
+     * @memberof Iroha2KeyJson
      */
-    quorum?: number;
+    digestFunction?: string;
     /**
      * 
-     * @type {number}
-     * @memberof IrohaBaseConfig
+     * @type {string}
+     * @memberof Iroha2KeyJson
      */
-    timeoutLimit?: number;
-    /**
-     * Can only be set to false for an insecure grpc connection.
-     * @type {boolean}
-     * @memberof IrohaBaseConfig
-     */
-    tls?: boolean;
+    payload?: string;
 }
 /**
  * 
@@ -131,10 +170,10 @@ export interface TransactRequestV1 {
     commandName: string;
     /**
      * 
-     * @type {IrohaBaseConfig}
+     * @type {Iroha2BaseConfig}
      * @memberof TransactRequestV1
      */
-    baseConfig: IrohaBaseConfig;
+    baseConfig?: Iroha2BaseConfig;
     /**
      * The list of arguments to pass in to the transaction request.
      * @type {Array<any>}

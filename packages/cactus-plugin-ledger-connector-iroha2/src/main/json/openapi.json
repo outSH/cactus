@@ -35,40 +35,70 @@
           "GetDomain"
         ]
       },
-      "IrohaBaseConfig": {
+      "Iroha2BaseConfigTorii": {
+        "type": "object",
+        "additionalProperties": false,
+        "nullable": false,
+        "properties": {
+          "apiURL": {
+            "type": "string",
+            "nullable": false
+          },
+          "telemetryURL": {
+            "type": "string",
+            "nullable": false
+          }
+        }
+      },
+      "Iroha2AccountId": {
+        "type": "object",
+        "additionalProperties": false,
+        "nullable": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "nullable": false
+          },
+          "domainId": {
+            "type": "string",
+            "nullable": false
+          }
+        }
+      },
+      "Iroha2KeyJson": {
+        "type": "object",
+        "additionalProperties": false,
+        "nullable": false,
+        "properties": {
+          "digestFunction": {
+            "type": "string",
+            "nullable": false
+          },
+          "payload": {
+            "type": "string",
+            "nullable": false
+          }
+        }
+      },
+      "Iroha2BaseConfig": {
         "type": "object",
         "additionalProperties": true,
         "properties": {
-          "irohaHost": {
+          "torii": {
+            "$ref": "#/components/schemas/Iroha2BaseConfigTorii",
+            "nullable": false
+          },
+          "accountId": {
+            "$ref": "#/components/schemas/Iroha2AccountId",
+            "nullable": false
+          },
+          "privateKey": {
+            "$ref": "#/components/schemas/Iroha2KeyJson",
+            "nullable": false
+          },
+          "publicKey": {
             "type": "string",
             "nullable": false
-          },
-          "irohaPort": {
-            "type": "number",
-            "nullable": false
-          },
-          "creatorAccountId": {
-            "type": "string",
-            "nullable": false
-          },
-          "privKey": {
-            "type": "array",
-            "items": {},
-            "default": [],
-            "nullable": false
-          },
-          "quorum": {
-            "type": "number",
-            "nullable": false
-          },
-          "timeoutLimit": {
-            "type": "number",
-            "nullable": false
-          },
-          "tls": {
-            "type": "boolean",
-            "nullable": false,
-            "description": "Can only be set to false for an insecure grpc connection."
           }
         }
       },
@@ -76,7 +106,6 @@
         "type": "object",
         "required": [
           "commandName",
-          "baseConfig",
           "params"
         ],
         "additionalProperties": false,
@@ -86,7 +115,7 @@
             "nullable": false
           },
           "baseConfig": {
-            "$ref": "#/components/schemas/IrohaBaseConfig",
+            "$ref": "#/components/schemas/Iroha2BaseConfig",
             "nullable": false
           },
           "params": {
