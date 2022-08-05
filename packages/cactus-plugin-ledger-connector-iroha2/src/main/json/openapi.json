@@ -35,25 +35,14 @@
           "GetDomain"
         ]
       },
-      "Iroha2BaseConfigTorii": {
-        "type": "object",
-        "additionalProperties": false,
-        "nullable": false,
-        "properties": {
-          "apiURL": {
-            "type": "string",
-            "nullable": false
-          },
-          "telemetryURL": {
-            "type": "string",
-            "nullable": false
-          }
-        }
-      },
       "Iroha2AccountId": {
         "type": "object",
         "additionalProperties": false,
         "nullable": false,
+        "required": [
+          "name",
+          "domainId"
+        ],
         "properties": {
           "name": {
             "type": "string",
@@ -69,6 +58,10 @@
         "type": "object",
         "additionalProperties": false,
         "nullable": false,
+        "required": [
+          "digestFunction",
+          "payload"
+        ],
         "properties": {
           "digestFunction": {
             "type": "string",
@@ -80,9 +73,80 @@
           }
         }
       },
+      "KeychainReference": {
+        "type": "object",
+        "required": [
+          "keychainId",
+          "keychainRef"
+        ],
+        "properties": {
+          "keychainId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "nullable": false
+          },
+          "keychainRef": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "nullable": false
+          }
+        }
+      },
+      "Iroha2KeyPair": {
+        "type": "object",
+        "required": [
+          "privateKey",
+          "publicKey"
+        ],
+        "properties": {
+          "privateKey": {
+            "$ref": "#/components/schemas/Iroha2KeyJson",
+            "nullable": false
+          },
+          "publicKey": {
+            "type": "string",
+            "nullable": false
+          }
+        }
+      },
+      "Iroha2BaseConfigTorii": {
+        "type": "object",
+        "additionalProperties": false,
+        "nullable": false,
+        "properties": {
+          "apiURL": {
+            "type": "string",
+            "nullable": false
+          },
+          "telemetryURL": {
+            "type": "string",
+            "nullable": false
+          }
+        }
+      },
+      "Iroha2BaseConfigTransaction": {
+        "type": "object",
+        "additionalProperties": false,
+        "nullable": false,
+        "properties": {
+          "timeToLiveMs": {
+            "type": "string",
+            "nullable": false
+          },
+          "addNonce": {
+            "type": "boolean",
+            "nullable": false
+          }
+        }
+      },
       "Iroha2BaseConfig": {
         "type": "object",
         "additionalProperties": true,
+        "required": [
+          "torii"
+        ],
         "properties": {
           "torii": {
             "$ref": "#/components/schemas/Iroha2BaseConfigTorii",
@@ -92,12 +156,20 @@
             "$ref": "#/components/schemas/Iroha2AccountId",
             "nullable": false
           },
-          "privateKey": {
-            "$ref": "#/components/schemas/Iroha2KeyJson",
-            "nullable": false
+          "signingCredential": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Iroha2KeyPair",
+                "nullable": false
+              },
+              {
+                "$ref": "#/components/schemas/KeychainReference",
+                "nullable": false
+              }
+            ]
           },
-          "publicKey": {
-            "type": "string",
+          "transaction": {
+            "$ref": "#/components/schemas/Iroha2BaseConfigTransaction",
             "nullable": false
           }
         }

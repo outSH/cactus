@@ -25,13 +25,16 @@ import {
   TransactRequestV1,
   TransactResponse,
   Iroha2BaseConfig,
+  Iroha2KeyJson,
+  Iroha2KeyPair,
+  KeychainReference,
 } from "./generated/openapi/typescript-axios";
 
 import { TransactEndpoint } from "./web-services/transact-endpoint";
 
 import { hexToBytes } from "hada";
 import { crypto } from "@iroha2/crypto-target-node";
-import { KeyPair } from "@iroha2/crypto-core";
+import { Key, KeyPair } from "@iroha2/crypto-core";
 import { setCrypto, Client } from "@iroha2/client";
 import {
   AccountId,
@@ -45,6 +48,7 @@ import {
   Metadata,
   NewDomain,
   OptionIpfsPath,
+  QueryBox,
   RegisterBox,
   Value,
   VecInstruction,
@@ -162,62 +166,119 @@ export class PluginLedgerConnectorIroha2
     return `@hyperledger/cactus-plugin-ledger-connector-iroha2`;
   }
 
-  public generateKeyPair(params: {
-    publicKeyMultihash: string;
-    privateKey: {
-      digestFunction: string;
-      payload: string;
-    };
-  }): KeyPair {
-    // @todo: exception safety
-    const multihashBytes = Uint8Array.from(
-      hexToBytes(params.publicKeyMultihash),
+  private async getFromKeychain(keychainId: string, keychainRef: string) {
+    const keychain = this.options.pluginRegistry.findOneByKeychainId(
+      keychainId,
     );
-    const multihash = crypto.createMultihashFromBytes(multihashBytes);
-    const publicKey = crypto.createPublicKeyFromMultihash(multihash);
-    const privateKey = crypto.createPrivateKeyFromJsKey(params.privateKey);
+    return JSON.parse(await keychain.get(keychainRef));
+  }
 
-    const keyPair = crypto.createKeyPairFromKeys(publicKey, privateKey);
+  private generateKeyPair(
+    publicKeyMultihash: string,
+    privateKeyJson: Key,
+  ): KeyPair {
+    const freeableKeys: { free(): void }[] = [];
 
-    // always free created structures
-    [publicKey, privateKey, multihash].forEach((x) => x.free());
+    try {
+      const multihashBytes = Uint8Array.from(hexToBytes(publicKeyMultihash));
 
-    return keyPair;
+      const multihash = crypto.createMultihashFromBytes(multihashBytes);
+      freeableKeys.push(multihash);
+      const publicKey = crypto.createPublicKeyFromMultihash(multihash);
+      freeableKeys.push(publicKey);
+      const privateKey = crypto.createPrivateKeyFromJsKey(privateKeyJson);
+      freeableKeys.push(privateKey);
+
+      const keyPair = crypto.createKeyPairFromKeys(publicKey, privateKey);
+
+      return keyPair;
+    } finally {
+      freeableKeys.forEach((x) => x.free());
+    }
+  }
+
+  private async getSigningKeyPair(
+    signingCredentials: Iroha2KeyPair | KeychainReference,
+  ): Promise<KeyPair> {
+    Checks.truthy(
+      signingCredentials,
+      "getSigningKeyPair() signingCredentials arg",
+    );
+
+    let publicKeyString: string;
+    let privateKeyJson: Iroha2KeyJson;
+    if ("keychainId" in signingCredentials) {
+      this.log.debug("getSigningKeyPair() read from keychain plugin");
+      const keychainStoredKey = await this.getFromKeychain(
+        signingCredentials.keychainId,
+        signingCredentials.keychainRef,
+      );
+      publicKeyString = keychainStoredKey.publicKey;
+      privateKeyJson = keychainStoredKey.privateKey;
+    } else {
+      this.log.debug(
+        "getSigningKeyPair() read directly from signingCredentials",
+      );
+      publicKeyString = signingCredentials.publicKey;
+      privateKeyJson = signingCredentials.privateKey;
+    }
+
+    Checks.truthy(publicKeyString, "getSigningKeyPair raw public key");
+    Checks.truthy(privateKeyJson, "getSigningKeyPair raw private key json");
+
+    return this.generateKeyPair(publicKeyString, privateKeyJson);
+  }
+
+  public async getClient(baseConfig?: Iroha2BaseConfig): Promise<Client> {
+    if (!baseConfig && !this.defaultConfig) {
+      throw new Error("getClient() called without valid Iroha config - fail");
+    }
+
+    // Merge default config with config passed to this function
+    const mergedConfig = { ...this.defaultConfig, ...baseConfig };
+
+    if (!mergedConfig.torii) {
+      throw new Error("torii is missing in combined configuration");
+    }
+
+    // Parse signing key pair
+    let keyPair: KeyPair | undefined;
+    if (mergedConfig.signingCredential) {
+      keyPair = await this.getSigningKeyPair(mergedConfig.signingCredential);
+    }
+
+    // Parse account ID
+    let accountId: AccountId | undefined;
+    if (mergedConfig.accountId) {
+      accountId = AccountId({
+        name: mergedConfig.accountId.name,
+        domain_id: DomainId({
+          name: mergedConfig.accountId.domainId,
+        }),
+      });
+    }
+
+    // Convert timeToLiveMs to BigInt if needed
+    let timeToLiveMs: bigint | undefined;
+    if (mergedConfig.transaction?.timeToLiveMs) {
+      timeToLiveMs = BigInt(mergedConfig.transaction.timeToLiveMs);
+    }
+
+    // Create client
+    // TODO - free keyPair at some point
+    return new Client({
+      torii: mergedConfig.torii,
+      accountId,
+      keyPair,
+      transaction: {
+        ...mergedConfig.transaction,
+        timeToLiveMs,
+      },
+    });
   }
 
   public async transact(req: TransactRequestV1): Promise<TransactResponse> {
-    const { baseConfig } = req;
-    if (!baseConfig) {
-      throw new Error("test empty");
-    }
-
-    this.log.warn("baseConfig.publicKey", baseConfig.publicKey);
-    this.log.warn(
-      "baseConfig.privateKey",
-      JSON.stringify(baseConfig.privateKey),
-    );
-
-    // Create client
-    const kp = this.generateKeyPair({
-      publicKeyMultihash: baseConfig.publicKey ?? "",
-      privateKey: baseConfig.privateKey as any, // todo: strict
-    });
-
-    this.log.warn("keyPair", JSON.stringify(kp));
-
-    // More options available - https://github.com/hyperledger/iroha/issues/2118 and UserConfig
-    const accountId = AccountId({
-      name: baseConfig.accountId?.name as any,
-      domain_id: DomainId({
-        name: baseConfig.accountId?.domainId as any,
-      }),
-    });
-
-    const client = new Client({
-      torii: baseConfig.torii as any,
-      accountId,
-      keyPair: kp,
-    });
+    const client = await this.getClient(req.baseConfig);
 
     const registerBox = RegisterBox({
       object: EvaluatesToRegistrableBox({
@@ -250,5 +311,16 @@ export class PluginLedgerConnectorIroha2
     return {
       transactionReceipt: "OK?",
     };
+  }
+
+  public async query(req: any): Promise<any> {
+    const client = await this.getClient(req.baseConfig);
+
+    const result = await client.request(QueryBox("FindAllDomains", null));
+
+    const domain = result.as("Ok").result.as("Vec");
+    this.log.error(domain);
+
+    return domain;
   }
 }

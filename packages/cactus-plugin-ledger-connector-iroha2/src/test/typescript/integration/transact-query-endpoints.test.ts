@@ -55,7 +55,7 @@ describe("Iroha V2 connector transact and query endpoints tests", () => {
   let connectorServer: http.Server;
   let iroha2ConnectorPlugin: PluginLedgerConnectorIroha2;
   let clientConfig: Iroha2ClientConfig;
-
+  let keychainSC: any;
   //////////////////////////////////
   // Environment Setup
   //////////////////////////////////
@@ -79,20 +79,37 @@ describe("Iroha V2 connector transact and query endpoints tests", () => {
     // Get client config
     clientConfig = await ledger.getClientConfig();
 
+    // Get signingCredential
+    const signingCredential = {
+      publicKey: clientConfig.PUBLIC_KEY,
+      privateKey: {
+        digestFunction: clientConfig.PRIVATE_KEY.digest_function,
+        payload: clientConfig.PRIVATE_KEY.payload,
+      },
+    };
+
     // Create Keychain Plugin
+    const keychainInstanceId = uuidv4();
     const keychainId = uuidv4();
-    const keychainEntryKey = "user2";
+    const keychainEntryKey = "aliceKey";
+    const keychainEntryValue = JSON.stringify(signingCredential);
+
     const keychainPlugin = new PluginKeychainMemory({
-      instanceId: uuidv4(),
+      instanceId: keychainInstanceId,
       keychainId,
       logLevel: sutLogLevel,
-      backend: new Map([[keychainEntryKey, JSON.stringify({})]]),
+      backend: new Map([[keychainEntryKey, keychainEntryValue]]),
     });
 
     iroha2ConnectorPlugin = new PluginLedgerConnectorIroha2({
       instanceId: uuidv4(),
       pluginRegistry: new PluginRegistry({ plugins: [keychainPlugin] }),
     });
+
+    keychainSC = {
+      keychainId,
+      keychainRef: keychainEntryKey,
+    };
 
     // Run http server
     const expressApp = express();
@@ -148,13 +165,9 @@ describe("Iroha V2 connector transact and query endpoints tests", () => {
           name: clientConfig.ACCOUNT_ID.name,
           domainId: clientConfig.ACCOUNT_ID.domain_id.name,
         },
-        publicKey: clientConfig.PUBLIC_KEY,
-        privateKey: {
-          digestFunction: clientConfig.PRIVATE_KEY.digest_function,
-          payload: clientConfig.PRIVATE_KEY.payload,
-        },
+        signingCredential: keychainSC,
       },
-      params: ["test1"],
+      params: ["test4"],
     });
     log.warn("res:", res);
     expect(res).toBeTruthy();

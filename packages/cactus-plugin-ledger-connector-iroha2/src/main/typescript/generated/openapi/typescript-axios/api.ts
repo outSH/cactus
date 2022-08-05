@@ -51,13 +51,13 @@ export interface Iroha2AccountId {
      * @type {string}
      * @memberof Iroha2AccountId
      */
-    name?: string;
+    name: string;
     /**
      * 
      * @type {string}
      * @memberof Iroha2AccountId
      */
-    domainId?: string;
+    domainId: string;
 }
 /**
  * 
@@ -72,7 +72,7 @@ export interface Iroha2BaseConfig {
      * @type {Iroha2BaseConfigTorii}
      * @memberof Iroha2BaseConfig
      */
-    torii?: Iroha2BaseConfigTorii;
+    torii: Iroha2BaseConfigTorii;
     /**
      * 
      * @type {Iroha2AccountId}
@@ -81,16 +81,16 @@ export interface Iroha2BaseConfig {
     accountId?: Iroha2AccountId;
     /**
      * 
-     * @type {Iroha2KeyJson}
+     * @type {Iroha2KeyPair | KeychainReference}
      * @memberof Iroha2BaseConfig
      */
-    privateKey?: Iroha2KeyJson;
+    signingCredential?: Iroha2KeyPair | KeychainReference;
     /**
      * 
-     * @type {string}
+     * @type {Iroha2BaseConfigTransaction}
      * @memberof Iroha2BaseConfig
      */
-    publicKey?: string;
+    transaction?: Iroha2BaseConfigTransaction;
 }
 /**
  * 
@@ -114,6 +114,25 @@ export interface Iroha2BaseConfigTorii {
 /**
  * 
  * @export
+ * @interface Iroha2BaseConfigTransaction
+ */
+export interface Iroha2BaseConfigTransaction {
+    /**
+     * 
+     * @type {string}
+     * @memberof Iroha2BaseConfigTransaction
+     */
+    timeToLiveMs?: string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof Iroha2BaseConfigTransaction
+     */
+    addNonce?: boolean;
+}
+/**
+ * 
+ * @export
  * @interface Iroha2KeyJson
  */
 export interface Iroha2KeyJson {
@@ -122,13 +141,32 @@ export interface Iroha2KeyJson {
      * @type {string}
      * @memberof Iroha2KeyJson
      */
-    digestFunction?: string;
+    digestFunction: string;
     /**
      * 
      * @type {string}
      * @memberof Iroha2KeyJson
      */
-    payload?: string;
+    payload: string;
+}
+/**
+ * 
+ * @export
+ * @interface Iroha2KeyPair
+ */
+export interface Iroha2KeyPair {
+    /**
+     * 
+     * @type {Iroha2KeyJson}
+     * @memberof Iroha2KeyPair
+     */
+    privateKey: Iroha2KeyJson;
+    /**
+     * 
+     * @type {string}
+     * @memberof Iroha2KeyPair
+     */
+    publicKey: string;
 }
 /**
  * 
@@ -156,6 +194,25 @@ export enum IrohaQuery {
     GetDomain = 'getDomain'
 }
 
+/**
+ * 
+ * @export
+ * @interface KeychainReference
+ */
+export interface KeychainReference {
+    /**
+     * 
+     * @type {string}
+     * @memberof KeychainReference
+     */
+    keychainId: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof KeychainReference
+     */
+    keychainRef: string;
+}
 /**
  * 
  * @export
