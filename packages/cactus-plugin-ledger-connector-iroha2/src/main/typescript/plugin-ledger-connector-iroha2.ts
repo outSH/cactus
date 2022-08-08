@@ -52,24 +52,6 @@ import {
   RegisterBox,
   Value,
   VecInstruction,
-  //NewAccount,
-  //QueryBox,
-  // VecPublicKey,
-  // PublicKey,
-  // AssetValueType,
-  // Mintable,
-  // AssetDefinitionId,
-  // EvaluatesToValue,
-  // IdBox,
-  // MintBox,
-  // AssetId,
-  // NewAssetDefinition,
-  // FindDomainById,
-  // EvaluatesToDomainId,
-  // FindAccountById,
-  // EvaluatesToAccountId,
-  // FindAssetById,
-  // EvaluatesToAssetId,
 } from "@iroha2/data-model";
 
 setCrypto(crypto);
@@ -111,10 +93,12 @@ export class PluginLedgerConnectorIroha2
     this.defaultConfig = options.defaultConfig;
   }
 
+  // TODO
   getConsensusAlgorithmFamily(): Promise<ConsensusAlgorithmFamily> {
     throw new Error("Method not implemented.");
   }
 
+  // TODO
   hasTransactionFinality(): Promise<boolean> {
     throw new Error("Method not implemented.");
   }
