@@ -183,7 +183,7 @@
         "additionalProperties": false,
         "properties": {
           "commandName": {
-            "type": "string",
+            "type": "IrohaCommand",
             "nullable": false
           },
           "baseConfig": {

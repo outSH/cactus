@@ -1,5 +1,7 @@
 import type { Express } from "express";
 import OAS from "../json/openapi.json";
+// import type { Server as SocketIoServer } from "socket.io";
+// import type { Socket as SocketIoSocket } from "socket.io";
 
 import {
   ConsensusAlgorithmFamily,
@@ -10,7 +12,10 @@ import {
   ICactusPluginOptions,
 } from "@hyperledger/cactus-core-api";
 
-import { PluginRegistry } from "@hyperledger/cactus-core";
+import {
+  consensusHasTransactionFinality,
+  PluginRegistry,
+} from "@hyperledger/cactus-core";
 
 import {
   Checks,
@@ -20,8 +25,8 @@ import {
 } from "@hyperledger/cactus-common";
 
 import {
-  // IrohaCommand,
-  // IrohaQuery,
+  IrohaCommand,
+  IrohaQuery,
   TransactRequestV1,
   TransactResponse,
   Iroha2BaseConfig,
@@ -32,29 +37,12 @@ import {
 
 import { TransactEndpoint } from "./web-services/transact-endpoint";
 
-import { hexToBytes } from "hada";
-import { crypto } from "@iroha2/crypto-target-node";
-import { Key, KeyPair } from "@iroha2/crypto-core";
-import { setCrypto, Client } from "@iroha2/client";
+import { KeyPair } from "@iroha2/crypto-core";
+import { AccountId, DomainId } from "@iroha2/data-model";
 import {
-  AccountId,
-  DomainId,
-  EvaluatesToRegistrableBox,
-  Executable,
-  Expression,
-  IdentifiableBox,
-  Instruction,
-  MapNameValue,
-  Metadata,
-  NewDomain,
-  OptionIpfsPath,
-  QueryBox,
-  RegisterBox,
-  Value,
-  VecInstruction,
-} from "@iroha2/data-model";
-
-setCrypto(crypto);
+  CactusIrohaV2Client,
+  generateIrohaV2KeyPair,
+} from "./cactus-iroha2-client";
 
 export interface IPluginLedgerConnectorIroha2Options
   extends ICactusPluginOptions {
@@ -69,38 +57,32 @@ export class PluginLedgerConnectorIroha2
     ICactusPlugin,
     IPluginWebService {
   private readonly instanceId: string;
-  private readonly defaultConfig: Iroha2BaseConfig | undefined;
   private readonly log: Logger;
-
+  private readonly defaultConfig: Iroha2BaseConfig | undefined;
   private endpoints: IWebServiceEndpoint[] | undefined;
 
-  public static readonly CLASS_NAME = "PluginLedgerConnectorIroha";
-
-  public get className(): string {
-    return PluginLedgerConnectorIroha2.CLASS_NAME;
-  }
+  public readonly className: string;
 
   constructor(public readonly options: IPluginLedgerConnectorIroha2Options) {
+    this.className = this.constructor.name;
     const fnTag = `${this.className}#constructor()`;
     Checks.truthy(options, `${fnTag} arg options`);
     Checks.truthy(options.instanceId, `${fnTag} options.instanceId`);
 
-    const level = this.options.logLevel || "INFO";
-    const label = this.className;
-    this.log = LoggerProvider.getOrCreate({ level, label });
+    const level = this.options.logLevel || "info";
+    this.log = LoggerProvider.getOrCreate({ level, label: this.className });
 
     this.instanceId = options.instanceId;
     this.defaultConfig = options.defaultConfig;
   }
 
-  // TODO
-  getConsensusAlgorithmFamily(): Promise<ConsensusAlgorithmFamily> {
-    throw new Error("Method not implemented.");
+  async getConsensusAlgorithmFamily(): Promise<ConsensusAlgorithmFamily> {
+    return ConsensusAlgorithmFamily.Authority;
   }
 
-  // TODO
-  hasTransactionFinality(): Promise<boolean> {
-    throw new Error("Method not implemented.");
+  public async hasTransactionFinality(): Promise<boolean> {
+    const currentConsensusAlgorithmFamily = await this.getConsensusAlgorithmFamily();
+    return consensusHasTransactionFinality(currentConsensusAlgorithmFamily);
   }
 
   public getOpenApiSpec(): unknown {
@@ -116,6 +98,7 @@ export class PluginLedgerConnectorIroha2
   }
 
   public async onPluginInit(): Promise<unknown> {
+    // Nothing to do...
     return;
   }
 
@@ -123,7 +106,11 @@ export class PluginLedgerConnectorIroha2
     this.log.info(`Shutting down ${this.className}...`);
   }
 
-  async registerWebServices(app: Express): Promise<IWebServiceEndpoint[]> {
+  // TODO - universal WS endpoints too
+  async registerWebServices(
+    app: Express,
+    // wsApi: SocketIoServer,
+  ): Promise<IWebServiceEndpoint[]> {
     const webServices = await this.getOrCreateWebServices();
     await Promise.all(webServices.map((ws) => ws.registerExpress(app)));
     return webServices;
@@ -157,30 +144,6 @@ export class PluginLedgerConnectorIroha2
     return JSON.parse(await keychain.get(keychainRef));
   }
 
-  private generateKeyPair(
-    publicKeyMultihash: string,
-    privateKeyJson: Key,
-  ): KeyPair {
-    const freeableKeys: { free(): void }[] = [];
-
-    try {
-      const multihashBytes = Uint8Array.from(hexToBytes(publicKeyMultihash));
-
-      const multihash = crypto.createMultihashFromBytes(multihashBytes);
-      freeableKeys.push(multihash);
-      const publicKey = crypto.createPublicKeyFromMultihash(multihash);
-      freeableKeys.push(publicKey);
-      const privateKey = crypto.createPrivateKeyFromJsKey(privateKeyJson);
-      freeableKeys.push(privateKey);
-
-      const keyPair = crypto.createKeyPairFromKeys(publicKey, privateKey);
-
-      return keyPair;
-    } finally {
-      freeableKeys.forEach((x) => x.free());
-    }
-  }
-
   private async getSigningKeyPair(
     signingCredentials: Iroha2KeyPair | KeychainReference,
   ): Promise<KeyPair> {
@@ -210,10 +173,12 @@ export class PluginLedgerConnectorIroha2
     Checks.truthy(publicKeyString, "getSigningKeyPair raw public key");
     Checks.truthy(privateKeyJson, "getSigningKeyPair raw private key json");
 
-    return this.generateKeyPair(publicKeyString, privateKeyJson);
+    return generateIrohaV2KeyPair(publicKeyString, privateKeyJson);
   }
 
-  public async getClient(baseConfig?: Iroha2BaseConfig): Promise<Client> {
+  public async getClient(
+    baseConfig?: Iroha2BaseConfig,
+  ): Promise<CactusIrohaV2Client> {
     if (!baseConfig && !this.defaultConfig) {
       throw new Error("getClient() called without valid Iroha config - fail");
     }
@@ -249,62 +214,45 @@ export class PluginLedgerConnectorIroha2
     }
 
     // Create client
-    // TODO - free keyPair at some point
-    return new Client({
-      torii: mergedConfig.torii,
-      accountId,
-      keyPair,
-      transaction: {
-        ...mergedConfig.transaction,
-        timeToLiveMs,
+    return new CactusIrohaV2Client(
+      {
+        torii: mergedConfig.torii,
+        accountId,
+        keyPair,
+        transaction: {
+          ...mergedConfig.transaction,
+          timeToLiveMs,
+        },
       },
-    });
+      this.options.logLevel,
+    );
   }
 
   public async transact(req: TransactRequestV1): Promise<TransactResponse> {
-    const client = await this.getClient(req.baseConfig);
+    const client = await this.getClient(req.baseConfig); // todo: with decorator?
 
-    const registerBox = RegisterBox({
-      object: EvaluatesToRegistrableBox({
-        expression: Expression(
-          "Raw",
-          Value(
-            "Identifiable",
-            IdentifiableBox(
-              "NewDomain",
-              NewDomain({
-                id: DomainId({
-                  name: req.params[0],
-                }),
-                metadata: Metadata({ map: MapNameValue(new Map()) }),
-                logo: OptionIpfsPath("None"),
-              }),
-            ),
-          ),
-        ),
-      }),
-    });
+    try {
+      switch (req.commandName) {
+        case IrohaCommand.CreateDomain:
+          await client.registerDomain(req.params[0]);
+          break;
+        default:
+          throw new Error("Unknown Iroha V2 command supplied.");
+      }
 
-    await client.submit(
-      Executable(
-        "Instructions",
-        VecInstruction([Instruction("Register", registerBox)]),
-      ),
-    );
+      await client.send();
 
-    return {
-      transactionReceipt: "OK?",
-    };
+      return {
+        transactionReceipt: "OK",
+      };
+    } finally {
+      client.free();
+    }
   }
 
   public async query(req: any): Promise<any> {
     const client = await this.getClient(req.baseConfig);
-
-    const result = await client.request(QueryBox("FindAllDomains", null));
-
-    const domain = result.as("Ok").result.as("Vec");
-    this.log.error(domain);
-
-    return domain;
+    this.log.debug("get", IrohaQuery.GetDomain);
+    return client.query.findAllDomains();
   }
 }

@@ -221,10 +221,10 @@ export interface KeychainReference {
 export interface TransactRequestV1 {
     /**
      * 
-     * @type {string}
+     * @type {IrohaCommand}
      * @memberof TransactRequestV1
      */
-    commandName: string;
+    commandName: IrohaCommand;
     /**
      * 
      * @type {Iroha2BaseConfig}

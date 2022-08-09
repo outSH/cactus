@@ -7,6 +7,7 @@ import {
   PluginLedgerConnectorIroha2,
 } from "./plugin-ledger-connector-iroha2";
 
+// TODO - remove ?
 export class PluginFactoryLedgerConnector extends PluginFactory<
   PluginLedgerConnectorIroha2,
   IPluginLedgerConnectorIroha2Options,

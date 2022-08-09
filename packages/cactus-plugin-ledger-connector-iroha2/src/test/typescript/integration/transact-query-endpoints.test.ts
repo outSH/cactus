@@ -36,7 +36,10 @@ import http from "http";
 import bodyParser from "body-parser";
 
 import "jest-extended";
-import { PluginLedgerConnectorIroha2 } from "../../../main/typescript";
+import {
+  IrohaCommand,
+  PluginLedgerConnectorIroha2,
+} from "../../../main/typescript";
 import { PluginRegistry } from "@hyperledger/cactus-core";
 import express from "express";
 import { AddressInfo } from "net";
@@ -104,6 +107,7 @@ describe("Iroha V2 connector transact and query endpoints tests", () => {
     iroha2ConnectorPlugin = new PluginLedgerConnectorIroha2({
       instanceId: uuidv4(),
       pluginRegistry: new PluginRegistry({ plugins: [keychainPlugin] }),
+      logLevel: sutLogLevel,
     });
 
     keychainSC = {
@@ -154,8 +158,10 @@ describe("Iroha V2 connector transact and query endpoints tests", () => {
   //////////////////////////////////
 
   test("Evaluate transaction returns correct data (GetAllAssets and ReadAsset)", async () => {
+    const newDomainName = "test4";
+
     const res = await iroha2ConnectorPlugin.transact({
-      commandName: "test",
+      commandName: IrohaCommand.CreateDomain,
       baseConfig: {
         torii: {
           apiURL: clientConfig.TORII_API_URL,
@@ -167,9 +173,28 @@ describe("Iroha V2 connector transact and query endpoints tests", () => {
         },
         signingCredential: keychainSC,
       },
-      params: ["test4"],
+      params: [newDomainName],
     });
     log.warn("res:", res);
     expect(res).toBeTruthy();
+
+    // Sleep
+    //await new Promise((resolve) => setTimeout(resolve, 3000));
+
+    const domains = await iroha2ConnectorPlugin.query({
+      baseConfig: {
+        torii: {
+          apiURL: clientConfig.TORII_API_URL,
+          telemetryURL: clientConfig.TORII_TELEMETRY_URL,
+        },
+        accountId: {
+          name: clientConfig.ACCOUNT_ID.name,
+          domainId: clientConfig.ACCOUNT_ID.domain_id.name,
+        },
+        signingCredential: keychainSC,
+      },
+    });
+
+    expect(JSON.stringify(domains)).toContain(newDomainName);
   });
 });
