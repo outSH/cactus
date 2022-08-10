@@ -11,7 +11,7 @@
   },
   "components": {
     "schemas": {
-      "IrohaCommand": {
+      "IrohaInstruction": {
         "type": "string",
         "enum": [
           "createDomain"
@@ -174,26 +174,49 @@
           }
         }
       },
-      "TransactRequestV1": {
+      "IrohaInstructionRequestV1": {
         "type": "object",
         "required": [
-          "commandName",
+          "name",
           "params"
         ],
         "additionalProperties": false,
         "properties": {
-          "commandName": {
-            "type": "IrohaCommand",
-            "nullable": false
-          },
-          "baseConfig": {
-            "$ref": "#/components/schemas/Iroha2BaseConfig",
+          "name": {
+            "type": "IrohaInstruction",
             "nullable": false
           },
           "params": {
             "description": "The list of arguments to pass in to the transaction request.",
             "type": "array",
             "items": {}
+          }
+        }
+      },
+      "TransactRequestV1": {
+        "type": "object",
+        "required": [
+          "instruction"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "instruction": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/IrohaInstructionRequestV1",
+                "nullable": false
+              },
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/IrohaInstructionRequestV1"
+                }
+              }
+            ]
+          },
+          "baseConfig": {
+            "$ref": "#/components/schemas/Iroha2BaseConfig",
+            "nullable": false
           }
         }
       },

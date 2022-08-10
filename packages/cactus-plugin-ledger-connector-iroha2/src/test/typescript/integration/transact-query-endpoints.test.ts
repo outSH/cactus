@@ -37,7 +37,7 @@ import bodyParser from "body-parser";
 
 import "jest-extended";
 import {
-  IrohaCommand,
+  IrohaInstruction,
   IrohaQuery,
   PluginLedgerConnectorIroha2,
 } from "../../../main/typescript";
@@ -159,10 +159,19 @@ describe("Iroha V2 connector transact and query endpoints tests", () => {
   //////////////////////////////////
 
   test("Evaluate transaction returns correct data (GetAllAssets and ReadAsset)", async () => {
-    const newDomainName = "test4";
+    const newDomainName = "test6";
 
     const res = await iroha2ConnectorPlugin.transact({
-      commandName: IrohaCommand.CreateDomain,
+      instruction: [
+        {
+          name: IrohaInstruction.CreateDomain,
+          params: [newDomainName],
+        },
+        {
+          name: IrohaInstruction.CreateDomain,
+          params: ["test5"],
+        },
+      ],
       baseConfig: {
         torii: {
           apiURL: clientConfig.TORII_API_URL,
@@ -174,7 +183,6 @@ describe("Iroha V2 connector transact and query endpoints tests", () => {
         },
         signingCredential: keychainSC,
       },
-      params: [newDomainName],
     });
     log.warn("res:", res);
     expect(res).toBeTruthy();

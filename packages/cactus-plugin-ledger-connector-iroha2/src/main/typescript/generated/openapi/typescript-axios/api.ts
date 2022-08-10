@@ -174,13 +174,32 @@ export interface Iroha2KeyPair {
  * @enum {string}
  */
 
-export enum IrohaCommand {
+export enum IrohaInstruction {
     /**
     * Add new domain
     */
     CreateDomain = 'createDomain'
 }
 
+/**
+ * 
+ * @export
+ * @interface IrohaInstructionRequestV1
+ */
+export interface IrohaInstructionRequestV1 {
+    /**
+     * 
+     * @type {IrohaInstruction}
+     * @memberof IrohaInstructionRequestV1
+     */
+    name: IrohaInstruction;
+    /**
+     * The list of arguments to pass in to the transaction request.
+     * @type {Array<any>}
+     * @memberof IrohaInstructionRequestV1
+     */
+    params: Array<any>;
+}
 /**
  * 
  * @export
@@ -259,22 +278,16 @@ export interface QueryResponseV1 {
 export interface TransactRequestV1 {
     /**
      * 
-     * @type {IrohaCommand}
+     * @type {IrohaInstructionRequestV1 | Array<IrohaInstructionRequestV1>}
      * @memberof TransactRequestV1
      */
-    commandName: IrohaCommand;
+    instruction: IrohaInstructionRequestV1 | Array<IrohaInstructionRequestV1>;
     /**
      * 
      * @type {Iroha2BaseConfig}
      * @memberof TransactRequestV1
      */
     baseConfig?: Iroha2BaseConfig;
-    /**
-     * The list of arguments to pass in to the transaction request.
-     * @type {Array<any>}
-     * @memberof TransactRequestV1
-     */
-    params: Array<any>;
 }
 /**
  * 

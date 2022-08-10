@@ -25,7 +25,7 @@ import {
 } from "@hyperledger/cactus-common";
 
 import {
-  IrohaCommand,
+  IrohaInstruction,
   IrohaQuery,
   TransactRequestV1,
   TransactResponseV1,
@@ -35,6 +35,7 @@ import {
   KeychainReference,
   QueryRequestV1,
   QueryResponseV1,
+  IrohaInstructionRequestV1,
 } from "./generated/openapi/typescript-axios";
 
 import { TransactEndpoint } from "./web-services/transact-endpoint";
@@ -238,13 +239,22 @@ export class PluginLedgerConnectorIroha2
     const client = await this.getClient(req.baseConfig);
 
     try {
-      switch (req.commandName) {
-        case IrohaCommand.CreateDomain:
-          await client.registerDomain(req.params[0]);
-          break;
-        default:
-          throw new Error("Unknown Iroha V2 command supplied.");
+      let instructions: IrohaInstructionRequestV1[];
+      if (Array.isArray(req.instruction)) {
+        instructions = req.instruction;
+      } else {
+        instructions = [req.instruction];
       }
+
+      instructions.forEach(async (cmd) => {
+        switch (cmd.name) {
+          case IrohaInstruction.CreateDomain:
+            await client.registerDomain(cmd.params[0]);
+            break;
+          default:
+            throw new Error("Unknown Iroha V2 command supplied.");
+        }
+      });
 
       await client.send();
 
