@@ -20,21 +20,21 @@ import { PluginLedgerConnectorIroha2 } from "../plugin-ledger-connector-iroha2";
 
 import OAS from "../../json/openapi.json";
 
-export interface ITransactEndpointOptions {
+export interface IQueryEndpointOptions {
   logLevel?: LogLevelDesc;
   connector: PluginLedgerConnectorIroha2;
 }
 
-export class TransactEndpoint implements IWebServiceEndpoint {
-  public static readonly CLASS_NAME = "TransactEndpoint";
+export class QueryEndpoint implements IWebServiceEndpoint {
+  public static readonly CLASS_NAME = "QueryEndpoint";
 
   private readonly log: Logger;
 
   public get className(): string {
-    return TransactEndpoint.CLASS_NAME;
+    return QueryEndpoint.CLASS_NAME;
   }
 
-  constructor(public readonly options: ITransactEndpointOptions) {
+  constructor(public readonly options: IQueryEndpointOptions) {
     const fnTag = `${this.className}#constructor()`;
     Checks.truthy(options, `${fnTag} arg options`);
     Checks.truthy(options.connector, `${fnTag} arg options.connector`);
@@ -46,7 +46,7 @@ export class TransactEndpoint implements IWebServiceEndpoint {
 
   public getOasPath(): any {
     return OAS.paths[
-      "/api/v1/plugins/@hyperledger/cactus-plugin-ledger-connector-iroha2/transact"
+      "/api/v1/plugins/@hyperledger/cactus-plugin-ledger-connector-iroha2/query"
     ];
   }
 
@@ -90,7 +90,7 @@ export class TransactEndpoint implements IWebServiceEndpoint {
     this.log.debug(reqTag);
     const reqBody = req.body;
     try {
-      const resBody = await this.options.connector.transact(reqBody);
+      const resBody = await this.options.connector.query(reqBody);
       res.json(resBody);
     } catch (ex) {
       this.log.error(`Crash while serving ${reqTag}`, ex);

@@ -38,6 +38,7 @@ import bodyParser from "body-parser";
 import "jest-extended";
 import {
   IrohaCommand,
+  IrohaQuery,
   PluginLedgerConnectorIroha2,
 } from "../../../main/typescript";
 import { PluginRegistry } from "@hyperledger/cactus-core";
@@ -179,9 +180,10 @@ describe("Iroha V2 connector transact and query endpoints tests", () => {
     expect(res).toBeTruthy();
 
     // Sleep
-    //await new Promise((resolve) => setTimeout(resolve, 3000));
+    // await new Promise((resolve) => setTimeout(resolve, 3000));
 
     const domains = await iroha2ConnectorPlugin.query({
+      queryName: IrohaQuery.FindAllDomains,
       baseConfig: {
         torii: {
           apiURL: clientConfig.TORII_API_URL,

@@ -26,13 +26,13 @@
       "IrohaQuery": {
         "type": "string",
         "enum": [
-          "getDomain"
+          "findAllDomains"
         ],
         "x-enum-descriptions": [
           "To get the state of a domain"
         ],
         "x-enum-varnames": [
-          "GetDomain"
+          "FindAllDomains"
         ]
       },
       "Iroha2AccountId": {
@@ -197,13 +197,49 @@
           }
         }
       },
-      "TransactResponse": {
+      "TransactResponseV1": {
         "type": "object",
         "required": [
-          "transactionReceipt"
+          "status"
         ],
         "properties": {
-          "transactionReceipt": {}
+          "status": {
+            "type": "string",
+            "nullable": false
+          }
+        }
+      },
+      "QueryRequestV1": {
+        "type": "object",
+        "required": [
+          "queryName"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "queryName": {
+            "type": "IrohaQuery",
+            "nullable": false
+          },
+          "baseConfig": {
+            "$ref": "#/components/schemas/Iroha2BaseConfig",
+            "nullable": false
+          },
+          "params": {
+            "description": "The list of arguments to pass in to the query request.",
+            "type": "array",
+            "items": {}
+          }
+        }
+      },
+      "QueryResponseV1": {
+        "type": "object",
+        "required": [
+          "response"
+        ],
+        "properties": {
+          "response": {
+            "nullable": false
+          }
         }
       },
       "ErrorExceptionResponseV1": {
@@ -252,13 +288,13 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TransactResponse"
+                  "$ref": "#/components/schemas/TransactResponseV1"
                 }
               }
             }
           },
-          "400": {
-            "description": "Bad Request error.",
+          "500": {
+            "description": "Internal Server Error.",
             "content": {
               "application/json": {
                 "schema": {
@@ -266,13 +302,37 @@
                 }
               }
             }
-          },
-          "405": {
-            "description": "Method Not Allowed error.",
+          }
+        }
+      }
+    },
+    "/api/v1/plugins/@hyperledger/cactus-plugin-ledger-connector-iroha2/query": {
+      "post": {
+        "x-hyperledger-cactus": {
+          "http": {
+            "verbLowerCase": "post",
+            "path": "/api/v1/plugins/@hyperledger/cactus-plugin-ledger-connector-iroha2/query"
+          }
+        },
+        "operationId": "QueryV1",
+        "summary": "Executes a query on a Iroha V2 ledger",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QueryRequestV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorExceptionResponseV1"
+                  "$ref": "#/components/schemas/QueryResponseV1"
                 }
               }
             }

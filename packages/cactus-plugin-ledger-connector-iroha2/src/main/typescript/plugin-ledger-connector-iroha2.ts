@@ -28,14 +28,17 @@ import {
   IrohaCommand,
   IrohaQuery,
   TransactRequestV1,
-  TransactResponse,
+  TransactResponseV1,
   Iroha2BaseConfig,
   Iroha2KeyJson,
   Iroha2KeyPair,
   KeychainReference,
+  QueryRequestV1,
+  QueryResponseV1,
 } from "./generated/openapi/typescript-axios";
 
 import { TransactEndpoint } from "./web-services/transact-endpoint";
+import { QueryEndpoint } from "./web-services/query-endpoint";
 
 import { KeyPair } from "@iroha2/crypto-core";
 import { AccountId, DomainId } from "@iroha2/data-model";
@@ -53,7 +56,7 @@ export interface IPluginLedgerConnectorIroha2Options
 
 export class PluginLedgerConnectorIroha2
   implements
-    IPluginLedgerConnector<never, never, TransactRequestV1, TransactResponse>,
+    IPluginLedgerConnector<never, never, TransactRequestV1, TransactResponseV1>,
     ICactusPlugin,
     IPluginWebService {
   private readonly instanceId: string;
@@ -120,14 +123,17 @@ export class PluginLedgerConnectorIroha2
     if (Array.isArray(this.endpoints)) {
       return this.endpoints;
     }
-    const endpoints: IWebServiceEndpoint[] = [];
-    {
-      const endpoint = new TransactEndpoint({
+
+    const endpoints: IWebServiceEndpoint[] = [
+      new TransactEndpoint({
         connector: this,
         logLevel: this.options.logLevel,
-      });
-      endpoints.push(endpoint);
-    }
+      }),
+      new QueryEndpoint({
+        connector: this,
+        logLevel: this.options.logLevel,
+      }),
+    ];
 
     this.endpoints = endpoints;
     return endpoints;
@@ -228,8 +234,8 @@ export class PluginLedgerConnectorIroha2
     );
   }
 
-  public async transact(req: TransactRequestV1): Promise<TransactResponse> {
-    const client = await this.getClient(req.baseConfig); // todo: with decorator?
+  public async transact(req: TransactRequestV1): Promise<TransactResponseV1> {
+    const client = await this.getClient(req.baseConfig);
 
     try {
       switch (req.commandName) {
@@ -243,16 +249,27 @@ export class PluginLedgerConnectorIroha2
       await client.send();
 
       return {
-        transactionReceipt: "OK",
+        status: "OK",
       };
     } finally {
       client.free();
     }
   }
 
-  public async query(req: any): Promise<any> {
+  public async query(req: QueryRequestV1): Promise<QueryResponseV1> {
     const client = await this.getClient(req.baseConfig);
-    this.log.debug("get", IrohaQuery.GetDomain);
-    return client.query.findAllDomains();
+
+    try {
+      switch (req.queryName) {
+        case IrohaQuery.FindAllDomains:
+          return {
+            response: await client.query.findAllDomains(),
+          };
+        default:
+          throw new Error("Unknown Iroha V2 command supplied.");
+      }
+    } finally {
+      client.free();
+    }
   }
 }

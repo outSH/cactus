@@ -191,7 +191,7 @@ export enum IrohaQuery {
     /**
     * To get the state of a domain
     */
-    GetDomain = 'getDomain'
+    FindAllDomains = 'findAllDomains'
 }
 
 /**
@@ -212,6 +212,44 @@ export interface KeychainReference {
      * @memberof KeychainReference
      */
     keychainRef: string;
+}
+/**
+ * 
+ * @export
+ * @interface QueryRequestV1
+ */
+export interface QueryRequestV1 {
+    /**
+     * 
+     * @type {IrohaQuery}
+     * @memberof QueryRequestV1
+     */
+    queryName: IrohaQuery;
+    /**
+     * 
+     * @type {Iroha2BaseConfig}
+     * @memberof QueryRequestV1
+     */
+    baseConfig?: Iroha2BaseConfig;
+    /**
+     * The list of arguments to pass in to the query request.
+     * @type {Array<any>}
+     * @memberof QueryRequestV1
+     */
+    params?: Array<any>;
+}
+/**
+ * 
+ * @export
+ * @interface QueryResponseV1
+ */
+export interface QueryResponseV1 {
+    /**
+     * 
+     * @type {any}
+     * @memberof QueryResponseV1
+     */
+    response: any;
 }
 /**
  * 
@@ -241,15 +279,15 @@ export interface TransactRequestV1 {
 /**
  * 
  * @export
- * @interface TransactResponse
+ * @interface TransactResponseV1
  */
-export interface TransactResponse {
+export interface TransactResponseV1 {
     /**
      * 
-     * @type {any}
-     * @memberof TransactResponse
+     * @type {string}
+     * @memberof TransactResponseV1
      */
-    transactionReceipt: any | null;
+    status: string;
 }
 
 /**
@@ -258,6 +296,40 @@ export interface TransactResponse {
  */
 export const DefaultApiAxiosParamCreator = function (configuration?: Configuration) {
     return {
+        /**
+         * 
+         * @summary Executes a query on a Iroha V2 ledger
+         * @param {QueryRequestV1} [queryRequestV1] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        queryV1: async (queryRequestV1?: QueryRequestV1, options: any = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/v1/plugins/@hyperledger/cactus-plugin-ledger-connector-iroha2/query`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter, options.query);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(queryRequestV1, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
         /**
          * 
          * @summary Executes a transaction on a Iroha V2 ledger
@@ -304,12 +376,23 @@ export const DefaultApiFp = function(configuration?: Configuration) {
     return {
         /**
          * 
+         * @summary Executes a query on a Iroha V2 ledger
+         * @param {QueryRequestV1} [queryRequestV1] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async queryV1(queryRequestV1?: QueryRequestV1, options?: any): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<QueryResponseV1>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.queryV1(queryRequestV1, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
          * @summary Executes a transaction on a Iroha V2 ledger
          * @param {TransactRequestV1} [transactRequestV1] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async transactV1(transactRequestV1?: TransactRequestV1, options?: any): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TransactResponse>> {
+        async transactV1(transactRequestV1?: TransactRequestV1, options?: any): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<TransactResponseV1>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.transactV1(transactRequestV1, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
@@ -325,12 +408,22 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
     return {
         /**
          * 
+         * @summary Executes a query on a Iroha V2 ledger
+         * @param {QueryRequestV1} [queryRequestV1] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        queryV1(queryRequestV1?: QueryRequestV1, options?: any): AxiosPromise<QueryResponseV1> {
+            return localVarFp.queryV1(queryRequestV1, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
          * @summary Executes a transaction on a Iroha V2 ledger
          * @param {TransactRequestV1} [transactRequestV1] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        transactV1(transactRequestV1?: TransactRequestV1, options?: any): AxiosPromise<TransactResponse> {
+        transactV1(transactRequestV1?: TransactRequestV1, options?: any): AxiosPromise<TransactResponseV1> {
             return localVarFp.transactV1(transactRequestV1, options).then((request) => request(axios, basePath));
         },
     };
@@ -343,6 +436,18 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
  * @extends {BaseAPI}
  */
 export class DefaultApi extends BaseAPI {
+    /**
+     * 
+     * @summary Executes a query on a Iroha V2 ledger
+     * @param {QueryRequestV1} [queryRequestV1] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public queryV1(queryRequestV1?: QueryRequestV1, options?: any) {
+        return DefaultApiFp(this.configuration).queryV1(queryRequestV1, options).then((request) => request(this.axios, this.basePath));
+    }
+
     /**
      * 
      * @summary Executes a transaction on a Iroha V2 ledger
