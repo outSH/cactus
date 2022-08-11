@@ -1,4 +1,5 @@
 import { crypto } from "@iroha2/crypto-target-node";
+import safeStringify from "fast-safe-stringify";
 
 import { Client, setCrypto, UserConfig } from "@iroha2/client";
 
@@ -17,9 +18,13 @@ import {
   RegisterBox,
   Value,
   VecInstruction,
+  FindDomainById,
+  EvaluatesToDomainId,
+  IdBox,
 } from "@iroha2/data-model";
 
 import {
+  Checks,
   Logger,
   LoggerProvider,
   LogLevelDesc,
@@ -42,13 +47,50 @@ export class CactusIrohaV2QueryClient {
     this.log.debug("CactusIrohaV2QueryClient created.");
   }
 
+  public async findDomainById(domainName: string): Promise<any> {
+    Checks.truthy(domainName, "findDomainById arg domainName");
+
+    const result = await this.client.request(
+      QueryBox(
+        "FindDomainById",
+        FindDomainById({
+          // TODO - helpers for DomainId()
+          id: EvaluatesToDomainId({
+            expression: Expression(
+              "Raw",
+              Value(
+                "Id",
+                IdBox(
+                  "DomainId",
+                  DomainId({
+                    name: domainName,
+                  }),
+                ),
+              ),
+            ),
+          }),
+        }),
+      ),
+    );
+
+    const domain = result.match({
+      Ok: (res) => res.result.as("Identifiable").as("Domain"),
+      Err: (error) => {
+        throw new Error(`Query error: ${safeStringify(error)}`);
+      },
+    });
+    this.log.debug("findDomainById:", domain);
+
+    return domain;
+  }
+
   public async findAllDomains(): Promise<any> {
     const result = await this.client.request(QueryBox("FindAllDomains", null));
 
     const domains = result.match({
       Ok: (res) => res.result.as("Vec"),
       Err: (error) => {
-        throw new Error(`Query error: ${error}`);
+        throw new Error(`Query error: ${safeStringify(error)}`);
       },
     });
     this.log.debug("findAllDomains:", domains);
@@ -81,6 +123,8 @@ export class CactusIrohaV2Client {
   }
 
   public async registerDomain(domainName: string): Promise<this> {
+    Checks.truthy(domainName, "findDomainById arg domainName");
+
     const registerBox = RegisterBox({
       object: EvaluatesToRegistrableBox({
         expression: Expression(

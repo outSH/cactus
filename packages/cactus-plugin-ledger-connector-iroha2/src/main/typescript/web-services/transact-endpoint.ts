@@ -103,15 +103,15 @@ export class TransactEndpoint implements IWebServiceEndpoint {
             allowedAttributes: {},
           }),
         });
+      } else {
+        res.status(500).json({
+          message: "Internal Server Error",
+          error: sanitizeHtml(safeStringify(ex), {
+            allowedTags: [],
+            allowedAttributes: {},
+          }),
+        });
       }
-
-      res.status(500).json({
-        message: "Internal Server Error",
-        error: sanitizeHtml(safeStringify(ex), {
-          allowedTags: [],
-          allowedAttributes: {},
-        }),
-      });
     }
   }
 }

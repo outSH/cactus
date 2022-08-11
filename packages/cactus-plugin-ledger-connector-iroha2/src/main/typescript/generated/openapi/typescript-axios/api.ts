@@ -210,7 +210,8 @@ export enum IrohaQuery {
     /**
     * To get the state of a domain
     */
-    FindAllDomains = 'findAllDomains'
+    FindAllDomains = 'findAllDomains',
+    FindDomainById = 'findDomainById'
 }
 
 /**

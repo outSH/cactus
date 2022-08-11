@@ -110,7 +110,6 @@ export class PluginLedgerConnectorIroha2
     this.log.info(`Shutting down ${this.className}...`);
   }
 
-  // TODO - universal WS endpoints too
   async registerWebServices(
     app: Express,
     // wsApi: SocketIoServer,
@@ -183,6 +182,7 @@ export class PluginLedgerConnectorIroha2
     return generateIrohaV2KeyPair(publicKeyString, privateKeyJson);
   }
 
+  // TODO - config merge on ApiClient side as well?
   public async getClient(
     baseConfig?: Iroha2BaseConfig,
   ): Promise<CactusIrohaV2Client> {
@@ -246,15 +246,16 @@ export class PluginLedgerConnectorIroha2
         instructions = [req.instruction];
       }
 
-      instructions.forEach(async (cmd) => {
-        switch (cmd.name) {
-          case IrohaInstruction.CreateDomain:
-            await client.registerDomain(cmd.params[0]);
-            break;
-          default:
-            throw new Error("Unknown Iroha V2 command supplied.");
-        }
-      });
+      await Promise.all(
+        instructions.map((cmd) => {
+          switch (cmd.name) {
+            case IrohaInstruction.CreateDomain:
+              return client.registerDomain(cmd.params[0]);
+            default:
+              throw new Error("Unknown Iroha V2 command supplied.");
+          }
+        }),
+      );
 
       await client.send();
 
@@ -274,6 +275,18 @@ export class PluginLedgerConnectorIroha2
         case IrohaQuery.FindAllDomains:
           return {
             response: await client.query.findAllDomains(),
+          };
+        case IrohaQuery.FindDomainById:
+          if (!req.params || req.params.length < 1) {
+            throw new Error(
+              `Not enough parameters for the query '${
+                IrohaQuery.FindDomainById
+              }' - expected: ${1}, got: ${req.params?.length ?? 0}`,
+            );
+          }
+
+          return {
+            response: await client.query.findDomainById(req.params[0]),
           };
         default:
           throw new Error("Unknown Iroha V2 command supplied.");

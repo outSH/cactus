@@ -26,13 +26,15 @@
       "IrohaQuery": {
         "type": "string",
         "enum": [
-          "findAllDomains"
+          "findAllDomains",
+          "findDomainById"
         ],
         "x-enum-descriptions": [
           "To get the state of a domain"
         ],
         "x-enum-varnames": [
-          "FindAllDomains"
+          "FindAllDomains",
+          "FindDomainById"
         ]
       },
       "Iroha2AccountId": {
