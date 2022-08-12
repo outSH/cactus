@@ -37,6 +37,81 @@
           "FindDomainById"
         ]
       },
+      "WatchBlocksV1": {
+        "type": "string",
+        "description": "Websocket requests for monitoring new blocks.",
+        "enum": [
+          "org.hyperledger.cactus.api.async.hliroha2.WatchBlocksV1.Subscribe",
+          "org.hyperledger.cactus.api.async.hliroha2.WatchBlocksV1.Next",
+          "org.hyperledger.cactus.api.async.hliroha2.WatchBlocksV1.Unsubscribe",
+          "org.hyperledger.cactus.api.async.hliroha2.WatchBlocksV1.Error",
+          "org.hyperledger.cactus.api.async.hliroha2.WatchBlocksV1.Complete"
+        ],
+        "x-enum-varnames": [
+          "Subscribe",
+          "Next",
+          "Unsubscribe",
+          "Error",
+          "Complete"
+        ]
+      },
+      "WatchBlocksListenerTypeV1": {
+        "type": "string",
+        "description": "Response type from WatchBlocks.",
+        "enum": [
+          "binary"
+        ],
+        "x-enum-varnames": [
+          "Binary"
+        ]
+      },
+      "WatchBlocksOptionsV1": {
+        "type": "object",
+        "description": "Options passed when subscribing to block monitoring.",
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/WatchBlocksListenerTypeV1",
+            "description": "Type of response block to return.",
+            "default": "WatchBlocksListenerTypeV1.Binary",
+            "nullable": false
+          },
+          "startBlock": {
+            "type": "string",
+            "minLength": 1,
+            "nullable": false
+          },
+          "baseConfig": {
+            "$ref": "#/components/schemas/Iroha2BaseConfig",
+            "nullable": false
+          }
+        }
+      },
+      "WatchBlocksBinaryResponseV1": {
+        "type": "object",
+        "description": "response.",
+        "required": [
+          "binaryBlock"
+        ],
+        "properties": {
+          "binaryBlock": {
+            "type": "string",
+            "format": "binary",
+            "nullable": false
+          }
+        }
+      },
+      "WatchBlocksResponseV1": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/WatchBlocksBinaryResponseV1",
+            "nullable": false
+          },
+          {
+            "$ref": "#/components/schemas/ErrorExceptionResponseV1",
+            "nullable": false
+          }
+        ]
+      },
       "Iroha2AccountId": {
         "type": "object",
         "additionalProperties": false,

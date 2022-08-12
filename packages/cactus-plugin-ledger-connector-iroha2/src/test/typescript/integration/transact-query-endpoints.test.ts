@@ -27,6 +27,7 @@ import {
   Logger,
   IListenOptions,
   Servers,
+  Checks,
 } from "@hyperledger/cactus-common";
 
 import { PluginKeychainMemory } from "@hyperledger/cactus-plugin-keychain-memory";
@@ -34,21 +35,23 @@ import { PluginKeychainMemory } from "@hyperledger/cactus-plugin-keychain-memory
 import { v4 as uuidv4 } from "uuid";
 import http from "http";
 import bodyParser from "body-parser";
-
+import { Server as SocketIoServer } from "socket.io";
 import "jest-extended";
+
 import {
   Iroha2BaseConfig,
   IrohaInstruction,
   IrohaQuery,
   KeychainReference,
   PluginLedgerConnectorIroha2,
-  DefaultApi as Iroha2Api,
   Iroha2KeyPair,
-} from "../../../main/typescript";
+  Iroha2ApiClient,
+} from "../../../main/typescript/public-api";
 import { PluginRegistry } from "@hyperledger/cactus-core";
 import express from "express";
 import { AddressInfo } from "net";
-import { Configuration } from "@hyperledger/cactus-core-api";
+import { Configuration, Constants } from "@hyperledger/cactus-core-api";
+import { VersionedCommittedBlock } from "@iroha2/data-model";
 
 // Logger setup
 const log: Logger = LoggerProvider.getOrCreate({
@@ -62,12 +65,13 @@ const log: Logger = LoggerProvider.getOrCreate({
 describe("Iroha V2 connector tests", () => {
   let ledger: Iroha2TestLedger;
   let connectorServer: http.Server;
+  let socketioServer: SocketIoServer;
   let iroha2ConnectorPlugin: PluginLedgerConnectorIroha2;
   let clientConfig: Iroha2ClientConfig;
   let keyPairCredential: Iroha2KeyPair;
   let keychainCredentials: KeychainReference;
   let defaultBaseConfig: Iroha2BaseConfig;
-  let apiClient: Iroha2Api;
+  let apiClient: Iroha2ApiClient;
 
   //////////////////////////////////
   // Environment Setup
@@ -150,13 +154,18 @@ describe("Iroha V2 connector tests", () => {
     const apiHost = `http://${addressInfo.address}:${addressInfo.port}`;
     log.debug("Iroha V2 connector URL:", apiHost);
 
+    // Run socketio server
+    socketioServer = new SocketIoServer(connectorServer, {
+      path: Constants.SocketIoConnectionPathV1,
+    });
+
     // Register services
     await iroha2ConnectorPlugin.getOrCreateWebServices();
-    await iroha2ConnectorPlugin.registerWebServices(expressApp);
+    await iroha2ConnectorPlugin.registerWebServices(expressApp, socketioServer);
 
     // Create ApiClient
     const apiConfig = new Configuration({ basePath: apiHost });
-    apiClient = new Iroha2Api(apiConfig);
+    apiClient = new Iroha2ApiClient(apiConfig);
   });
 
   afterAll(async () => {
@@ -167,6 +176,13 @@ describe("Iroha V2 connector tests", () => {
     //   await ledger.stop();
     //   await ledger.destroy();
     // }
+
+    if (socketioServer) {
+      log.info("Stop the SocketIO server connector...");
+      await new Promise<void>((resolve) =>
+        socketioServer.close(() => resolve()),
+      );
+    }
 
     if (connectorServer) {
       log.info("Stop the fabric connector...");
@@ -425,6 +441,64 @@ describe("Iroha V2 connector tests", () => {
           baseConfig: defaultBaseConfig,
         }),
       ).toReject();
+    });
+  });
+
+  describe("Block monitoring tests", () => {
+    test("watchBlocksV1 reports new blocks in binary (default) format", async () => {
+      // Start monitoring
+      const monitorPromise = new Promise<void>((resolve, reject) => {
+        const watchObservable = apiClient.watchBlocksV1({
+          baseConfig: defaultBaseConfig,
+        });
+
+        const subscription = watchObservable.subscribe({
+          next(event) {
+            try {
+              log.info("Received block event from the connector");
+              if (!("binaryBlock" in event)) {
+                throw new Error("Unknown response type, wanted binary data");
+              }
+              Checks.truthy(event.binaryBlock);
+              const decodedBlock = VersionedCommittedBlock.fromBuffer(
+                Buffer.from(event.binaryBlock),
+              );
+              log.debug("decodedBlock:", decodedBlock);
+              expect(decodedBlock.as("V1").header).toBeTruthy();
+              subscription.unsubscribe();
+              resolve();
+            } catch (err) {
+              log.error("watchBlocksV1() event check error:", err);
+              subscription.unsubscribe();
+              reject(err);
+            }
+          },
+          error(err) {
+            log.error("watchBlocksV1() error:", err);
+            subscription.unsubscribe();
+            reject(err);
+          },
+        });
+      });
+
+      await waitForCommit();
+
+      // Create new domain to trigger new block creation
+      const domainName =
+        "watchBlocksBin" + (Math.random() + 1).toString(36).substring(7);
+      const transactionResponse = await apiClient.transactV1({
+        instruction: {
+          name: IrohaInstruction.CreateDomain,
+          params: [domainName],
+        },
+        baseConfig: defaultBaseConfig,
+      });
+      log.info("Watch block trigger tx sent to create domain", domainName);
+      expect(transactionResponse).toBeTruthy();
+      expect(transactionResponse.status).toEqual(200);
+      expect(transactionResponse.data.status).toEqual("OK");
+
+      await expect(monitorPromise).toResolve();
     });
   });
 });

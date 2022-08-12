@@ -303,6 +303,74 @@ export interface TransactResponseV1 {
      */
     status: string;
 }
+/**
+ * response.
+ * @export
+ * @interface WatchBlocksBinaryResponseV1
+ */
+export interface WatchBlocksBinaryResponseV1 {
+    /**
+     * 
+     * @type {any}
+     * @memberof WatchBlocksBinaryResponseV1
+     */
+    binaryBlock: any;
+}
+/**
+ * Response type from WatchBlocks.
+ * @export
+ * @enum {string}
+ */
+
+export enum WatchBlocksListenerTypeV1 {
+    Binary = 'binary'
+}
+
+/**
+ * Options passed when subscribing to block monitoring.
+ * @export
+ * @interface WatchBlocksOptionsV1
+ */
+export interface WatchBlocksOptionsV1 {
+    /**
+     * 
+     * @type {WatchBlocksListenerTypeV1}
+     * @memberof WatchBlocksOptionsV1
+     */
+    type?: WatchBlocksListenerTypeV1;
+    /**
+     * 
+     * @type {string}
+     * @memberof WatchBlocksOptionsV1
+     */
+    startBlock?: string;
+    /**
+     * 
+     * @type {Iroha2BaseConfig}
+     * @memberof WatchBlocksOptionsV1
+     */
+    baseConfig?: Iroha2BaseConfig;
+}
+/**
+ * @type WatchBlocksResponseV1
+ * @export
+ */
+export type WatchBlocksResponseV1 = ErrorExceptionResponseV1 | WatchBlocksBinaryResponseV1;
+
+/**
+ * Websocket requests for monitoring new blocks.
+ * @export
+ * @enum {string}
+ */
+
+export enum WatchBlocksV1 {
+    Subscribe = 'org.hyperledger.cactus.api.async.hliroha2.WatchBlocksV1.Subscribe',
+    Next = 'org.hyperledger.cactus.api.async.hliroha2.WatchBlocksV1.Next',
+    Unsubscribe = 'org.hyperledger.cactus.api.async.hliroha2.WatchBlocksV1.Unsubscribe',
+    Error = 'org.hyperledger.cactus.api.async.hliroha2.WatchBlocksV1.Error',
+    Complete = 'org.hyperledger.cactus.api.async.hliroha2.WatchBlocksV1.Complete'
+}
+
 
 /**
  * DefaultApi - axios parameter creator

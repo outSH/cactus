@@ -1,7 +1,10 @@
 import type { Express } from "express";
+import type {
+  Server as SocketIoServer,
+  Socket as SocketIoSocket,
+} from "socket.io";
+
 import OAS from "../json/openapi.json";
-// import type { Server as SocketIoServer } from "socket.io";
-// import type { Socket as SocketIoSocket } from "socket.io";
 
 import {
   ConsensusAlgorithmFamily,
@@ -36,10 +39,13 @@ import {
   QueryRequestV1,
   QueryResponseV1,
   IrohaInstructionRequestV1,
+  WatchBlocksV1,
+  WatchBlocksOptionsV1,
 } from "./generated/openapi/typescript-axios";
 
 import { TransactEndpoint } from "./web-services/transact-endpoint";
 import { QueryEndpoint } from "./web-services/query-endpoint";
+import { WatchBlocksV1Endpoint } from "./web-services/watch-blocks-v1-endpoint";
 
 import { KeyPair } from "@iroha2/crypto-core";
 import { AccountId, DomainId } from "@iroha2/data-model";
@@ -64,6 +70,7 @@ export class PluginLedgerConnectorIroha2
   private readonly log: Logger;
   private readonly defaultConfig: Iroha2BaseConfig | undefined;
   private endpoints: IWebServiceEndpoint[] | undefined;
+  private runningWatchBlocksMonitors = new Set<WatchBlocksV1Endpoint>();
 
   public readonly className: string;
 
@@ -108,14 +115,62 @@ export class PluginLedgerConnectorIroha2
 
   public async shutdown(): Promise<void> {
     this.log.info(`Shutting down ${this.className}...`);
+    this.runningWatchBlocksMonitors.forEach((m) => m.close());
+    this.runningWatchBlocksMonitors.clear();
+  }
+
+  private registerWatchBlocksSocketIOEndpoint(
+    socket: SocketIoSocket,
+  ): SocketIoSocket {
+    this.log.debug("Register WatchBlocks.Subscribe handler.");
+
+    socket.on(
+      WatchBlocksV1.Subscribe,
+      async (options: WatchBlocksOptionsV1) => {
+        // Get client
+        const cactusIrohaClient = await this.getClient(options.baseConfig);
+
+        // Start monitoring
+        const monitor = new WatchBlocksV1Endpoint({
+          socket,
+          logLevel: this.options.logLevel,
+          client: cactusIrohaClient.irohaClient,
+        });
+        this.runningWatchBlocksMonitors.add(monitor);
+        await monitor.subscribe(options);
+        this.log.debug(
+          "Running monitors count:",
+          this.runningWatchBlocksMonitors.size,
+        );
+
+        socket.on("disconnect", async () => {
+          await cactusIrohaClient.clear();
+          this.runningWatchBlocksMonitors.delete(monitor);
+          this.log.debug(
+            "Running monitors count:",
+            this.runningWatchBlocksMonitors.size,
+          );
+        });
+      },
+    );
+
+    return socket;
   }
 
   async registerWebServices(
     app: Express,
-    // wsApi: SocketIoServer,
+    wsApi: SocketIoServer,
   ): Promise<IWebServiceEndpoint[]> {
     const webServices = await this.getOrCreateWebServices();
     await Promise.all(webServices.map((ws) => ws.registerExpress(app)));
+
+    if (wsApi) {
+      wsApi.on("connection", (socket: SocketIoSocket) => {
+        this.log.debug(`New Socket connected. ID=${socket.id}`);
+        this.registerWatchBlocksSocketIOEndpoint(socket);
+      });
+    }
+
     return webServices;
   }
 
@@ -252,7 +307,10 @@ export class PluginLedgerConnectorIroha2
             case IrohaInstruction.CreateDomain:
               return client.registerDomain(cmd.params[0]);
             default:
-              throw new Error("Unknown Iroha V2 command supplied.");
+              const unknownType: never = cmd.name;
+              throw new Error(
+                `Unknown IrohaV2 instruction - '${unknownType}'. Check name and connector version.`,
+              );
           }
         }),
       );
@@ -284,12 +342,14 @@ export class PluginLedgerConnectorIroha2
               }' - expected: ${1}, got: ${req.params?.length ?? 0}`,
             );
           }
-
           return {
             response: await client.query.findDomainById(req.params[0]),
           };
         default:
-          throw new Error("Unknown Iroha V2 command supplied.");
+          const unknownType: never = req.queryName;
+          throw new Error(
+            `Unknown IrohaV2 query - '${unknownType}'. Check name and connector version.`,
+          );
       }
     } finally {
       client.free();

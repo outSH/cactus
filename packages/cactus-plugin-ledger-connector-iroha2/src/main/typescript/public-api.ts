@@ -15,3 +15,8 @@ export async function createPluginFactory(
 ): Promise<PluginFactoryLedgerConnector> {
   return new PluginFactoryLedgerConnector(pluginFactoryOptions);
 }
+
+export {
+  Iroha2ApiClient,
+  Iroha2ApiClientOptions,
+} from "./api-client/iroha2-api-client";
