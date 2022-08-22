@@ -118,16 +118,16 @@ describe("Iroha V2 connector tests", () => {
       backend: new Map([[keychainEntryKey, keychainEntryValue]]),
     });
 
+    keychainCredentials = {
+      keychainId,
+      keychainRef: keychainEntryKey,
+    };
+
     iroha2ConnectorPlugin = new PluginLedgerConnectorIroha2({
       instanceId: uuidv4(),
       pluginRegistry: new PluginRegistry({ plugins: [keychainPlugin] }),
       logLevel: sutLogLevel,
     });
-
-    keychainCredentials = {
-      keychainId,
-      keychainRef: keychainEntryKey,
-    };
 
     defaultBaseConfig = {
       torii: {
@@ -243,7 +243,7 @@ describe("Iroha V2 connector tests", () => {
       // Create new domain
       const transactionResponse = await apiClient.transactV1({
         instruction: {
-          name: IrohaInstruction.CreateDomain,
+          name: IrohaInstruction.RegisterDomain,
           params: [domainName],
         },
         baseConfig: defaultBaseConfig,
@@ -275,7 +275,7 @@ describe("Iroha V2 connector tests", () => {
       // Create new domain
       const transactionResponse = await apiClient.transactV1({
         instruction: {
-          name: IrohaInstruction.CreateDomain,
+          name: IrohaInstruction.RegisterDomain,
           params: [domainName],
         },
         baseConfig: {
@@ -310,7 +310,7 @@ describe("Iroha V2 connector tests", () => {
       // Create new domain
       const transactionResponse = await apiClient.transactV1({
         instruction: {
-          name: IrohaInstruction.CreateDomain,
+          name: IrohaInstruction.RegisterDomain,
           params: [domainName],
         },
         baseConfig: {
@@ -346,11 +346,11 @@ describe("Iroha V2 connector tests", () => {
       const transactionResponse = await apiClient.transactV1({
         instruction: [
           {
-            name: IrohaInstruction.CreateDomain,
+            name: IrohaInstruction.RegisterDomain,
             params: [firstDomainName],
           },
           {
-            name: IrohaInstruction.CreateDomain,
+            name: IrohaInstruction.RegisterDomain,
             params: [secondDomainName],
           },
         ],
@@ -400,7 +400,7 @@ describe("Iroha V2 connector tests", () => {
       await expect(
         apiClient.transactV1({
           instruction: {
-            name: IrohaInstruction.CreateDomain,
+            name: IrohaInstruction.RegisterDomain,
             params: [domainName],
           },
           baseConfig: {
@@ -413,7 +413,7 @@ describe("Iroha V2 connector tests", () => {
       await expect(
         apiClient.transactV1({
           instruction: {
-            name: IrohaInstruction.CreateDomain,
+            name: IrohaInstruction.RegisterDomain,
             params: [domainName],
           },
           baseConfig: {
@@ -481,6 +481,7 @@ describe("Iroha V2 connector tests", () => {
         });
       });
 
+      // Wait for monitor setup just to be sure
       await waitForCommit();
 
       // Create new domain to trigger new block creation
@@ -488,7 +489,7 @@ describe("Iroha V2 connector tests", () => {
         "watchBlocksBin" + (Math.random() + 1).toString(36).substring(7);
       const transactionResponse = await apiClient.transactV1({
         instruction: {
-          name: IrohaInstruction.CreateDomain,
+          name: IrohaInstruction.RegisterDomain,
           params: [domainName],
         },
         baseConfig: defaultBaseConfig,
@@ -499,6 +500,46 @@ describe("Iroha V2 connector tests", () => {
       expect(transactionResponse.data.status).toEqual("OK");
 
       await expect(monitorPromise).toResolve();
+    });
+  });
+
+  describe("Asset tests", () => {
+    test.only("Create asset", async () => {
+      const assetName = "testAsset1";
+
+      // Create new asset
+      const transactionResponse = await apiClient.transactV1({
+        instruction: {
+          name: IrohaInstruction.RegisterAsset,
+          params: [assetName, "singleTxTest", "Quantity", "Infinitely"],
+        },
+        baseConfig: defaultBaseConfig,
+      });
+      expect(transactionResponse).toBeTruthy();
+      expect(transactionResponse.status).toEqual(200);
+      expect(transactionResponse.data.status).toBeTruthy();
+      expect(transactionResponse.data.status).toEqual("OK");
+
+      // Sleep
+      await waitForCommit();
+
+      // Query it
+      const queryResponse = await apiClient.queryV1({
+        queryName: IrohaQuery.FindAssetById,
+        baseConfig: defaultBaseConfig,
+        params: [
+          "rose",
+          "wonderland",
+          defaultBaseConfig.accountId?.name,
+          defaultBaseConfig.accountId?.domainId,
+        ],
+      });
+      expect(queryResponse).toBeTruthy();
+      expect(queryResponse.data).toBeTruthy();
+      expect(queryResponse.data.response).toBeTruthy();
+      log.error("RESPONSE", queryResponse.data.response);
+      // expect(queryResponse.data.response.id).toBeTruthy();
+      // expect(queryResponse.data.response.id.name).toEqual(domainName);
     });
   });
 });

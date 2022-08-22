@@ -92,15 +92,11 @@ export class WatchBlocksV1Endpoint {
 
       // Handle events
       blockMonitor.ee.on("open", (openEvent) => {
-        log.info("listenForBlocksStream open:", safeStringify(openEvent));
+        log.debug("listenForBlocksStream open:", safeStringify(openEvent));
       });
 
       blockMonitor.ee.on("close", (closeEvent) => {
-        log.info("listenForBlocksStream close:", safeStringify(closeEvent));
-        // socket.emit(WatchBlocksV1.Complete, {
-        //   message: "WatchBlocksV1 Complete",
-        //   error: "Complete event received",
-        // });
+        log.debug("listenForBlocksStream close:", safeStringify(closeEvent));
       });
 
       blockMonitor.ee.on("error", (error) => {
@@ -151,7 +147,6 @@ export class WatchBlocksV1Endpoint {
     }
   }
 
-  // TODO - share socketio connection with other endpoints
   close(): void {
     if (this.socket.connected) {
       this.socket.disconnect(true);

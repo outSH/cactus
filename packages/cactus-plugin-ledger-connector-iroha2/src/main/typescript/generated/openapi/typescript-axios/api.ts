@@ -176,9 +176,13 @@ export interface Iroha2KeyPair {
 
 export enum IrohaInstruction {
     /**
-    * Add new domain
+    * Register new domain
     */
-    CreateDomain = 'createDomain'
+    RegisterDomain = 'registerDomain',
+    /**
+    * Register new asset
+    */
+    RegisterAsset = 'registerAsset'
 }
 
 /**
@@ -208,10 +212,17 @@ export interface IrohaInstructionRequestV1 {
 
 export enum IrohaQuery {
     /**
-    * To get the state of a domain
+    * Get list of all registered domains
     */
     FindAllDomains = 'findAllDomains',
-    FindDomainById = 'findDomainById'
+    /**
+    * Get domain with specified ID
+    */
+    FindDomainById = 'findDomainById',
+    /**
+    * Get asset with specified ID
+    */
+    FindAssetById = 'findAssetById'
 }
 
 /**

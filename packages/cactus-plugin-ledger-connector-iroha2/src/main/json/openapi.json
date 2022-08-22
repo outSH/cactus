@@ -14,27 +14,34 @@
       "IrohaInstruction": {
         "type": "string",
         "enum": [
-          "createDomain"
+          "registerDomain",
+          "registerAsset"
         ],
         "x-enum-descriptions": [
-          "Add new domain"
+          "Register new domain",
+          "Register new asset"
         ],
         "x-enum-varnames": [
-          "CreateDomain"
+          "RegisterDomain",
+          "RegisterAsset"
         ]
       },
       "IrohaQuery": {
         "type": "string",
         "enum": [
           "findAllDomains",
-          "findDomainById"
+          "findDomainById",
+          "findAssetById"
         ],
         "x-enum-descriptions": [
-          "To get the state of a domain"
+          "Get list of all registered domains",
+          "Get domain with specified ID",
+          "Get asset with specified ID"
         ],
         "x-enum-varnames": [
           "FindAllDomains",
-          "FindDomainById"
+          "FindDomainById",
+          "FindAssetById"
         ]
       },
       "WatchBlocksV1": {

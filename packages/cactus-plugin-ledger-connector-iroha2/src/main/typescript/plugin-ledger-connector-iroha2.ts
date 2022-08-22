@@ -52,7 +52,7 @@ import { AccountId, DomainId } from "@iroha2/data-model";
 import {
   CactusIrohaV2Client,
   generateIrohaV2KeyPair,
-} from "./cactus-iroha2-client";
+} from "./cactus-iroha-sdk-wrapper/cactus-iroha2-client";
 
 export interface IPluginLedgerConnectorIroha2Options
   extends ICactusPluginOptions {
@@ -100,7 +100,7 @@ export class PluginLedgerConnectorIroha2
     return OAS;
   }
 
-  deployContract(): Promise<never> {
+  public deployContract(): Promise<never> {
     throw new Error("Method not implemented.");
   }
 
@@ -290,6 +290,22 @@ export class PluginLedgerConnectorIroha2
     );
   }
 
+  private checkArgsCount(
+    params: unknown[] | undefined,
+    expectedCount: number,
+    command: string,
+  ): params is any[] {
+    if (!params || params.length < expectedCount) {
+      throw new Error(
+        `Not enough parameters for ${command} - expected: ${expectedCount}, got: ${
+          params?.length ?? 0
+        }`,
+      );
+    }
+
+    return true;
+  }
+
   public async transact(req: TransactRequestV1): Promise<TransactResponseV1> {
     const client = await this.getClient(req.baseConfig);
 
@@ -301,11 +317,30 @@ export class PluginLedgerConnectorIroha2
         instructions = [req.instruction];
       }
 
+      // TODO - no promise - just foreach
       await Promise.all(
         instructions.map((cmd) => {
           switch (cmd.name) {
-            case IrohaInstruction.CreateDomain:
+            case IrohaInstruction.RegisterDomain:
+              this.checkArgsCount(
+                cmd.params,
+                1,
+                IrohaInstruction.RegisterDomain,
+              );
               return client.registerDomain(cmd.params[0]);
+            case IrohaInstruction.RegisterAsset:
+              this.checkArgsCount(
+                cmd.params,
+                4,
+                IrohaInstruction.RegisterAsset,
+              );
+              // TODO - support for metadata
+              return client.registerAsset(
+                cmd.params[0],
+                cmd.params[1],
+                cmd.params[2],
+                cmd.params[3],
+              );
             default:
               const unknownType: never = cmd.name;
               throw new Error(
@@ -341,10 +376,25 @@ export class PluginLedgerConnectorIroha2
                 IrohaQuery.FindDomainById
               }' - expected: ${1}, got: ${req.params?.length ?? 0}`,
             );
-          }
+          } // todo: function?
           return {
             response: await client.query.findDomainById(req.params[0]),
           };
+        case IrohaQuery.FindAssetById:
+          if (this.checkArgsCount(req.params, 4, IrohaQuery.FindAssetById)) {
+            return {
+              response: await client.query.findAssetById(
+                req.params[0],
+                req.params[1],
+                req.params[2],
+                req.params[3],
+              ),
+            };
+          } else {
+            throw new Error(
+              `Missing args for command ${IrohaQuery.FindAssetById}`,
+            );
+          }
         default:
           const unknownType: never = req.queryName;
           throw new Error(
