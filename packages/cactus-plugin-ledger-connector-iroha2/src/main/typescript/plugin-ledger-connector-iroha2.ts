@@ -53,6 +53,9 @@ import {
   CactusIrohaV2Client,
   generateIrohaV2KeyPair,
 } from "./cactus-iroha-sdk-wrapper/cactus-iroha2-client";
+import { CactusIrohaV2QueryClient } from "./cactus-iroha-sdk-wrapper/cactus-iroha2-query";
+
+type LengthOf<T extends ArrayLike<unknown>> = T["length"];
 
 export interface IPluginLedgerConnectorIroha2Options
   extends ICactusPluginOptions {
@@ -293,17 +296,37 @@ export class PluginLedgerConnectorIroha2
   private checkArgsCount(
     params: unknown[] | undefined,
     expectedCount: number,
-    command: string,
-  ): params is any[] {
-    if (!params || params.length < expectedCount) {
+    functionName: string,
+  ): unknown[] {
+    if (!params) {
       throw new Error(
-        `Not enough parameters for ${command} - expected: ${expectedCount}, got: ${
-          params?.length ?? 0
-        }`,
+        `Error [${functionName}] - Missing required parameters in request.`,
       );
     }
 
-    return true;
+    const requiredParams = params.slice(0, expectedCount);
+
+    if (requiredParams.length < expectedCount) {
+      throw new Error(
+        `Error [${functionName}] - No enough parameters. Expected: ${expectedCount}, got: ${requiredParams.length}`,
+      );
+    }
+
+    return requiredParams;
+  }
+
+  private addTransactionWithCheckedParams<
+    T extends (...args: any[]) => unknown
+  >(
+    client: CactusIrohaV2Client,
+    transactFunction: T,
+    params: unknown[] | undefined,
+    expectedCount: LengthOf<Parameters<T>>,
+  ): void {
+    transactFunction.apply(
+      client,
+      this.checkArgsCount(params, expectedCount, transactFunction.name),
+    );
   }
 
   public async transact(req: TransactRequestV1): Promise<TransactResponseV1> {
@@ -317,38 +340,31 @@ export class PluginLedgerConnectorIroha2
         instructions = [req.instruction];
       }
 
-      // TODO - no promise - just foreach
-      await Promise.all(
-        instructions.map((cmd) => {
-          switch (cmd.name) {
-            case IrohaInstruction.RegisterDomain:
-              this.checkArgsCount(
-                cmd.params,
-                1,
-                IrohaInstruction.RegisterDomain,
-              );
-              return client.registerDomain(cmd.params[0]);
-            case IrohaInstruction.RegisterAsset:
-              this.checkArgsCount(
-                cmd.params,
-                4,
-                IrohaInstruction.RegisterAsset,
-              );
-              // TODO - support for metadata
-              return client.registerAsset(
-                cmd.params[0],
-                cmd.params[1],
-                cmd.params[2],
-                cmd.params[3],
-              );
-            default:
-              const unknownType: never = cmd.name;
-              throw new Error(
-                `Unknown IrohaV2 instruction - '${unknownType}'. Check name and connector version.`,
-              );
-          }
-        }),
-      );
+      instructions.forEach((cmd) => {
+        switch (cmd.name) {
+          case IrohaInstruction.RegisterDomain:
+            this.addTransactionWithCheckedParams(
+              client,
+              CactusIrohaV2Client.prototype.registerDomain,
+              cmd.params,
+              1,
+            );
+            break;
+          case IrohaInstruction.RegisterAssetDefinition:
+            this.addTransactionWithCheckedParams(
+              client,
+              CactusIrohaV2Client.prototype.registerAssetDefinition,
+              cmd.params,
+              4,
+            );
+            break;
+          default:
+            const unknownType: never = cmd.name;
+            throw new Error(
+              `Unknown IrohaV2 instruction - '${unknownType}'. Check name and connector version.`,
+            );
+        }
+      });
 
       await client.send();
 
@@ -358,6 +374,22 @@ export class PluginLedgerConnectorIroha2
     } finally {
       client.free();
     }
+  }
+
+  private async runQueryWithCheckedParams<
+    T extends (...args: any[]) => Promise<unknown>
+  >(
+    client: CactusIrohaV2Client,
+    queryFunction: T,
+    params: unknown[] | undefined,
+    expectedCount: LengthOf<Parameters<T>>,
+  ): Promise<QueryResponseV1> {
+    return {
+      response: await queryFunction.apply(
+        client.query,
+        this.checkArgsCount(params, expectedCount, queryFunction.name),
+      ),
+    };
   }
 
   public async query(req: QueryRequestV1): Promise<QueryResponseV1> {
@@ -370,31 +402,19 @@ export class PluginLedgerConnectorIroha2
             response: await client.query.findAllDomains(),
           };
         case IrohaQuery.FindDomainById:
-          if (!req.params || req.params.length < 1) {
-            throw new Error(
-              `Not enough parameters for the query '${
-                IrohaQuery.FindDomainById
-              }' - expected: ${1}, got: ${req.params?.length ?? 0}`,
-            );
-          } // todo: function?
-          return {
-            response: await client.query.findDomainById(req.params[0]),
-          };
-        case IrohaQuery.FindAssetById:
-          if (this.checkArgsCount(req.params, 4, IrohaQuery.FindAssetById)) {
-            return {
-              response: await client.query.findAssetById(
-                req.params[0],
-                req.params[1],
-                req.params[2],
-                req.params[3],
-              ),
-            };
-          } else {
-            throw new Error(
-              `Missing args for command ${IrohaQuery.FindAssetById}`,
-            );
-          }
+          return await this.runQueryWithCheckedParams(
+            client,
+            CactusIrohaV2QueryClient.prototype.findDomainById,
+            req.params,
+            1,
+          );
+        case IrohaQuery.FindAssetDefinitionById:
+          return await this.runQueryWithCheckedParams(
+            client,
+            CactusIrohaV2QueryClient.prototype.findAssetDefinitionById,
+            req.params,
+            2,
+          );
         default:
           const unknownType: never = req.queryName;
           throw new Error(

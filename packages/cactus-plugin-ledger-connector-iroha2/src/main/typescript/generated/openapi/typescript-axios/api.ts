@@ -180,9 +180,9 @@ export enum IrohaInstruction {
     */
     RegisterDomain = 'registerDomain',
     /**
-    * Register new asset
+    * Register new asset definition
     */
-    RegisterAsset = 'registerAsset'
+    RegisterAssetDefinition = 'registerAssetDefinition'
 }
 
 /**
@@ -220,9 +220,9 @@ export enum IrohaQuery {
     */
     FindDomainById = 'findDomainById',
     /**
-    * Get asset with specified ID
+    * Get asset definition with specified ID
     */
-    FindAssetById = 'findAssetById'
+    FindAssetDefinitionById = 'findAssetDefinitionById'
 }
 
 /**

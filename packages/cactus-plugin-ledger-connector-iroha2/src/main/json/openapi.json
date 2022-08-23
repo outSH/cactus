@@ -15,15 +15,15 @@
         "type": "string",
         "enum": [
           "registerDomain",
-          "registerAsset"
+          "registerAssetDefinition"
         ],
         "x-enum-descriptions": [
           "Register new domain",
-          "Register new asset"
+          "Register new asset definition"
         ],
         "x-enum-varnames": [
           "RegisterDomain",
-          "RegisterAsset"
+          "RegisterAssetDefinition"
         ]
       },
       "IrohaQuery": {
@@ -31,17 +31,17 @@
         "enum": [
           "findAllDomains",
           "findDomainById",
-          "findAssetById"
+          "findAssetDefinitionById"
         ],
         "x-enum-descriptions": [
           "Get list of all registered domains",
           "Get domain with specified ID",
-          "Get asset with specified ID"
+          "Get asset definition with specified ID"
         ],
         "x-enum-varnames": [
           "FindAllDomains",
           "FindDomainById",
-          "FindAssetById"
+          "FindAssetDefinitionById"
         ]
       },
       "WatchBlocksV1": {

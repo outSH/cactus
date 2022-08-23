@@ -15,6 +15,8 @@ import {
   AssetDefinitionId,
   FindAssetById,
   EvaluatesToAssetId,
+  FindAssetDefinitionById,
+  EvaluatesToAssetDefinitionId,
 } from "@iroha2/data-model";
 
 import { Checks, Logger } from "@hyperledger/cactus-common";
@@ -28,32 +30,32 @@ export class CactusIrohaV2QueryClient {
     this.log.debug("CactusIrohaV2QueryClient created.");
   }
 
-  public async findAllDomains(): Promise<any> {
+  // Domains
+  public async findAllDomains(): Promise<unknown> {
+    // TODO - unknown?
     const result = await this.irohaClient.request(
       QueryBox("FindAllDomains", null),
     );
 
-    const domains = result.match({
+    const vectorResult = result.match({
       Ok: (res) => res.result.as("Vec"),
       Err: (error) => {
-        throw new Error(`Query error: ${safeStringify(error)}`);
+        throw new Error(`findAllDomains query error: ${safeStringify(error)}`);
       },
     });
-    this.log.debug("findAllDomains:", domains);
+    const domains = vectorResult.map((d) => d.as("Identifiable").as("Domain"));
 
-    const mapped = domains.map((d) => d.as("Identifiable").as("Domain"));
-    this.log.warn("mapped:", mapped);
-    return mapped;
+    this.log.debug("findAllDomains:", domains);
+    return domains;
   }
 
-  public async findDomainById(domainName: string): Promise<any> {
+  public async findDomainById(domainName: string): Promise<unknown> {
     Checks.truthy(domainName, "findDomainById arg domainName");
 
     const result = await this.irohaClient.request(
       QueryBox(
         "FindDomainById",
         FindDomainById({
-          // TODO - helpers for DomainId()
           id: EvaluatesToDomainId({
             expression: Expression(
               "Raw",
@@ -75,20 +77,23 @@ export class CactusIrohaV2QueryClient {
     const domain = result.match({
       Ok: (res) => res.result.as("Identifiable").as("Domain"),
       Err: (error) => {
-        throw new Error(`Query error: ${safeStringify(error)}`);
+        throw new Error(
+          `findDomainById query error: ${safeStringify(error.toJSON())}`,
+        );
       },
     });
-    this.log.debug("findDomainById:", domain);
 
+    this.log.debug("findDomainById:", domain);
     return domain;
   }
 
+  // Assets
   public async findAssetById(
     assetName: string,
     assetDomainName: string,
     accountName: string,
     accountDomainName: string,
-  ): Promise<any> {
+  ): Promise<unknown> {
     Checks.truthy(assetName, "findAssetById arg assetName");
     Checks.truthy(assetDomainName, "findAssetById arg assetDomainName");
     Checks.truthy(accountName, "findAssetById arg accountName");
@@ -121,17 +126,53 @@ export class CactusIrohaV2QueryClient {
       ),
     );
 
-    this.log.error("asset result:", result);
-
-    // TODO - function?
     const asset = result.match({
       Ok: (res) => res.result.as("Identifiable").as("Asset"),
       Err: (error) => {
-        throw new Error(`Query error: ${safeStringify(error)}`);
+        throw new Error(`findAssetById query error: ${safeStringify(error)}`);
       },
     });
-    this.log.debug("findAssetById:", asset);
 
+    this.log.debug("findAssetById:", asset);
     return asset;
+  }
+
+  public async findAssetDefinitionById(
+    name: string,
+    domainName: string,
+  ): Promise<unknown> {
+    Checks.truthy(name, "findAssetDefinitionById arg name");
+    Checks.truthy(domainName, "findAssetDefinitionById arg domainName");
+
+    const assetDefId = AssetDefinitionId({
+      name: name,
+      domain_id: DomainId({ name: domainName }),
+    });
+
+    const result = await this.irohaClient.request(
+      QueryBox(
+        "FindAssetDefinitionById",
+        FindAssetDefinitionById({
+          id: EvaluatesToAssetDefinitionId({
+            expression: Expression(
+              "Raw",
+              Value("Id", IdBox("AssetDefinitionId", assetDefId)),
+            ),
+          }),
+        }),
+      ),
+    );
+
+    const assetDef = result.match({
+      Ok: (res) => res.result.as("Identifiable").as("AssetDefinition"),
+      Err: (error) => {
+        throw new Error(
+          `findAssetDefinitionById query error: ${safeStringify(error)}`,
+        );
+      },
+    });
+
+    this.log.debug("findAssetDefinitionById:", assetDef);
+    return assetDef;
   }
 }

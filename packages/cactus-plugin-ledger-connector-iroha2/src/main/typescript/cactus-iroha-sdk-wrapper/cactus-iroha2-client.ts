@@ -121,7 +121,7 @@ export class CactusIrohaV2Client {
     return this;
   }
 
-  public registerAsset(
+  public registerAssetDefinition(
     assetName: IrohaName,
     domainName: IrohaName,
     valueType: "Fixed" | "Quantity" | "BigQuantity" | "Store",

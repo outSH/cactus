@@ -503,15 +503,65 @@ describe("Iroha V2 connector tests", () => {
     });
   });
 
-  describe("Asset tests", () => {
-    test.only("Create asset", async () => {
-      const assetName = "testAsset1";
+  describe("Domain tests", () => {
+    const domainName = "funcTestDomain";
 
-      // Create new asset
+    // Create domain common test
+    beforeAll(async () => {
+      // Create new domain
       const transactionResponse = await apiClient.transactV1({
         instruction: {
-          name: IrohaInstruction.RegisterAsset,
-          params: [assetName, "singleTxTest", "Quantity", "Infinitely"],
+          name: IrohaInstruction.RegisterDomain,
+          params: [domainName],
+        },
+        baseConfig: defaultBaseConfig,
+      });
+      expect(transactionResponse).toBeTruthy();
+      expect(transactionResponse.status).toEqual(200);
+      expect(transactionResponse.data.status).toBeTruthy();
+      expect(transactionResponse.data.status).toEqual("OK");
+
+      // Sleep
+      await waitForCommit();
+    });
+
+    test("Query single domain (FindDomainById)", async () => {
+      const queryResponse = await apiClient.queryV1({
+        queryName: IrohaQuery.FindDomainById,
+        baseConfig: defaultBaseConfig,
+        params: [domainName],
+      });
+      expect(queryResponse).toBeTruthy();
+      expect(queryResponse.data).toBeTruthy();
+      expect(queryResponse.data.response).toBeTruthy();
+      expect(queryResponse.data.response.id).toBeTruthy();
+      expect(queryResponse.data.response.id.name).toEqual(domainName);
+    });
+
+    test("Query all domains (FindAllDomains)", async () => {
+      const queryResponse = await apiClient.queryV1({
+        queryName: IrohaQuery.FindAllDomains,
+        baseConfig: defaultBaseConfig,
+      });
+      expect(queryResponse).toBeTruthy();
+      expect(queryResponse.data).toBeTruthy();
+      expect(queryResponse.data.response).toBeTruthy();
+      expect(JSON.stringify(queryResponse.data.response)).toContain(domainName);
+    });
+  });
+
+  describe("Asset tests", () => {
+    test("Create asset definition", async () => {
+      const assetName = "testAsset1";
+      const domainName = "singleTxTest";
+      const valueType = "Quantity";
+      const mintable = "Infinitely";
+
+      // Create new asset definition
+      const transactionResponse = await apiClient.transactV1({
+        instruction: {
+          name: IrohaInstruction.RegisterAssetDefinition,
+          params: [assetName, domainName, valueType, mintable],
         },
         baseConfig: defaultBaseConfig,
       });
@@ -523,21 +573,36 @@ describe("Iroha V2 connector tests", () => {
       // Sleep
       await waitForCommit();
 
-      // Query it
+      // Query single asset definition (FindAssetDefinitionById)
       const queryResponse = await apiClient.queryV1({
-        queryName: IrohaQuery.FindAssetById,
+        queryName: IrohaQuery.FindAssetDefinitionById,
         baseConfig: defaultBaseConfig,
-        params: [
-          "rose",
-          "wonderland",
-          defaultBaseConfig.accountId?.name,
-          defaultBaseConfig.accountId?.domainId,
-        ],
+        params: [assetName, "singleTxTest"],
       });
       expect(queryResponse).toBeTruthy();
       expect(queryResponse.data).toBeTruthy();
-      expect(queryResponse.data.response).toBeTruthy();
-      log.error("RESPONSE", queryResponse.data.response);
+      const responseData = queryResponse.data.response;
+      expect(responseData).toBeTruthy();
+      expect(responseData.id.name).toEqual(assetName);
+      expect(responseData.id.domain_id.name).toEqual(domainName);
+      expect(responseData.value_type.tag).toEqual(valueType);
+      expect(responseData.mintable.tag).toEqual(mintable);
+
+      // Query asset
+      // const queryResponse = await apiClient.queryV1({
+      //   queryName: IrohaQuery.FindAssetById,
+      //   baseConfig: defaultBaseConfig,
+      //   params: [
+      //     "rose",
+      //     "wonderland",
+      //     defaultBaseConfig.accountId?.name,
+      //     defaultBaseConfig.accountId?.domainId,
+      //   ],
+      // });
+      // expect(queryResponse).toBeTruthy();
+      // expect(queryResponse.data).toBeTruthy();
+      // expect(queryResponse.data.response).toBeTruthy();
+      //log.error("RESPONSE", queryResponse.data.response);
       // expect(queryResponse.data.response.id).toBeTruthy();
       // expect(queryResponse.data.response.id.name).toEqual(domainName);
     });
