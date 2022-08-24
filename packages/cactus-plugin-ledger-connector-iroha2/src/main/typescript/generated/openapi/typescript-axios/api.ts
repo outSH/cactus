@@ -22,6 +22,16 @@ import { DUMMY_BASE_URL, assertParamExists, setApiKeyToObject, setBasicAuthToObj
 import { BASE_PATH, COLLECTION_FORMATS, RequestArgs, BaseAPI, RequiredError } from './base';
 
 /**
+ * Response type from WatchBlocks.
+ * @export
+ * @enum {string}
+ */
+
+export enum BlockTypeV1 {
+    Binary = 'binary'
+}
+
+/**
  * 
  * @export
  * @interface ErrorExceptionResponseV1
@@ -246,7 +256,11 @@ export enum IrohaQuery {
     /**
     * Get list of all registered assets
     */
-    FindAllAssets = 'findAllAssets'
+    FindAllAssets = 'findAllAssets',
+    /**
+    * Get list of all ledger peers
+    */
+    FindAllPeers = 'findAllPeers'
 }
 
 /**
@@ -352,16 +366,6 @@ export interface WatchBlocksBinaryResponseV1 {
     binaryBlock: any;
 }
 /**
- * Response type from WatchBlocks.
- * @export
- * @enum {string}
- */
-
-export enum WatchBlocksListenerTypeV1 {
-    Binary = 'binary'
-}
-
-/**
  * Options passed when subscribing to block monitoring.
  * @export
  * @interface WatchBlocksOptionsV1
@@ -369,10 +373,10 @@ export enum WatchBlocksListenerTypeV1 {
 export interface WatchBlocksOptionsV1 {
     /**
      * 
-     * @type {WatchBlocksListenerTypeV1}
+     * @type {BlockTypeV1}
      * @memberof WatchBlocksOptionsV1
      */
-    type?: WatchBlocksListenerTypeV1;
+    type?: BlockTypeV1;
     /**
      * 
      * @type {string}

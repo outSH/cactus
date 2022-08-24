@@ -43,7 +43,8 @@
           "findAssetDefinitionById",
           "findAllAssetsDefinitions",
           "findAssetById",
-          "findAllAssets"
+          "findAllAssets",
+          "findAllPeers"
         ],
         "x-enum-descriptions": [
           "Get list of all registered domains",
@@ -51,7 +52,8 @@
           "Get asset definition with specified ID",
           "Get list of all registered asset definition",
           "Get asset with specified ID",
-          "Get list of all registered assets"
+          "Get list of all registered assets",
+          "Get list of all ledger peers"
         ],
         "x-enum-varnames": [
           "FindAllDomains",
@@ -59,7 +61,8 @@
           "FindAssetDefinitionById",
           "FindAllAssetsDefinitions",
           "FindAssetById",
-          "FindAllAssets"
+          "FindAllAssets",
+          "FindAllPeers"
         ]
       },
       "WatchBlocksV1": {
@@ -80,7 +83,7 @@
           "Complete"
         ]
       },
-      "WatchBlocksListenerTypeV1": {
+      "BlockTypeV1": {
         "type": "string",
         "description": "Response type from WatchBlocks.",
         "enum": [
@@ -95,9 +98,9 @@
         "description": "Options passed when subscribing to block monitoring.",
         "properties": {
           "type": {
-            "$ref": "#/components/schemas/WatchBlocksListenerTypeV1",
+            "$ref": "#/components/schemas/BlockTypeV1",
             "description": "Type of response block to return.",
-            "default": "WatchBlocksListenerTypeV1.Binary",
+            "default": "BlockTypeV1.Binary",
             "nullable": false
           },
           "startBlock": {

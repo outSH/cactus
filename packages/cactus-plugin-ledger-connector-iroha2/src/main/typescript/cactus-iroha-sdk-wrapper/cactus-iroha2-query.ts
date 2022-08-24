@@ -17,9 +17,11 @@ import {
   EvaluatesToAssetId,
   FindAssetDefinitionById,
   EvaluatesToAssetDefinitionId,
+  BlockValue,
 } from "@iroha2/data-model";
 
 import { Checks, Logger } from "@hyperledger/cactus-common";
+import { BlockTypeV1 } from "../public-api";
 
 // TODO - pagination once supported by upstream
 export class CactusIrohaV2QueryClient {
@@ -42,7 +44,7 @@ export class CactusIrohaV2QueryClient {
         throw new Error(`findAllDomains query error: ${safeStringify(error)}`);
       },
     });
-    const domains = vectorResult.map((d) => d.as("Identifiable").as("Domain"));
+    const domains = vectorResult.map((i) => i.as("Identifiable").as("Domain"));
 
     this.log.debug("findAllDomains:", domains);
     return domains;
@@ -207,9 +209,67 @@ export class CactusIrohaV2QueryClient {
         throw new Error(`findAllAssets query error: ${safeStringify(error)}`);
       },
     });
-    const assets = vectorResult.map((d) => d.as("Identifiable").as("Asset"));
+    const assets = vectorResult.map((i) => i.as("Identifiable").as("Asset"));
 
     this.log.debug("findAllAssets:", assets);
     return assets;
+  }
+
+  // Other
+  public async findAllPeers(): Promise<unknown> {
+    const result = await this.irohaClient.request(
+      QueryBox("FindAllPeers", null),
+    );
+
+    const vectorResult = result.match({
+      Ok: (res) => res.result.as("Vec"),
+      Err: (error) => {
+        throw new Error(`findAllPeers query error: ${safeStringify(error)}`);
+      },
+    });
+    const peers = vectorResult.map((i) => i.as("Identifiable").as("Peer"));
+
+    this.log.debug("findAllPeers:", peers);
+    return peers;
+  }
+
+  /**
+   * cant return encoded to the client yet
+   * @param encoding
+   * @returns
+   */
+  public async findAllBlocks(encoding?: BlockTypeV1): Promise<unknown> {
+    const result = await this.irohaClient.request(
+      QueryBox("FindAllBlocks", null),
+    );
+
+    const vectorResult = result.match({
+      Ok: (res) => res.result.as("Vec"),
+      Err: (error) => {
+        throw new Error(`findAllBlocks query error: ${safeStringify(error)}`);
+      },
+    });
+
+    const encodedBlocks = vectorResult.map((b) => {
+      const block = b.as("Block");
+
+      switch (encoding) {
+        case undefined:
+          return block;
+        case BlockTypeV1.Binary:
+          // Note: binary format can't be returned by Query endpoint (can't be decoded)
+          return BlockValue.toBuffer(block);
+        default:
+          const unknownType: never = encoding;
+          throw new Error(
+            `Unknown block encoding type - '${unknownType}'. Check name and connector version.`,
+          );
+      }
+    });
+
+    this.log.debug(
+      `findAllBlocks: Total ${encodedBlocks.length}, encoding: ${encoding}`,
+    );
+    return encodedBlocks;
   }
 }

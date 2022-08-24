@@ -797,4 +797,21 @@ describe("Iroha V2 connector tests", () => {
       expect(finalValue).toEqual(initValue - burnValue);
     });
   });
+
+  describe("Miscellaneous tests", () => {
+    test("Query all peers (FindAllPeers)", async () => {
+      const queryResponse = await apiClient.queryV1({
+        queryName: IrohaQuery.FindAllPeers,
+        baseConfig: defaultBaseConfig,
+      });
+      expect(queryResponse).toBeTruthy();
+      expect(queryResponse.data).toBeTruthy();
+      expect(queryResponse.data.response).toBeTruthy();
+      expect(queryResponse.data.response.length).toBeGreaterThan(0);
+      const singlePeer = queryResponse.data.response.pop();
+      expect(singlePeer.id).toBeTruthy();
+      expect(singlePeer.id.address).toBeTruthy();
+      expect(singlePeer.id.public_key).toBeTruthy();
+    });
+  });
 });

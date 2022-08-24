@@ -11,7 +11,7 @@ import {
   WatchBlocksV1,
   WatchBlocksOptionsV1,
   WatchBlocksResponseV1,
-  WatchBlocksListenerTypeV1,
+  BlockTypeV1,
 } from "../generated/openapi/typescript-axios";
 
 import { Client as IrohaClient } from "@iroha2/client";
@@ -85,7 +85,7 @@ export class WatchBlocksV1Endpoint {
 
     try {
       const height = options.startBlock ?? "0";
-      const blockType = options.type ?? WatchBlocksListenerTypeV1.Binary;
+      const blockType = options.type ?? BlockTypeV1.Binary;
       const blockMonitor = await client.listenForBlocksStream({
         height: BigInt(height),
       });
@@ -110,7 +110,7 @@ export class WatchBlocksV1Endpoint {
 
       blockMonitor.ee.on("block", (block) => {
         switch (blockType) {
-          case WatchBlocksListenerTypeV1.Binary:
+          case BlockTypeV1.Binary:
             socket.emit(WatchBlocksV1.Next, {
               binaryBlock: VersionedCommittedBlock.toBuffer(block),
             });

@@ -454,6 +454,17 @@ export class PluginLedgerConnectorIroha2
           return {
             response: await client.query.findAllAssets(),
           };
+        case IrohaQuery.FindAllPeers:
+          return {
+            response: await client.query.findAllPeers(),
+          };
+        // case IrohaQuery.FindAllBlocks:
+        //   return await this.runQueryWithCheckedParams(
+        //     client,
+        //     CactusIrohaV2QueryClient.prototype.findAllBlocks,
+        //     req.params,
+        //     1,
+        //   );
         default:
           const unknownType: never = req.queryName;
           throw new Error(
