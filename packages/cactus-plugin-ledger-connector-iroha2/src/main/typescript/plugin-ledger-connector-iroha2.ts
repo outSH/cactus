@@ -358,6 +358,30 @@ export class PluginLedgerConnectorIroha2
               4,
             );
             break;
+          case IrohaInstruction.RegisterAsset:
+            this.addTransactionWithCheckedParams(
+              client,
+              CactusIrohaV2Client.prototype.registerAsset,
+              cmd.params,
+              5,
+            );
+            break;
+          case IrohaInstruction.MintAsset:
+            this.addTransactionWithCheckedParams(
+              client,
+              CactusIrohaV2Client.prototype.mintAsset,
+              cmd.params,
+              5,
+            );
+            break;
+          case IrohaInstruction.BurnAsset:
+            this.addTransactionWithCheckedParams(
+              client,
+              CactusIrohaV2Client.prototype.burnAsset,
+              cmd.params,
+              5,
+            );
+            break;
           default:
             const unknownType: never = cmd.name;
             throw new Error(
@@ -415,6 +439,21 @@ export class PluginLedgerConnectorIroha2
             req.params,
             2,
           );
+        case IrohaQuery.FindAllAssetsDefinitions:
+          return {
+            response: await client.query.findAllAssetsDefinitions(),
+          };
+        case IrohaQuery.FindAssetById:
+          return await this.runQueryWithCheckedParams(
+            client,
+            CactusIrohaV2QueryClient.prototype.findAssetById,
+            req.params,
+            4,
+          );
+        case IrohaQuery.FindAllAssets:
+          return {
+            response: await client.query.findAllAssets(),
+          };
         default:
           const unknownType: never = req.queryName;
           throw new Error(

@@ -32,7 +32,6 @@ export class CactusIrohaV2QueryClient {
 
   // Domains
   public async findAllDomains(): Promise<unknown> {
-    // TODO - unknown?
     const result = await this.irohaClient.request(
       QueryBox("FindAllDomains", null),
     );
@@ -88,6 +87,66 @@ export class CactusIrohaV2QueryClient {
   }
 
   // Assets
+  public async findAssetDefinitionById(
+    name: string,
+    domainName: string,
+  ): Promise<unknown> {
+    Checks.truthy(name, "findAssetDefinitionById arg name");
+    Checks.truthy(domainName, "findAssetDefinitionById arg domainName");
+
+    const assetDefId = AssetDefinitionId({
+      name: name,
+      domain_id: DomainId({ name: domainName }),
+    });
+
+    const result = await this.irohaClient.request(
+      QueryBox(
+        "FindAssetDefinitionById",
+        FindAssetDefinitionById({
+          id: EvaluatesToAssetDefinitionId({
+            expression: Expression(
+              "Raw",
+              Value("Id", IdBox("AssetDefinitionId", assetDefId)),
+            ),
+          }),
+        }),
+      ),
+    );
+
+    const assetDef = result.match({
+      Ok: (res) => res.result.as("Identifiable").as("AssetDefinition"),
+      Err: (error) => {
+        throw new Error(
+          `findAssetDefinitionById query error: ${safeStringify(error)}`,
+        );
+      },
+    });
+
+    this.log.debug("findAssetDefinitionById:", assetDef);
+    return assetDef;
+  }
+
+  public async findAllAssetsDefinitions(): Promise<unknown> {
+    const result = await this.irohaClient.request(
+      QueryBox("FindAllAssetsDefinitions", null),
+    );
+
+    const vectorResult = result.match({
+      Ok: (res) => res.result.as("Vec"),
+      Err: (error) => {
+        throw new Error(
+          `findAllAssetsDefinitions query error: ${safeStringify(error)}`,
+        );
+      },
+    });
+    const assetDefs = vectorResult.map((d) =>
+      d.as("Identifiable").as("AssetDefinition"),
+    );
+
+    this.log.debug("findAllAssetsDefinitions:", assetDefs);
+    return assetDefs;
+  }
+
   public async findAssetById(
     assetName: string,
     assetDomainName: string,
@@ -137,42 +196,20 @@ export class CactusIrohaV2QueryClient {
     return asset;
   }
 
-  public async findAssetDefinitionById(
-    name: string,
-    domainName: string,
-  ): Promise<unknown> {
-    Checks.truthy(name, "findAssetDefinitionById arg name");
-    Checks.truthy(domainName, "findAssetDefinitionById arg domainName");
-
-    const assetDefId = AssetDefinitionId({
-      name: name,
-      domain_id: DomainId({ name: domainName }),
-    });
-
+  public async findAllAssets(): Promise<unknown> {
     const result = await this.irohaClient.request(
-      QueryBox(
-        "FindAssetDefinitionById",
-        FindAssetDefinitionById({
-          id: EvaluatesToAssetDefinitionId({
-            expression: Expression(
-              "Raw",
-              Value("Id", IdBox("AssetDefinitionId", assetDefId)),
-            ),
-          }),
-        }),
-      ),
+      QueryBox("FindAllAssets", null),
     );
 
-    const assetDef = result.match({
-      Ok: (res) => res.result.as("Identifiable").as("AssetDefinition"),
+    const vectorResult = result.match({
+      Ok: (res) => res.result.as("Vec"),
       Err: (error) => {
-        throw new Error(
-          `findAssetDefinitionById query error: ${safeStringify(error)}`,
-        );
+        throw new Error(`findAllAssets query error: ${safeStringify(error)}`);
       },
     });
+    const assets = vectorResult.map((d) => d.as("Identifiable").as("Asset"));
 
-    this.log.debug("findAssetDefinitionById:", assetDef);
-    return assetDef;
+    this.log.debug("findAllAssets:", assets);
+    return assets;
   }
 }

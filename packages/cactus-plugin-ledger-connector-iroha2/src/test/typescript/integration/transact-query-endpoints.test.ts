@@ -205,6 +205,10 @@ describe("Iroha V2 connector tests", () => {
     await new Promise((resolve) => setTimeout(resolve, timeout));
   }
 
+  function addRandomSuffix(name: string) {
+    return name + (Math.random() + 1).toString(36).substring(7);
+  }
+
   //////////////////////////////////
   // Basic Endpoint Tests
   //////////////////////////////////
@@ -238,7 +242,7 @@ describe("Iroha V2 connector tests", () => {
     });
 
     test("Simple transaction and query endpoints works", async () => {
-      const domainName = "singleTxTest";
+      const domainName = addRandomSuffix("singleTxTest");
 
       // Create new domain
       const transactionResponse = await apiClient.transactV1({
@@ -270,7 +274,7 @@ describe("Iroha V2 connector tests", () => {
     });
 
     test("Sending transaction with keychain signatory works", async () => {
-      const domainName = "keychainSignatoryDomain";
+      const domainName = addRandomSuffix("keychainSignatoryDomain");
 
       // Create new domain
       const transactionResponse = await apiClient.transactV1({
@@ -305,7 +309,7 @@ describe("Iroha V2 connector tests", () => {
     });
 
     test("Sending transaction with keypair signatory works", async () => {
-      const domainName = "keypairSignatoryDomain";
+      const domainName = addRandomSuffix("keypairSignatoryDomain");
 
       // Create new domain
       const transactionResponse = await apiClient.transactV1({
@@ -341,8 +345,8 @@ describe("Iroha V2 connector tests", () => {
 
     test("Multiple instructions in single transaction works", async () => {
       // Create two new domains
-      const firstDomainName = "multiTxFirstDomain";
-      const secondDomainName = "multiTxSecondDomain";
+      const firstDomainName = addRandomSuffix("multiTxFirstDomain");
+      const secondDomainName = addRandomSuffix("multiTxSecondDomain");
       const transactionResponse = await apiClient.transactV1({
         instruction: [
           {
@@ -485,8 +489,7 @@ describe("Iroha V2 connector tests", () => {
       await waitForCommit();
 
       // Create new domain to trigger new block creation
-      const domainName =
-        "watchBlocksBin" + (Math.random() + 1).toString(36).substring(7);
+      const domainName = addRandomSuffix("watchBlocksBin");
       const transactionResponse = await apiClient.transactV1({
         instruction: {
           name: IrohaInstruction.RegisterDomain,
@@ -504,10 +507,14 @@ describe("Iroha V2 connector tests", () => {
   });
 
   describe("Domain tests", () => {
-    const domainName = "funcTestDomain";
+    let domainName: string;
 
     // Create domain common test
     beforeAll(async () => {
+      // Generate random domain and assets name
+      domainName = addRandomSuffix("funcTestDomain");
+      expect(domainName).toBeTruthy();
+
       // Create new domain
       const transactionResponse = await apiClient.transactV1({
         instruction: {
@@ -551,33 +558,71 @@ describe("Iroha V2 connector tests", () => {
   });
 
   describe("Asset tests", () => {
-    test("Create asset definition", async () => {
-      const assetName = "testAsset1";
-      const domainName = "singleTxTest";
-      const valueType = "Quantity";
-      const mintable = "Infinitely";
+    let assetName: string;
+    let domainName: string;
+    const valueType = "Quantity";
+    const value = 42;
+    const mintable = "Infinitely";
+
+    // Create asset definition and asset itself common test
+    beforeAll(async () => {
+      // Generate random domain and assets name
+      assetName = addRandomSuffix("testAsset");
+      expect(assetName).toBeTruthy();
+      domainName = addRandomSuffix("testAssetDomain");
+      expect(domainName).toBeTruthy();
+
+      // Create new domain for our new asset
+      const registerDomainResponse = await apiClient.transactV1({
+        instruction: {
+          name: IrohaInstruction.RegisterDomain,
+          params: [domainName],
+        },
+        baseConfig: defaultBaseConfig,
+      });
+      expect(registerDomainResponse).toBeTruthy();
+      expect(registerDomainResponse.status).toEqual(200);
+      expect(registerDomainResponse.data.status).toEqual("OK");
+      await waitForCommit();
 
       // Create new asset definition
-      const transactionResponse = await apiClient.transactV1({
+      const registerAssetDefResponse = await apiClient.transactV1({
         instruction: {
           name: IrohaInstruction.RegisterAssetDefinition,
           params: [assetName, domainName, valueType, mintable],
         },
         baseConfig: defaultBaseConfig,
       });
-      expect(transactionResponse).toBeTruthy();
-      expect(transactionResponse.status).toEqual(200);
-      expect(transactionResponse.data.status).toBeTruthy();
-      expect(transactionResponse.data.status).toEqual("OK");
-
-      // Sleep
+      expect(registerAssetDefResponse).toBeTruthy();
+      expect(registerAssetDefResponse.status).toEqual(200);
+      expect(registerAssetDefResponse.data.status).toEqual("OK");
       await waitForCommit();
 
-      // Query single asset definition (FindAssetDefinitionById)
+      // Create new asset
+      const registerAssetResponse = await apiClient.transactV1({
+        instruction: {
+          name: IrohaInstruction.RegisterAsset,
+          params: [
+            assetName,
+            domainName,
+            defaultBaseConfig.accountId?.name,
+            defaultBaseConfig.accountId?.domainId,
+            value,
+          ],
+        },
+        baseConfig: defaultBaseConfig,
+      });
+      expect(registerAssetResponse).toBeTruthy();
+      expect(registerAssetResponse.status).toEqual(200);
+      expect(registerAssetResponse.data.status).toEqual("OK");
+      await waitForCommit();
+    });
+
+    test("Query single asset definition (FindAssetDefinitionById)", async () => {
       const queryResponse = await apiClient.queryV1({
         queryName: IrohaQuery.FindAssetDefinitionById,
         baseConfig: defaultBaseConfig,
-        params: [assetName, "singleTxTest"],
+        params: [assetName, domainName],
       });
       expect(queryResponse).toBeTruthy();
       expect(queryResponse.data).toBeTruthy();
@@ -587,24 +632,169 @@ describe("Iroha V2 connector tests", () => {
       expect(responseData.id.domain_id.name).toEqual(domainName);
       expect(responseData.value_type.tag).toEqual(valueType);
       expect(responseData.mintable.tag).toEqual(mintable);
+    });
 
-      // Query asset
-      // const queryResponse = await apiClient.queryV1({
-      //   queryName: IrohaQuery.FindAssetById,
-      //   baseConfig: defaultBaseConfig,
-      //   params: [
-      //     "rose",
-      //     "wonderland",
-      //     defaultBaseConfig.accountId?.name,
-      //     defaultBaseConfig.accountId?.domainId,
-      //   ],
-      // });
-      // expect(queryResponse).toBeTruthy();
-      // expect(queryResponse.data).toBeTruthy();
-      // expect(queryResponse.data.response).toBeTruthy();
-      //log.error("RESPONSE", queryResponse.data.response);
-      // expect(queryResponse.data.response.id).toBeTruthy();
-      // expect(queryResponse.data.response.id.name).toEqual(domainName);
+    test("Query all asset definitions (FindAllAssetsDefinitions)", async () => {
+      const queryResponse = await apiClient.queryV1({
+        queryName: IrohaQuery.FindAllAssetsDefinitions,
+        baseConfig: defaultBaseConfig,
+      });
+      expect(queryResponse).toBeTruthy();
+      expect(queryResponse.data).toBeTruthy();
+      expect(queryResponse.data.response).toBeTruthy();
+      expect(JSON.stringify(queryResponse.data.response)).toContain(domainName);
+    });
+
+    test("Query single asset (FindAssetById)", async () => {
+      const queryResponse = await apiClient.queryV1({
+        queryName: IrohaQuery.FindAssetById,
+        baseConfig: defaultBaseConfig,
+        params: [
+          assetName,
+          domainName,
+          defaultBaseConfig.accountId?.name,
+          defaultBaseConfig.accountId?.domainId,
+        ],
+      });
+      expect(queryResponse).toBeTruthy();
+      expect(queryResponse.data).toBeTruthy();
+      const responseData = queryResponse.data.response;
+      expect(responseData).toBeTruthy();
+      expect(responseData.id.definition_id.name).toEqual(assetName);
+      expect(responseData.id.definition_id.domain_id.name).toEqual(domainName);
+      expect(responseData.id.account_id.name).toEqual(
+        defaultBaseConfig.accountId?.name,
+      );
+      expect(responseData.id.account_id.domain_id.name).toEqual(
+        defaultBaseConfig.accountId?.domainId,
+      );
+      expect(responseData.value.tag).toEqual(valueType);
+    });
+
+    test("Query all assets (FindAllAssets)", async () => {
+      const queryResponse = await apiClient.queryV1({
+        queryName: IrohaQuery.FindAllAssets,
+        baseConfig: defaultBaseConfig,
+      });
+      expect(queryResponse).toBeTruthy();
+      expect(queryResponse.data).toBeTruthy();
+      expect(queryResponse.data.response).toBeTruthy();
+      expect(JSON.stringify(queryResponse.data.response)).toContain(assetName);
+    });
+
+    test("Mint asset integer value (MintAsset)", async () => {
+      const mintValue = 100;
+
+      // Get initial asset value
+      const initQueryResponse = await apiClient.queryV1({
+        queryName: IrohaQuery.FindAssetById,
+        baseConfig: defaultBaseConfig,
+        params: [
+          assetName,
+          domainName,
+          defaultBaseConfig.accountId?.name,
+          defaultBaseConfig.accountId?.domainId,
+        ],
+      });
+      expect(initQueryResponse).toBeTruthy();
+      expect(initQueryResponse.data).toBeTruthy();
+      const initValue = initQueryResponse.data.response.value.value;
+      log.info("Initial asset value (before mint):", initValue);
+
+      // Mint additional asset value
+      const mintResponse = await apiClient.transactV1({
+        instruction: {
+          name: IrohaInstruction.MintAsset,
+          params: [
+            assetName,
+            domainName,
+            defaultBaseConfig.accountId?.name,
+            defaultBaseConfig.accountId?.domainId,
+            mintValue,
+          ],
+        },
+        baseConfig: defaultBaseConfig,
+      });
+      expect(mintResponse).toBeTruthy();
+      expect(mintResponse.status).toEqual(200);
+      expect(mintResponse.data.status).toEqual("OK");
+      await waitForCommit();
+
+      // Get final asset value (after mint)
+      const finalQueryResponse = await apiClient.queryV1({
+        queryName: IrohaQuery.FindAssetById,
+        baseConfig: defaultBaseConfig,
+        params: [
+          assetName,
+          domainName,
+          defaultBaseConfig.accountId?.name,
+          defaultBaseConfig.accountId?.domainId,
+        ],
+      });
+      expect(finalQueryResponse).toBeTruthy();
+      expect(finalQueryResponse.data).toBeTruthy();
+      const finalValue = finalQueryResponse.data.response.value.value;
+      log.info("Final asset value (after mint):", finalValue);
+
+      expect(finalValue).toEqual(initValue + mintValue);
+    });
+
+    test("Burn asset integer value (BurnAsset)", async () => {
+      const burnValue = 5;
+
+      // Get initial asset value
+      const initQueryResponse = await apiClient.queryV1({
+        queryName: IrohaQuery.FindAssetById,
+        baseConfig: defaultBaseConfig,
+        params: [
+          assetName,
+          domainName,
+          defaultBaseConfig.accountId?.name,
+          defaultBaseConfig.accountId?.domainId,
+        ],
+      });
+      expect(initQueryResponse).toBeTruthy();
+      expect(initQueryResponse.data).toBeTruthy();
+      const initValue = initQueryResponse.data.response.value.value;
+      log.info("Initial asset value (before burn):", initValue);
+      expect(burnValue).toBeLessThan(initValue);
+
+      // Burn asset value
+      const burnResponse = await apiClient.transactV1({
+        instruction: {
+          name: IrohaInstruction.BurnAsset,
+          params: [
+            assetName,
+            domainName,
+            defaultBaseConfig.accountId?.name,
+            defaultBaseConfig.accountId?.domainId,
+            burnValue,
+          ],
+        },
+        baseConfig: defaultBaseConfig,
+      });
+      expect(burnResponse).toBeTruthy();
+      expect(burnResponse.status).toEqual(200);
+      expect(burnResponse.data.status).toEqual("OK");
+      await waitForCommit();
+
+      // Get final asset value (after burn)
+      const finalQueryResponse = await apiClient.queryV1({
+        queryName: IrohaQuery.FindAssetById,
+        baseConfig: defaultBaseConfig,
+        params: [
+          assetName,
+          domainName,
+          defaultBaseConfig.accountId?.name,
+          defaultBaseConfig.accountId?.domainId,
+        ],
+      });
+      expect(finalQueryResponse).toBeTruthy();
+      expect(finalQueryResponse.data).toBeTruthy();
+      const finalValue = finalQueryResponse.data.response.value.value;
+      log.info("Final asset value (after burn):", finalValue);
+
+      expect(finalValue).toEqual(initValue - burnValue);
     });
   });
 });

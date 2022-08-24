@@ -182,7 +182,19 @@ export enum IrohaInstruction {
     /**
     * Register new asset definition
     */
-    RegisterAssetDefinition = 'registerAssetDefinition'
+    RegisterAssetDefinition = 'registerAssetDefinition',
+    /**
+    * Register new asset
+    */
+    RegisterAsset = 'registerAsset',
+    /**
+    * Mint asset value
+    */
+    MintAsset = 'mintAsset',
+    /**
+    * Burn asset value
+    */
+    BurnAsset = 'burnAsset'
 }
 
 /**
@@ -222,7 +234,19 @@ export enum IrohaQuery {
     /**
     * Get asset definition with specified ID
     */
-    FindAssetDefinitionById = 'findAssetDefinitionById'
+    FindAssetDefinitionById = 'findAssetDefinitionById',
+    /**
+    * Get list of all registered asset definition
+    */
+    FindAllAssetsDefinitions = 'findAllAssetsDefinitions',
+    /**
+    * Get asset with specified ID
+    */
+    FindAssetById = 'findAssetById',
+    /**
+    * Get list of all registered assets
+    */
+    FindAllAssets = 'findAllAssets'
 }
 
 /**

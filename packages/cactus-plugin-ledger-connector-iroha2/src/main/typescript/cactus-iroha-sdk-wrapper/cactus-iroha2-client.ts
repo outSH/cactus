@@ -22,6 +22,15 @@ import {
   OptionIpfsPath,
   RegisterBox,
   VecInstruction,
+  Asset,
+  AssetId,
+  AccountId,
+  AssetValue,
+  MintBox,
+  EvaluatesToValue,
+  EvaluatesToIdBox,
+  IdBox,
+  BurnBox,
 } from "@iroha2/data-model";
 
 import {
@@ -157,10 +166,194 @@ export class CactusIrohaV2Client {
       }),
     });
 
-    const description = `RegisterAsset '${assetName}#${domainName}', type: ${valueType}, mintable: ${mintable}`;
+    const description = `RegisterAssetDefinition '${assetName}#${domainName}', type: ${valueType}, mintable: ${mintable}`;
     this.transactions.push({
       name: description,
       instruction: Instruction("Register", registerBox),
+    });
+    this.log.debug(`Added ${description} to transactions`);
+
+    return this;
+  }
+
+  public registerAsset(
+    assetName: IrohaName,
+    domainName: IrohaName,
+    accountName: IrohaName,
+    accountDomainName: IrohaName,
+    value: number | bigint | string | Metadata,
+  ): this {
+    Checks.truthy(assetName, "registerAsset arg assetName");
+    Checks.truthy(domainName, "registerAsset arg domainName");
+    Checks.truthy(accountName, "registerAsset arg accountName");
+    Checks.truthy(accountDomainName, "registerAsset arg accountDomainName");
+
+    let assetValue: AssetValue;
+    switch (typeof value) {
+      case "number":
+        assetValue = AssetValue("Quantity", value);
+        break;
+      case "bigint":
+        assetValue = AssetValue("BigQuantity", value);
+        break;
+      case "string":
+        assetValue = AssetValue("Fixed", value);
+        break;
+      case "object":
+        assetValue = AssetValue("Store", value);
+      default:
+        throw new Error(`Unknown AssetValue: ${value}, type: ${typeof value}`);
+    }
+
+    const assetDefinition = Asset({
+      id: AssetId({
+        account_id: AccountId({
+          name: accountName,
+          domain_id: DomainId({
+            name: accountDomainName,
+          }),
+        }),
+        definition_id: AssetDefinitionId({
+          name: assetName,
+          domain_id: DomainId({ name: domainName }),
+        }),
+      }),
+      value: assetValue,
+    });
+
+    const registerBox = RegisterBox({
+      object: EvaluatesToRegistrableBox({
+        expression: Expression(
+          "Raw",
+          IrohaValue("Identifiable", IdentifiableBox("Asset", assetDefinition)),
+        ),
+      }),
+    });
+
+    const description = `RegisterAsset '${assetName}#${domainName}', value: ${value}`;
+    this.transactions.push({
+      name: description,
+      instruction: Instruction("Register", registerBox),
+    });
+    this.log.debug(`Added ${description} to transactions`);
+
+    return this;
+  }
+
+  public mintAsset(
+    assetName: string,
+    domainName: string,
+    accountName: string,
+    accountDomainName: string,
+    value: number | bigint | string | Metadata,
+  ): this {
+    const assetId = AssetId({
+      account_id: AccountId({
+        name: accountName,
+        domain_id: DomainId({
+          name: accountDomainName,
+        }),
+      }),
+      definition_id: AssetDefinitionId({
+        name: assetName,
+        domain_id: DomainId({ name: domainName }),
+      }),
+    });
+
+    // todo - factory method
+    let assetValue: IrohaValue;
+    switch (typeof value) {
+      case "number":
+        assetValue = IrohaValue("U32", value);
+        break;
+      case "bigint":
+        assetValue = IrohaValue("U128", value);
+        break;
+      case "string":
+        assetValue = IrohaValue("Fixed", value);
+        break;
+      case "object":
+        assetValue = IrohaValue("LimitedMetadata", value);
+      default:
+        throw new Error(`Unknown AssetValue: ${value}, type: ${typeof value}`);
+    }
+
+    const mintBox = MintBox({
+      object: EvaluatesToValue({
+        expression: Expression("Raw", assetValue),
+      }),
+      destination_id: EvaluatesToIdBox({
+        expression: Expression(
+          "Raw",
+          IrohaValue("Id", IdBox("AssetId", assetId)),
+        ),
+      }),
+    });
+
+    const description = `MintAsset '${assetName}#${domainName}', value: ${value}`;
+    this.transactions.push({
+      name: description,
+      instruction: Instruction("Mint", mintBox),
+    });
+    this.log.debug(`Added ${description} to transactions`);
+
+    return this;
+  }
+
+  public burnAsset(
+    assetName: string,
+    domainName: string,
+    accountName: string,
+    accountDomainName: string,
+    value: number | bigint | string | Metadata,
+  ): this {
+    const assetId = AssetId({
+      account_id: AccountId({
+        name: accountName,
+        domain_id: DomainId({
+          name: accountDomainName,
+        }),
+      }),
+      definition_id: AssetDefinitionId({
+        name: assetName,
+        domain_id: DomainId({ name: domainName }),
+      }),
+    });
+
+    // todo - factory method
+    let assetValue: IrohaValue;
+    switch (typeof value) {
+      case "number":
+        assetValue = IrohaValue("U32", value);
+        break;
+      case "bigint":
+        assetValue = IrohaValue("U128", value);
+        break;
+      case "string":
+        assetValue = IrohaValue("Fixed", value);
+        break;
+      case "object":
+        assetValue = IrohaValue("LimitedMetadata", value);
+      default:
+        throw new Error(`Unknown AssetValue: ${value}, type: ${typeof value}`);
+    }
+
+    const burnBox = BurnBox({
+      object: EvaluatesToValue({
+        expression: Expression("Raw", assetValue),
+      }),
+      destination_id: EvaluatesToIdBox({
+        expression: Expression(
+          "Raw",
+          IrohaValue("Id", IdBox("AssetId", assetId)),
+        ),
+      }),
+    });
+
+    const description = `BurnAsset '${assetName}#${domainName}', value: ${value}`;
+    this.transactions.push({
+      name: description,
+      instruction: Instruction("Burn", burnBox),
     });
     this.log.debug(`Added ${description} to transactions`);
 

@@ -15,15 +15,24 @@
         "type": "string",
         "enum": [
           "registerDomain",
-          "registerAssetDefinition"
+          "registerAssetDefinition",
+          "registerAsset",
+          "mintAsset",
+          "burnAsset"
         ],
         "x-enum-descriptions": [
           "Register new domain",
-          "Register new asset definition"
+          "Register new asset definition",
+          "Register new asset",
+          "Mint asset value",
+          "Burn asset value"
         ],
         "x-enum-varnames": [
           "RegisterDomain",
-          "RegisterAssetDefinition"
+          "RegisterAssetDefinition",
+          "RegisterAsset",
+          "MintAsset",
+          "BurnAsset"
         ]
       },
       "IrohaQuery": {
@@ -31,17 +40,26 @@
         "enum": [
           "findAllDomains",
           "findDomainById",
-          "findAssetDefinitionById"
+          "findAssetDefinitionById",
+          "findAllAssetsDefinitions",
+          "findAssetById",
+          "findAllAssets"
         ],
         "x-enum-descriptions": [
           "Get list of all registered domains",
           "Get domain with specified ID",
-          "Get asset definition with specified ID"
+          "Get asset definition with specified ID",
+          "Get list of all registered asset definition",
+          "Get asset with specified ID",
+          "Get list of all registered assets"
         ],
         "x-enum-varnames": [
           "FindAllDomains",
           "FindDomainById",
-          "FindAssetDefinitionById"
+          "FindAssetDefinitionById",
+          "FindAllAssetsDefinitions",
+          "FindAssetById",
+          "FindAllAssets"
         ]
       },
       "WatchBlocksV1": {
