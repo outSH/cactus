@@ -18,21 +18,24 @@
           "registerAssetDefinition",
           "registerAsset",
           "mintAsset",
-          "burnAsset"
+          "burnAsset",
+          "registerAccount"
         ],
         "x-enum-descriptions": [
           "Register new domain",
           "Register new asset definition",
           "Register new asset",
           "Mint asset value",
-          "Burn asset value"
+          "Burn asset value",
+          "Register new account"
         ],
         "x-enum-varnames": [
           "RegisterDomain",
           "RegisterAssetDefinition",
           "RegisterAsset",
           "MintAsset",
-          "BurnAsset"
+          "BurnAsset",
+          "RegisterAccount"
         ]
       },
       "IrohaQuery": {
@@ -44,7 +47,9 @@
           "findAllAssetsDefinitions",
           "findAssetById",
           "findAllAssets",
-          "findAllPeers"
+          "findAllPeers",
+          "findAccountById",
+          "findAllAccounts"
         ],
         "x-enum-descriptions": [
           "Get list of all registered domains",
@@ -53,7 +58,9 @@
           "Get list of all registered asset definition",
           "Get asset with specified ID",
           "Get list of all registered assets",
-          "Get list of all ledger peers"
+          "Get list of all ledger peers",
+          "Get account with specified ID",
+          "Get list of all registered accounts"
         ],
         "x-enum-varnames": [
           "FindAllDomains",
@@ -62,7 +69,9 @@
           "FindAllAssetsDefinitions",
           "FindAssetById",
           "FindAllAssets",
-          "FindAllPeers"
+          "FindAllPeers",
+          "FindAccountById",
+          "FindAllAccounts"
         ]
       },
       "WatchBlocksV1": {

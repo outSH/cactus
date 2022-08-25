@@ -382,6 +382,14 @@ export class PluginLedgerConnectorIroha2
               5,
             );
             break;
+          case IrohaInstruction.RegisterAccount:
+            this.addTransactionWithCheckedParams(
+              client,
+              CactusIrohaV2Client.prototype.registerAccount,
+              cmd.params,
+              4,
+            );
+            break;
           default:
             const unknownType: never = cmd.name;
             throw new Error(
@@ -457,6 +465,17 @@ export class PluginLedgerConnectorIroha2
         case IrohaQuery.FindAllPeers:
           return {
             response: await client.query.findAllPeers(),
+          };
+        case IrohaQuery.FindAccountById:
+          return await this.runQueryWithCheckedParams(
+            client,
+            CactusIrohaV2QueryClient.prototype.findAccountById,
+            req.params,
+            2,
+          );
+        case IrohaQuery.FindAllAccounts:
+          return {
+            response: await client.query.findAllAccounts(),
           };
         // case IrohaQuery.FindAllBlocks:
         //   return await this.runQueryWithCheckedParams(

@@ -18,6 +18,8 @@ import {
   FindAssetDefinitionById,
   EvaluatesToAssetDefinitionId,
   BlockValue,
+  FindAccountById,
+  EvaluatesToAccountId,
 } from "@iroha2/data-model";
 
 import { Checks, Logger } from "@hyperledger/cactus-common";
@@ -213,6 +215,66 @@ export class CactusIrohaV2QueryClient {
 
     this.log.debug("findAllAssets:", assets);
     return assets;
+  }
+
+  // Account
+  public async findAccountById(
+    name: string,
+    domainName: string,
+  ): Promise<unknown> {
+    Checks.truthy(name, "findAccountById arg name");
+    Checks.truthy(domainName, "findAccountById arg domainName");
+
+    const accountId = AccountId({
+      name: name,
+      domain_id: DomainId({
+        name: domainName,
+      }),
+    });
+
+    const result = await this.irohaClient.request(
+      QueryBox(
+        "FindAccountById",
+        FindAccountById({
+          id: EvaluatesToAccountId({
+            expression: Expression(
+              "Raw",
+              Value("Id", IdBox("AccountId", accountId)),
+            ),
+          }),
+        }),
+      ),
+    );
+
+    const account = result.match({
+      Ok: (res) => res.result.as("Identifiable").as("Account"),
+      Err: (error) => {
+        throw new Error(`findAccountById query error: ${safeStringify(error)}`);
+      },
+    });
+
+    this.log.debug("findAccountById:", account);
+    return account;
+  }
+
+  public async findAllAccounts(): Promise<unknown> {
+    const result = await this.irohaClient.request(
+      QueryBox("FindAllAccounts", null),
+    );
+
+    // todo: getVectorResult() helper func
+    const vectorResult = result.match({
+      Ok: (res) => res.result.as("Vec"),
+      Err: (error) => {
+        throw new Error(`findAllAccounts query error: ${safeStringify(error)}`);
+      },
+    });
+    const accounts = vectorResult.map((i) =>
+      i.as("Identifiable").as("Account"),
+    );
+
+    this.log.debug("findAllAccounts:", accounts);
+    return accounts;
   }
 
   // Other

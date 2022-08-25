@@ -52,6 +52,12 @@ import express from "express";
 import { AddressInfo } from "net";
 import { Configuration, Constants } from "@hyperledger/cactus-core-api";
 import { VersionedCommittedBlock } from "@iroha2/data-model";
+import { crypto } from "@iroha2/crypto-target-node";
+import { setCrypto } from "@iroha2/client";
+import { KeyPair } from "@iroha2/crypto-core";
+import { bytesToHex } from "hada";
+
+setCrypto(crypto);
 
 // Logger setup
 const log: Logger = LoggerProvider.getOrCreate({
@@ -208,6 +214,34 @@ describe("Iroha V2 connector tests", () => {
   function addRandomSuffix(name: string) {
     return name + (Math.random() + 1).toString(36).substring(7);
   }
+
+  test("Adding random suffix to test strings works (addRandomSuffix)", async () => {
+    const a = addRandomSuffix("foo");
+    expect(a).toBeTruthy();
+    const b = addRandomSuffix("foo");
+    expect(b).toBeTruthy();
+    expect(a).not.toEqual(b);
+  });
+
+  function generateTestKeyPair(): KeyPair {
+    const SEED_BYTES = [1, 2, 3, 4];
+    const config = crypto
+      .createKeyGenConfiguration()
+      .useSeed(Uint8Array.from(SEED_BYTES))
+      .withAlgorithm(crypto.AlgorithmEd25519());
+    return crypto.generateKeyPairWithConfiguration(config);
+  }
+
+  test("Test key generation works (generateTestKeyPair)", async () => {
+    const keyPair = generateTestKeyPair();
+    try {
+      expect(keyPair).toBeTruthy();
+      expect(keyPair.publicKey().payload()).toBeTruthy();
+      expect(keyPair.privateKey().payload()).toBeTruthy();
+    } finally {
+      keyPair.free();
+    }
+  });
 
   //////////////////////////////////
   // Basic Endpoint Tests
@@ -554,6 +588,104 @@ describe("Iroha V2 connector tests", () => {
       expect(queryResponse.data).toBeTruthy();
       expect(queryResponse.data.response).toBeTruthy();
       expect(JSON.stringify(queryResponse.data.response)).toContain(domainName);
+    });
+  });
+
+  describe("Account tests", () => {
+    let newAccountName: string;
+    let newAccountDomainName: string;
+    let newAccountCredentials: Iroha2KeyPair;
+
+    // Register new account (RegisterAccount)
+    beforeAll(async () => {
+      newAccountName = addRandomSuffix("fooAcc");
+      expect(newAccountName).toBeTruthy();
+      newAccountDomainName = addRandomSuffix("newAccDomain");
+      expect(newAccountDomainName).toBeTruthy();
+
+      // Create new domain for our new account
+      const registerDomainResponse = await apiClient.transactV1({
+        instruction: {
+          name: IrohaInstruction.RegisterDomain,
+          params: [newAccountDomainName],
+        },
+        baseConfig: defaultBaseConfig,
+      });
+      expect(registerDomainResponse).toBeTruthy();
+      expect(registerDomainResponse.status).toEqual(200);
+      expect(registerDomainResponse.data.status).toEqual("OK");
+      await waitForCommit();
+
+      // Generate new account credentials
+      const freeableKeys: { free(): void }[] = [];
+      try {
+        const keyPair = generateTestKeyPair();
+        freeableKeys.push(keyPair);
+        const multiHashPubKey = crypto.createMultihashFromPublicKey(
+          keyPair.publicKey(),
+        );
+        freeableKeys.push(multiHashPubKey);
+
+        newAccountCredentials = {
+          publicKey: bytesToHex(Array.from(multiHashPubKey.toBytes())),
+          privateKey: {
+            digestFunction: keyPair.privateKey().digestFunction(),
+            payload: bytesToHex(Array.from(keyPair.privateKey().payload())),
+          },
+        };
+      } finally {
+        freeableKeys.forEach((x) => x.free());
+      }
+
+      // Register new account
+      const registerAccountResponse = await apiClient.transactV1({
+        instruction: {
+          name: IrohaInstruction.RegisterAccount,
+          params: [
+            newAccountName,
+            newAccountDomainName,
+            newAccountCredentials.publicKey,
+            newAccountCredentials.privateKey.digestFunction,
+          ],
+        },
+        baseConfig: defaultBaseConfig,
+      });
+      expect(registerAccountResponse).toBeTruthy();
+      expect(registerAccountResponse.status).toEqual(200);
+      expect(registerAccountResponse.data.status).toEqual("OK");
+      await waitForCommit();
+    });
+
+    test("Query single account (FindAccountById)", async () => {
+      const queryResponse = await apiClient.queryV1({
+        queryName: IrohaQuery.FindAccountById,
+        baseConfig: defaultBaseConfig,
+        params: [newAccountName, newAccountDomainName],
+      });
+      expect(queryResponse).toBeTruthy();
+      expect(queryResponse.data).toBeTruthy();
+      const responseData = queryResponse.data.response;
+      expect(responseData).toBeTruthy();
+      expect(responseData.id.name).toEqual(newAccountName);
+      expect(responseData.id.domain_id.name).toEqual(newAccountDomainName);
+      expect(responseData.signatories.length).toBeGreaterThan(0);
+      const receivedPubKey = responseData.signatories.pop().payload;
+      expect(bytesToHex(Object.values(receivedPubKey))).toEqual(
+        newAccountCredentials.publicKey,
+      );
+    });
+
+    test("Query all accounts (FindAllAccounts)", async () => {
+      const queryResponse = await apiClient.queryV1({
+        queryName: IrohaQuery.FindAllAccounts,
+        baseConfig: defaultBaseConfig,
+      });
+      expect(queryResponse).toBeTruthy();
+      expect(queryResponse.data).toBeTruthy();
+      expect(queryResponse.data.response).toBeTruthy();
+      expect(JSON.stringify(queryResponse.data.response)).toContain(
+        newAccountName,
+      );
     });
   });
 

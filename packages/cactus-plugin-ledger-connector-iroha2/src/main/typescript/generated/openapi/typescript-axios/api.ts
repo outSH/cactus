@@ -204,7 +204,11 @@ export enum IrohaInstruction {
     /**
     * Burn asset value
     */
-    BurnAsset = 'burnAsset'
+    BurnAsset = 'burnAsset',
+    /**
+    * Register new account
+    */
+    RegisterAccount = 'registerAccount'
 }
 
 /**
@@ -260,7 +264,15 @@ export enum IrohaQuery {
     /**
     * Get list of all ledger peers
     */
-    FindAllPeers = 'findAllPeers'
+    FindAllPeers = 'findAllPeers',
+    /**
+    * Get account with specified ID
+    */
+    FindAccountById = 'findAccountById',
+    /**
+    * Get list of all registered accounts
+    */
+    FindAllAccounts = 'findAllAccounts'
 }
 
 /**

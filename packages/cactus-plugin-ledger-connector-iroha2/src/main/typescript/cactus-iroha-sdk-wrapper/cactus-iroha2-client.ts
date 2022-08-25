@@ -31,6 +31,9 @@ import {
   EvaluatesToIdBox,
   IdBox,
   BurnBox,
+  PublicKey,
+  NewAccount,
+  VecPublicKey,
 } from "@iroha2/data-model";
 
 import {
@@ -247,6 +250,12 @@ export class CactusIrohaV2Client {
     accountDomainName: string,
     value: number | bigint | string | Metadata,
   ): this {
+    Checks.truthy(assetName, "mintAsset arg assetName");
+    Checks.truthy(domainName, "mintAsset arg domainName");
+    Checks.truthy(accountName, "mintAsset arg accountName");
+    Checks.truthy(accountDomainName, "mintAsset arg accountDomainName");
+    Checks.truthy(value, "mintAsset arg value");
+
     const assetId = AssetId({
       account_id: AccountId({
         name: accountName,
@@ -307,6 +316,12 @@ export class CactusIrohaV2Client {
     accountDomainName: string,
     value: number | bigint | string | Metadata,
   ): this {
+    Checks.truthy(assetName, "burnAsset arg assetName");
+    Checks.truthy(domainName, "burnAsset arg domainName");
+    Checks.truthy(accountName, "burnAsset arg accountName");
+    Checks.truthy(accountDomainName, "burnAsset arg accountDomainName");
+    Checks.truthy(value, "burnAsset arg value");
+
     const assetId = AssetId({
       account_id: AccountId({
         name: accountName,
@@ -354,6 +369,69 @@ export class CactusIrohaV2Client {
     this.transactions.push({
       name: description,
       instruction: Instruction("Burn", burnBox),
+    });
+    this.log.debug(`Added ${description} to transactions`);
+
+    return this;
+  }
+
+  public registerAccount(
+    accountName: string,
+    domainName: string,
+    publicKeyPayload: string | Uint8Array,
+    publicKeyDigestFunction = "ed25519",
+    metadata: Map<IrohaName, IrohaValue> = new Map(),
+  ): this {
+    Checks.truthy(accountName, "registerAccount arg accountName");
+    Checks.truthy(domainName, "registerAccount arg domainName");
+    Checks.truthy(publicKeyPayload, "registerAccount arg publicKeyPayload");
+    Checks.truthy(
+      publicKeyDigestFunction,
+      "registerAccount arg publicKeyDigestFunction",
+    );
+
+    const accountId = AccountId({
+      name: accountName,
+      domain_id: DomainId({
+        name: domainName,
+      }),
+    });
+
+    let publicKeyBytes: Uint8Array;
+    if (typeof publicKeyPayload === "string") {
+      publicKeyBytes = Uint8Array.from(hexToBytes(publicKeyPayload));
+    } else {
+      publicKeyBytes = publicKeyPayload;
+    }
+
+    const publicKey = PublicKey({
+      payload: publicKeyBytes,
+      digest_function: publicKeyDigestFunction,
+    });
+
+    const registerBox = RegisterBox({
+      object: EvaluatesToRegistrableBox({
+        expression: Expression(
+          "Raw",
+          IrohaValue(
+            "Identifiable",
+            IdentifiableBox(
+              "NewAccount",
+              NewAccount({
+                id: accountId,
+                signatories: VecPublicKey([publicKey]),
+                metadata: Metadata({ map: MapNameValue(metadata) }),
+              }),
+            ),
+          ),
+        ),
+      }),
+    });
+
+    const description = `RegisterAccount '${accountName}@${domainName}'`;
+    this.transactions.push({
+      name: description,
+      instruction: Instruction("Register", registerBox),
     });
     this.log.debug(`Added ${description} to transactions`);
 
