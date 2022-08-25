@@ -19,6 +19,7 @@
           "registerAsset",
           "mintAsset",
           "burnAsset",
+          "transferAsset",
           "registerAccount"
         ],
         "x-enum-descriptions": [
@@ -27,6 +28,7 @@
           "Register new asset",
           "Mint asset value",
           "Burn asset value",
+          "Transfer asset between accounts",
           "Register new account"
         ],
         "x-enum-varnames": [
@@ -35,6 +37,7 @@
           "RegisterAsset",
           "MintAsset",
           "BurnAsset",
+          "TransferAsset",
           "RegisterAccount"
         ]
       },

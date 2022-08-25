@@ -34,6 +34,7 @@ import {
   PublicKey,
   NewAccount,
   VecPublicKey,
+  TransferBox,
 } from "@iroha2/data-model";
 
 import {
@@ -369,6 +370,99 @@ export class CactusIrohaV2Client {
     this.transactions.push({
       name: description,
       instruction: Instruction("Burn", burnBox),
+    });
+    this.log.debug(`Added ${description} to transactions`);
+
+    return this;
+  }
+
+  public transferAsset(
+    assetName: string,
+    assetDomainName: string,
+    sourceAccountName: string,
+    sourceAccountDomain: string,
+    targetAccountName: string,
+    targetAccountDomain: string,
+    valueToTransfer: number | bigint | string | Metadata,
+  ): this {
+    Checks.truthy(assetName, "transferAsset arg assetName");
+    Checks.truthy(assetDomainName, "transferAsset arg assetDomainName");
+    Checks.truthy(sourceAccountName, "transferAsset arg sourceAccountName");
+    Checks.truthy(sourceAccountDomain, "transferAsset arg sourceAccountDomain");
+    Checks.truthy(targetAccountName, "transferAsset arg targetAccountName");
+    Checks.truthy(targetAccountDomain, "transferAsset arg targetAccountDomain");
+    Checks.truthy(valueToTransfer, "transferAsset arg valueToTransfer");
+
+    const assetDefinition = AssetDefinitionId({
+      name: assetName,
+      domain_id: DomainId({ name: assetDomainName }),
+    });
+
+    const sourceAssetId = AssetId({
+      account_id: AccountId({
+        name: sourceAccountName,
+        domain_id: DomainId({
+          name: sourceAccountDomain,
+        }),
+      }),
+      definition_id: assetDefinition,
+    });
+
+    const targetAssetId = AssetId({
+      account_id: AccountId({
+        name: targetAccountName,
+        domain_id: DomainId({
+          name: targetAccountDomain,
+        }),
+      }),
+      definition_id: assetDefinition,
+    });
+
+    // todo - factory method
+    let transferValue: IrohaValue;
+    switch (typeof valueToTransfer) {
+      case "number":
+        transferValue = IrohaValue("U32", valueToTransfer);
+        break;
+      case "bigint":
+        transferValue = IrohaValue("U128", valueToTransfer);
+        break;
+      case "string":
+        transferValue = IrohaValue("Fixed", valueToTransfer);
+        break;
+      case "object":
+        transferValue = IrohaValue("LimitedMetadata", valueToTransfer);
+      default:
+        throw new Error(
+          `Unknown AssetValue: ${valueToTransfer}, type: ${typeof valueToTransfer}`,
+        );
+    }
+
+    const transferBox = TransferBox({
+      source_id: EvaluatesToIdBox({
+        expression: Expression(
+          "Raw",
+          IrohaValue("Id", IdBox("AssetId", sourceAssetId)),
+        ),
+      }),
+      object: EvaluatesToValue({
+        expression: Expression("Raw", transferValue),
+      }),
+      destination_id: EvaluatesToIdBox({
+        expression: Expression(
+          "Raw",
+          IrohaValue("Id", IdBox("AssetId", targetAssetId)),
+        ),
+      }),
+    });
+
+    const description = `TransferAsset '${assetName}#${assetDomainName}',\
+    from: ${sourceAccountName}@${sourceAccountDomain}\
+    to ${targetAccountName}@${targetAccountDomain}`;
+
+    this.transactions.push({
+      name: description,
+      instruction: Instruction("Transfer", transferBox),
     });
     this.log.debug(`Added ${description} to transactions`);
 

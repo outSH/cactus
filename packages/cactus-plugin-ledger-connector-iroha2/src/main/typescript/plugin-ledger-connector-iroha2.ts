@@ -382,6 +382,14 @@ export class PluginLedgerConnectorIroha2
               5,
             );
             break;
+          case IrohaInstruction.TransferAsset:
+            this.addTransactionWithCheckedParams(
+              client,
+              CactusIrohaV2Client.prototype.transferAsset,
+              cmd.params,
+              7,
+            );
+            break;
           case IrohaInstruction.RegisterAccount:
             this.addTransactionWithCheckedParams(
               client,

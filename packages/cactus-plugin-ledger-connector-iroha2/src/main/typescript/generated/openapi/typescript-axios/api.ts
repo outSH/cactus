@@ -206,6 +206,10 @@ export enum IrohaInstruction {
     */
     BurnAsset = 'burnAsset',
     /**
+    * Transfer asset between accounts
+    */
+    TransferAsset = 'transferAsset',
+    /**
     * Register new account
     */
     RegisterAccount = 'registerAccount'

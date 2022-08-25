@@ -54,7 +54,6 @@ import { Configuration, Constants } from "@hyperledger/cactus-core-api";
 import { VersionedCommittedBlock } from "@iroha2/data-model";
 import { crypto } from "@iroha2/crypto-target-node";
 import { setCrypto } from "@iroha2/client";
-import { KeyPair } from "@iroha2/crypto-core";
 import { bytesToHex } from "hada";
 
 setCrypto(crypto);
@@ -223,24 +222,41 @@ describe("Iroha V2 connector tests", () => {
     expect(a).not.toEqual(b);
   });
 
-  function generateTestKeyPair(): KeyPair {
-    const SEED_BYTES = [1, 2, 3, 4];
+  function generateTestIrohaCredentials(): Iroha2KeyPair {
+    const seedBytes = Buffer.from(addRandomSuffix("seed"));
     const config = crypto
       .createKeyGenConfiguration()
-      .useSeed(Uint8Array.from(SEED_BYTES))
+      .useSeed(Uint8Array.from(seedBytes))
       .withAlgorithm(crypto.AlgorithmEd25519());
-    return crypto.generateKeyPairWithConfiguration(config);
+
+    const freeableKeys: { free(): void }[] = [];
+    try {
+      const keyPair = crypto.generateKeyPairWithConfiguration(config);
+      freeableKeys.push(keyPair);
+
+      const multiHashPubKey = crypto.createMultihashFromPublicKey(
+        keyPair.publicKey(),
+      );
+      freeableKeys.push(multiHashPubKey);
+
+      return {
+        publicKey: bytesToHex(Array.from(multiHashPubKey.toBytes())),
+        privateKey: {
+          digestFunction: keyPair.privateKey().digestFunction(),
+          payload: bytesToHex(Array.from(keyPair.privateKey().payload())),
+        },
+      };
+    } finally {
+      freeableKeys.forEach((x) => x.free());
+    }
   }
 
-  test("Test key generation works (generateTestKeyPair)", async () => {
-    const keyPair = generateTestKeyPair();
-    try {
-      expect(keyPair).toBeTruthy();
-      expect(keyPair.publicKey().payload()).toBeTruthy();
-      expect(keyPair.privateKey().payload()).toBeTruthy();
-    } finally {
-      keyPair.free();
-    }
+  test("Test key generation works (generateTestIrohaCredentials)", async () => {
+    const credentials = generateTestIrohaCredentials();
+    expect(credentials).toBeTruthy();
+    expect(credentials.publicKey).toBeTruthy();
+    expect(credentials.privateKey.payload).toBeTruthy();
+    expect(credentials.privateKey.digestFunction).toBeTruthy();
   });
 
   //////////////////////////////////
@@ -617,25 +633,7 @@ describe("Iroha V2 connector tests", () => {
       await waitForCommit();
 
       // Generate new account credentials
-      const freeableKeys: { free(): void }[] = [];
-      try {
-        const keyPair = generateTestKeyPair();
-        freeableKeys.push(keyPair);
-        const multiHashPubKey = crypto.createMultihashFromPublicKey(
-          keyPair.publicKey(),
-        );
-        freeableKeys.push(multiHashPubKey);
-
-        newAccountCredentials = {
-          publicKey: bytesToHex(Array.from(multiHashPubKey.toBytes())),
-          privateKey: {
-            digestFunction: keyPair.privateKey().digestFunction(),
-            payload: bytesToHex(Array.from(keyPair.privateKey().payload())),
-          },
-        };
-      } finally {
-        freeableKeys.forEach((x) => x.free());
-      }
+      newAccountCredentials = generateTestIrohaCredentials();
 
       // Register new account
       const registerAccountResponse = await apiClient.transactV1({
@@ -927,6 +925,97 @@ describe("Iroha V2 connector tests", () => {
       log.info("Final asset value (after burn):", finalValue);
 
       expect(finalValue).toEqual(initValue - burnValue);
+    });
+
+    test("Transfer asset between accounts (TransferAsset)", async () => {
+      const transferValue = 3;
+      const sourceAccountName = defaultBaseConfig.accountId?.name;
+      const sourceAccountDomain = defaultBaseConfig.accountId?.domainId;
+      const targetAccountName = addRandomSuffix("transferTargetAcc");
+      const targetAccountDomain = sourceAccountDomain;
+
+      // Get initial asset value
+      const initQueryResponse = await apiClient.queryV1({
+        queryName: IrohaQuery.FindAssetById,
+        baseConfig: defaultBaseConfig,
+        params: [assetName, domainName, sourceAccountName, sourceAccountDomain],
+      });
+      expect(initQueryResponse).toBeTruthy();
+      expect(initQueryResponse.data).toBeTruthy();
+      const initValue = initQueryResponse.data.response.value.value;
+      log.info("Initial asset value (before transfer):", initValue);
+      expect(transferValue).toBeLessThan(initValue);
+
+      // Register new account to receive the assets
+      const accountCredentials = generateTestIrohaCredentials();
+      const registerAccountResponse = await apiClient.transactV1({
+        instruction: {
+          name: IrohaInstruction.RegisterAccount,
+          params: [
+            targetAccountName,
+            targetAccountDomain,
+            accountCredentials.publicKey,
+            accountCredentials.privateKey.digestFunction,
+          ],
+        },
+        baseConfig: defaultBaseConfig,
+      });
+      expect(registerAccountResponse).toBeTruthy();
+      expect(registerAccountResponse.status).toEqual(200);
+      expect(registerAccountResponse.data.status).toEqual("OK");
+      await waitForCommit();
+
+      // Transfer asset to the newly created account
+      const transferResponse = await apiClient.transactV1({
+        instruction: {
+          name: IrohaInstruction.TransferAsset,
+          params: [
+            assetName,
+            domainName,
+            sourceAccountName,
+            sourceAccountDomain,
+            targetAccountName,
+            targetAccountDomain,
+            transferValue,
+          ],
+        },
+        baseConfig: defaultBaseConfig,
+      });
+      expect(transferResponse).toBeTruthy();
+      expect(transferResponse.status).toEqual(200);
+      expect(transferResponse.data.status).toEqual("OK");
+      await waitForCommit();
+
+      // Get final asset value on source account (after transfer)
+      const finalSourceQueryResponse = await apiClient.queryV1({
+        queryName: IrohaQuery.FindAssetById,
+        baseConfig: defaultBaseConfig,
+        params: [assetName, domainName, sourceAccountName, sourceAccountDomain],
+      });
+      expect(finalSourceQueryResponse).toBeTruthy();
+      expect(finalSourceQueryResponse.data).toBeTruthy();
+      const finalSrcValue = finalSourceQueryResponse.data.response.value.value;
+      log.info(
+        "Final asset value on source account (after transfer):",
+        finalSrcValue,
+      );
+      expect(finalSrcValue).toEqual(initValue - transferValue);
+
+      // Get final asset value on target account (after transfer)
+      const finalTargetQueryResponse = await apiClient.queryV1({
+        queryName: IrohaQuery.FindAssetById,
+        baseConfig: defaultBaseConfig,
+        params: [assetName, domainName, targetAccountName, targetAccountDomain],
+      });
+      expect(finalTargetQueryResponse).toBeTruthy();
+      expect(finalTargetQueryResponse.data).toBeTruthy();
+      const finalTargetValue =
+        finalTargetQueryResponse.data.response.value.value;
+      log.info(
+        "Final asset value on target account (after transfer):",
+        finalTargetValue,
+      );
+      expect(finalTargetValue).toEqual(transferValue);
     });
   });
 
