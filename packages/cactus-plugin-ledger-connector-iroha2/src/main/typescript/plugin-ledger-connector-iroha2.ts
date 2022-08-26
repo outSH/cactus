@@ -58,22 +58,7 @@ import {
   generateIrohaV2KeyPair,
 } from "./cactus-iroha-sdk-wrapper/cactus-iroha2-client";
 import { CactusIrohaV2QueryClient } from "./cactus-iroha-sdk-wrapper/cactus-iroha2-query";
-
-/**
- * `JSON.stringify` replacer function to handle BigInt.
- * See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt#use_within_json
- */
-function stringifyBigIntReplacer(key: string, value: bigint) {
-  if (typeof value === "bigint") {
-    return value.toString();
-  }
-  return value;
-}
-
-/**
- * Abstract type that corresponds to length of supplied iterable ('1', '2', etc...)
- */
-type LengthOf<T extends ArrayLike<unknown>> = T["length"];
+import { LengthOf, stringifyBigIntReplacer } from "./utils";
 
 /**
  * Input options for PluginLedgerConnectorIroha2.

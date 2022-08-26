@@ -3,8 +3,6 @@
  */
 
 import type { Express, Request, Response } from "express";
-import safeStringify from "fast-safe-stringify";
-import sanitizeHtml from "sanitize-html";
 
 import {
   Logger,
@@ -21,6 +19,7 @@ import {
 import { registerWebServiceEndpoint } from "@hyperledger/cactus-core";
 
 import { PluginLedgerConnectorIroha2 } from "../plugin-ledger-connector-iroha2";
+import { safeStringifyException } from "../utils";
 
 import OAS from "../../json/openapi.json";
 
@@ -97,25 +96,11 @@ export class TransactEndpoint implements IWebServiceEndpoint {
       const resBody = await this.options.connector.transact(reqBody);
       res.json(resBody);
     } catch (ex) {
-      this.log.error(`Crash while serving ${reqTag}`, ex);
-
-      if (ex instanceof Error) {
-        res.status(500).json({
-          message: "Internal Server Error",
-          error: sanitizeHtml(ex.stack || ex.message, {
-            allowedTags: [],
-            allowedAttributes: {},
-          }),
-        });
-      } else {
-        res.status(500).json({
-          message: "Internal Server Error",
-          error: sanitizeHtml(safeStringify(ex), {
-            allowedTags: [],
-            allowedAttributes: {},
-          }),
-        });
-      }
+      this.log.warn(`Crash while serving ${reqTag}`, ex);
+      res.status(500).json({
+        message: "Internal Server Error",
+        error: safeStringifyException(ex),
+      });
     }
   }
 }

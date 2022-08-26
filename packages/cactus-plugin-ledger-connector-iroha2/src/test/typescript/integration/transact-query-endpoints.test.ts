@@ -46,6 +46,7 @@ import {
   PluginLedgerConnectorIroha2,
   Iroha2KeyPair,
   Iroha2ApiClient,
+  BlockTypeV1,
 } from "../../../main/typescript/public-api";
 import { PluginRegistry } from "@hyperledger/cactus-core";
 import express from "express";
@@ -499,10 +500,72 @@ describe("Iroha V2 connector tests", () => {
   });
 
   describe("Block monitoring tests", () => {
-    test("watchBlocksV1 reports new blocks in binary (default) format", async () => {
+    // TODO - common helper function
+    test("watchBlocksV1 reports new blocks in raw json (default) format", async () => {
       // Start monitoring
       const monitorPromise = new Promise<void>((resolve, reject) => {
         const watchObservable = apiClient.watchBlocksV1({
+          type: BlockTypeV1.Raw,
+          baseConfig: defaultBaseConfig,
+        });
+
+        const subscription = watchObservable.subscribe({
+          next(event) {
+            try {
+              log.info("Received block event from the connector");
+              if (!("blockData" in event)) {
+                throw new Error("Unknown response type, wanted raw JSON data");
+              }
+              Checks.truthy(event.blockData);
+              log.debug("block:", event.blockData);
+              expect(event.blockData).toBeTruthy();
+              const parsedBlock = JSON.parse(event.blockData).value;
+              expect(parsedBlock).toBeTruthy();
+              expect(parsedBlock.header).toBeTruthy();
+              expect(parsedBlock.transactions).toBeDefined();
+              expect(parsedBlock.rejected_transactions).toBeDefined();
+              expect(parsedBlock.event_recommendations).toBeDefined();
+              subscription.unsubscribe();
+              resolve();
+            } catch (err) {
+              log.error("watchBlocksV1() event check error:", err);
+              subscription.unsubscribe();
+              reject(err);
+            }
+          },
+          error(err) {
+            log.error("watchBlocksV1() error:", err);
+            subscription.unsubscribe();
+            reject(err);
+          },
+        });
+      });
+
+      // Wait for monitor setup just to be sure
+      await waitForCommit();
+
+      // Create new domain to trigger new block creation
+      const domainName = addRandomSuffix("watchBlocksRaw");
+      const transactionResponse = await apiClient.transactV1({
+        instruction: {
+          name: IrohaInstruction.RegisterDomain,
+          params: [domainName],
+        },
+        baseConfig: defaultBaseConfig,
+      });
+      log.info("Watch block trigger tx sent to create domain", domainName);
+      expect(transactionResponse).toBeTruthy();
+      expect(transactionResponse.status).toEqual(200);
+      expect(transactionResponse.data.status).toEqual("OK");
+
+      await expect(monitorPromise).toResolve();
+    });
+
+    test("watchBlocksV1 reports new blocks in binary format", async () => {
+      // Start monitoring
+      const monitorPromise = new Promise<void>((resolve, reject) => {
+        const watchObservable = apiClient.watchBlocksV1({
+          type: BlockTypeV1.Binary,
           baseConfig: defaultBaseConfig,
         });
 

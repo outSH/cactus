@@ -29,6 +29,10 @@ import { BASE_PATH, COLLECTION_FORMATS, RequestArgs, BaseAPI, RequiredError } fr
 
 export enum BlockTypeV1 {
     /**
+    * Default JSON-encoded string full block data.
+    */
+    Raw = 'raw',
+    /**
     * Encoded format that must be decoded with Iroha SDK on client side before use
     */
     Binary = 'binary'
@@ -420,10 +424,23 @@ export interface WatchBlocksOptionsV1 {
     baseConfig?: Iroha2BaseConfig;
 }
 /**
+ * Default JSON-encoded string full block data.
+ * @export
+ * @interface WatchBlocksRawResponseV1
+ */
+export interface WatchBlocksRawResponseV1 {
+    /**
+     * 
+     * @type {string}
+     * @memberof WatchBlocksRawResponseV1
+     */
+    blockData: string;
+}
+/**
  * @type WatchBlocksResponseV1
  * @export
  */
-export type WatchBlocksResponseV1 = ErrorExceptionResponseV1 | WatchBlocksBinaryResponseV1;
+export type WatchBlocksResponseV1 = ErrorExceptionResponseV1 | WatchBlocksBinaryResponseV1 | WatchBlocksRawResponseV1;
 
 /**
  * Websocket requests for monitoring new blocks.

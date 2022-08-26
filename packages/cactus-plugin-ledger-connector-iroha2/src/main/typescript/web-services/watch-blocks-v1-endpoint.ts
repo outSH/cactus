@@ -18,10 +18,11 @@ import {
   BlockTypeV1,
 } from "../generated/openapi/typescript-axios";
 
+import { safeStringifyException, stringifyBigIntReplacer } from "../utils";
+
 import { Client as IrohaClient } from "@iroha2/client";
 
 import safeStringify from "fast-safe-stringify";
-import sanitizeHtml from "sanitize-html";
 import { VersionedCommittedBlock } from "@iroha2/data-model";
 
 /**
@@ -31,23 +32,6 @@ export interface IWatchBlocksV1EndpointConfiguration {
   logLevel?: LogLevelDesc;
   socket: SocketIoSocket;
   client: IrohaClient;
-}
-
-/**
- * Return secure string representation of error from the input.
- * Handles circular structures and removes HTML.`
- *
- * @param error Any object to return as an error, preferable `Error`
- * @returns Safe string representation of an error.
- *
- * @todo use one from cactus-common after #2089 is merged.
- */
-export function safeStringifyException(error: unknown): string {
-  if (error instanceof Error) {
-    return sanitizeHtml(error.stack || error.message);
-  }
-
-  return sanitizeHtml(safeStringify(error));
 }
 
 /**
@@ -76,7 +60,7 @@ export class WatchBlocksV1Endpoint {
   }
 
   /**
-   * Subscribe to new blocks on Iroha V2 ledger, push them to the client via socketio.
+   * Subscribe to new blocks on Iroha V2 ledger, push them to the client via SocketIO.
    *
    * @param options Block monitoring options.
    */
@@ -89,7 +73,7 @@ export class WatchBlocksV1Endpoint {
 
     try {
       const height = options.startBlock ?? "0";
-      const blockType = options.type ?? BlockTypeV1.Binary;
+      const blockType = options.type ?? BlockTypeV1.Raw;
       const blockMonitor = await client.listenForBlocksStream({
         height: BigInt(height),
       });
@@ -113,17 +97,34 @@ export class WatchBlocksV1Endpoint {
       });
 
       blockMonitor.ee.on("block", (block) => {
-        switch (blockType) {
-          case BlockTypeV1.Binary:
-            socket.emit(WatchBlocksV1.Next, {
-              binaryBlock: VersionedCommittedBlock.toBuffer(block),
-            });
-            break;
-          default:
-            const unknownType: never = blockType;
-            throw new Error(
-              `Unknown block listen type - '${unknownType}'. Check name and connector version.`,
-            );
+        try {
+          switch (blockType) {
+            case BlockTypeV1.Raw:
+              socket.emit(WatchBlocksV1.Next, {
+                blockData: JSON.stringify(block, stringifyBigIntReplacer),
+              });
+              break;
+            case BlockTypeV1.Binary:
+              socket.emit(WatchBlocksV1.Next, {
+                binaryBlock: VersionedCommittedBlock.toBuffer(block),
+              });
+              break;
+            default:
+              const unknownType: never = blockType;
+              throw new Error(
+                `Unknown block listen type - '${unknownType}'. Check name and connector version.`,
+              );
+          }
+        } catch (error) {
+          const errorMessage = safeStringifyException(error);
+          log.warn(
+            "listenForBlocksStream block serialization error:",
+            errorMessage,
+          );
+          socket.emit(WatchBlocksV1.Error, {
+            message: "listenForBlocksStream onBlock event error",
+            error: errorMessage,
+          });
         }
       });
 

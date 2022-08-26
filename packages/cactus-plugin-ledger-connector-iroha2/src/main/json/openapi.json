@@ -110,12 +110,15 @@
         "type": "string",
         "description": "Iroha V2 block response type.",
         "enum": [
+          "raw",
           "binary"
         ],
         "x-enum-descriptions": [
+          "Default JSON-encoded string full block data.",
           "Encoded format that must be decoded with Iroha SDK on client side before use"
         ],
         "x-enum-varnames": [
+          "Raw",
           "Binary"
         ]
       },
@@ -142,6 +145,19 @@
           }
         }
       },
+      "WatchBlocksRawResponseV1": {
+        "type": "object",
+        "description": "Default JSON-encoded string full block data.",
+        "required": [
+          "blockData"
+        ],
+        "properties": {
+          "blockData": {
+            "type": "string",
+            "nullable": false
+          }
+        }
+      },
       "WatchBlocksBinaryResponseV1": {
         "type": "object",
         "description": "Binary encoded response of block data.",
@@ -158,6 +174,10 @@
       },
       "WatchBlocksResponseV1": {
         "oneOf": [
+          {
+            "$ref": "#/components/schemas/WatchBlocksRawResponseV1",
+            "nullable": false
+          },
           {
             "$ref": "#/components/schemas/WatchBlocksBinaryResponseV1",
             "nullable": false
