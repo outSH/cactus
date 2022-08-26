@@ -55,6 +55,17 @@ import {
 } from "./cactus-iroha-sdk-wrapper/cactus-iroha2-client";
 import { CactusIrohaV2QueryClient } from "./cactus-iroha-sdk-wrapper/cactus-iroha2-query";
 
+/**
+ * `JSON.stringify` replacer function to handle BigInt.
+ * See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt#use_within_json
+ */
+function stringifyBigIntReplacer(key: string, value: bigint) {
+  if (typeof value === "bigint") {
+    return value.toString();
+  }
+  return value;
+}
+
 type LengthOf<T extends ArrayLike<unknown>> = T["length"];
 
 export interface IPluginLedgerConnectorIroha2Options
@@ -164,6 +175,8 @@ export class PluginLedgerConnectorIroha2
     app: Express,
     wsApi: SocketIoServer,
   ): Promise<IWebServiceEndpoint[]> {
+    app.set("json replacer", stringifyBigIntReplacer);
+
     const webServices = await this.getOrCreateWebServices();
     await Promise.all(webServices.map((ws) => ws.registerExpress(app)));
 
@@ -485,6 +498,17 @@ export class PluginLedgerConnectorIroha2
           return {
             response: await client.query.findAllAccounts(),
           };
+        case IrohaQuery.FindAllTransactions:
+          return {
+            response: await client.query.findAllTransactions(),
+          };
+        case IrohaQuery.FindTransactionByHash:
+          return await this.runQueryWithCheckedParams(
+            client,
+            CactusIrohaV2QueryClient.prototype.findTransactionByHash,
+            req.params,
+            1,
+          );
         // case IrohaQuery.FindAllBlocks:
         //   return await this.runQueryWithCheckedParams(
         //     client,

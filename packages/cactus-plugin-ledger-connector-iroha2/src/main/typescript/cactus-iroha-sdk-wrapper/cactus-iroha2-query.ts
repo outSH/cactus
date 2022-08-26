@@ -20,10 +20,13 @@ import {
   BlockValue,
   FindAccountById,
   EvaluatesToAccountId,
+  FindTransactionByHash,
+  EvaluatesToHash,
 } from "@iroha2/data-model";
 
 import { Checks, Logger } from "@hyperledger/cactus-common";
 import { BlockTypeV1 } from "../public-api";
+import { hexToBytes } from "hada";
 
 // TODO - pagination once supported by upstream
 export class CactusIrohaV2QueryClient {
@@ -275,6 +278,63 @@ export class CactusIrohaV2QueryClient {
 
     this.log.debug("findAllAccounts:", accounts);
     return accounts;
+  }
+
+  // Transactions
+  public async findAllTransactions(): Promise<unknown> {
+    const result = await this.irohaClient.request(
+      QueryBox("FindAllTransactions", null),
+    );
+
+    const vectorResult = result.match({
+      Ok: (res) => res.result.as("Vec"),
+      Err: (error) => {
+        throw new Error(
+          `findAllTransactions query error: ${safeStringify(error)}`,
+        );
+      },
+    });
+    const transactions = vectorResult.map((i) => i.as("TransactionValue"));
+
+    this.log.debug("findAllTransactions:", transactions);
+    return transactions;
+  }
+
+  public async findTransactionByHash(
+    hash: string | Uint8Array,
+  ): Promise<unknown> {
+    Checks.truthy(hash, "findTransactionByHash arg hash");
+
+    this.log.debug("findTransactionByHash - search for", hash);
+    let hashBytes: Uint8Array;
+    if (typeof hash === "string") {
+      hashBytes = Uint8Array.from(hexToBytes(hash));
+    } else {
+      hashBytes = hash;
+    }
+
+    const result = await this.irohaClient.request(
+      QueryBox(
+        "FindTransactionByHash",
+        FindTransactionByHash({
+          hash: EvaluatesToHash({
+            expression: Expression("Raw", Value("Hash", hashBytes)),
+          }),
+        }),
+      ),
+    );
+
+    const transaction = result.match({
+      Ok: (res) => res.result.as("TransactionValue"),
+      Err: (error) => {
+        throw new Error(
+          `findTransactionByHash query error: ${safeStringify(error)}`,
+        );
+      },
+    });
+
+    this.log.debug("findTransactionByHash:", transaction);
+    return transaction;
   }
 
   // Other

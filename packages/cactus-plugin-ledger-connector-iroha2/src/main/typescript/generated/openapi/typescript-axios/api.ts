@@ -276,7 +276,15 @@ export enum IrohaQuery {
     /**
     * Get list of all registered accounts
     */
-    FindAllAccounts = 'findAllAccounts'
+    FindAllAccounts = 'findAllAccounts',
+    /**
+    * Get list of all transactions
+    */
+    FindAllTransactions = 'findAllTransactions',
+    /**
+    * Get transaction with specified hash
+    */
+    FindTransactionByHash = 'findTransactionByHash'
 }
 
 /**

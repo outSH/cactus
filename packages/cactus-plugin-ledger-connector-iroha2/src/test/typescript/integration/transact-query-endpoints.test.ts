@@ -1019,6 +1019,46 @@ describe("Iroha V2 connector tests", () => {
     });
   });
 
+  describe("Transaction queries tests", () => {
+    test("Query all transactions (FindAllTransactions)", async () => {
+      const queryResponse = await apiClient.queryV1({
+        queryName: IrohaQuery.FindAllTransactions,
+        baseConfig: defaultBaseConfig,
+      });
+      expect(queryResponse).toBeTruthy();
+      expect(queryResponse.data).toBeTruthy();
+      expect(queryResponse.data.response.length).toBeGreaterThan(0);
+      const singleTx = queryResponse.data.response.pop().value.value;
+      expect(singleTx.signatures).toBeTruthy();
+      expect(singleTx.payload).toBeTruthy();
+      expect(singleTx.payload.account_id).toBeTruthy();
+      expect(singleTx.payload.instructions).toBeTruthy();
+    });
+
+    /**
+     * @todo Find a way to calculate / retrieve hash of some transaction.
+     *       Right now it's hardcoded for manual testing.
+     */
+    test.skip("Query single transaction (FindAssetById)", async () => {
+      const hash =
+        "f1076e718309d9b54a9fc74f110b0d16111f7d1c4f9c470f18c56b9309ad873d";
+
+      const queryResponse = await apiClient.queryV1({
+        queryName: IrohaQuery.FindTransactionByHash,
+        baseConfig: defaultBaseConfig,
+        params: [hash],
+      });
+      expect(queryResponse).toBeTruthy();
+      expect(queryResponse.data).toBeTruthy();
+      const responseData = queryResponse.data.response.value.value;
+      expect(responseData).toBeTruthy();
+      expect(responseData.signatures).toBeTruthy();
+      expect(responseData.payload).toBeTruthy();
+      expect(responseData.payload.account_id).toBeTruthy();
+      expect(responseData.payload.instructions).toBeTruthy();
+    });
+  });
+
   describe("Miscellaneous tests", () => {
     test("Query all peers (FindAllPeers)", async () => {
       const queryResponse = await apiClient.queryV1({

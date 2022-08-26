@@ -52,7 +52,9 @@
           "findAllAssets",
           "findAllPeers",
           "findAccountById",
-          "findAllAccounts"
+          "findAllAccounts",
+          "findAllTransactions",
+          "findTransactionByHash"
         ],
         "x-enum-descriptions": [
           "Get list of all registered domains",
@@ -63,7 +65,9 @@
           "Get list of all registered assets",
           "Get list of all ledger peers",
           "Get account with specified ID",
-          "Get list of all registered accounts"
+          "Get list of all registered accounts",
+          "Get list of all transactions",
+          "Get transaction with specified hash"
         ],
         "x-enum-varnames": [
           "FindAllDomains",
@@ -74,7 +78,9 @@
           "FindAllAssets",
           "FindAllPeers",
           "FindAccountById",
-          "FindAllAccounts"
+          "FindAllAccounts",
+          "FindAllTransactions",
+          "FindTransactionByHash"
         ]
       },
       "WatchBlocksV1": {
