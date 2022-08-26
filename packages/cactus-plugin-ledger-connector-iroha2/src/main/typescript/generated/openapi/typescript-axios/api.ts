@@ -270,6 +270,10 @@ export enum IrohaQuery {
     */
     FindAllPeers = 'findAllPeers',
     /**
+    * Get list of all ledger blocks
+    */
+    FindAllBlocks = 'findAllBlocks',
+    /**
     * Get account with specified ID
     */
     FindAccountById = 'findAccountById',

@@ -509,13 +509,10 @@ export class PluginLedgerConnectorIroha2
             req.params,
             1,
           );
-        // case IrohaQuery.FindAllBlocks:
-        //   return await this.runQueryWithCheckedParams(
-        //     client,
-        //     CactusIrohaV2QueryClient.prototype.findAllBlocks,
-        //     req.params,
-        //     1,
-        //   );
+        case IrohaQuery.FindAllBlocks:
+          return {
+            response: await client.query.findAllBlocks(),
+          };
         default:
           const unknownType: never = req.queryName;
           throw new Error(

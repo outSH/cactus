@@ -1074,5 +1074,21 @@ describe("Iroha V2 connector tests", () => {
       expect(singlePeer.id.address).toBeTruthy();
       expect(singlePeer.id.public_key).toBeTruthy();
     });
+
+    test("Query all blocks (FindAllBlocks)", async () => {
+      const queryResponse = await apiClient.queryV1({
+        queryName: IrohaQuery.FindAllBlocks,
+        baseConfig: defaultBaseConfig,
+      });
+      expect(queryResponse).toBeTruthy();
+      expect(queryResponse.data).toBeTruthy();
+      expect(queryResponse.data.response).toBeTruthy();
+      expect(queryResponse.data.response.length).toBeGreaterThan(0);
+      const singleBlock = queryResponse.data.response.pop();
+      expect(singleBlock.header).toBeTruthy();
+      expect(singleBlock.transactions).toBeDefined();
+      expect(singleBlock.rejected_transactions).toBeDefined();
+      expect(singleBlock.event_recommendations).toBeDefined();
+    });
   });
 });

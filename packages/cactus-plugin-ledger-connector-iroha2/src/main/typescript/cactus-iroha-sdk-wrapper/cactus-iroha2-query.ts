@@ -17,7 +17,6 @@ import {
   EvaluatesToAssetId,
   FindAssetDefinitionById,
   EvaluatesToAssetDefinitionId,
-  BlockValue,
   FindAccountById,
   EvaluatesToAccountId,
   FindTransactionByHash,
@@ -25,7 +24,6 @@ import {
 } from "@iroha2/data-model";
 
 import { Checks, Logger } from "@hyperledger/cactus-common";
-import { BlockTypeV1 } from "../public-api";
 import { hexToBytes } from "hada";
 
 // TODO - pagination once supported by upstream
@@ -355,12 +353,7 @@ export class CactusIrohaV2QueryClient {
     return peers;
   }
 
-  /**
-   * cant return encoded to the client yet
-   * @param encoding
-   * @returns
-   */
-  public async findAllBlocks(encoding?: BlockTypeV1): Promise<unknown> {
+  public async findAllBlocks(): Promise<unknown> {
     const result = await this.irohaClient.request(
       QueryBox("FindAllBlocks", null),
     );
@@ -371,27 +364,9 @@ export class CactusIrohaV2QueryClient {
         throw new Error(`findAllBlocks query error: ${safeStringify(error)}`);
       },
     });
+    const blocks = vectorResult.map((i) => i.as("Block"));
 
-    const encodedBlocks = vectorResult.map((b) => {
-      const block = b.as("Block");
-
-      switch (encoding) {
-        case undefined:
-          return block;
-        case BlockTypeV1.Binary:
-          // Note: binary format can't be returned by Query endpoint (can't be decoded)
-          return BlockValue.toBuffer(block);
-        default:
-          const unknownType: never = encoding;
-          throw new Error(
-            `Unknown block encoding type - '${unknownType}'. Check name and connector version.`,
-          );
-      }
-    });
-
-    this.log.debug(
-      `findAllBlocks: Total ${encodedBlocks.length}, encoding: ${encoding}`,
-    );
-    return encodedBlocks;
+    this.log.debug(`findAllBlocks: Total ${blocks.length}`);
+    return blocks;
   }
 }
