@@ -12,7 +12,6 @@
     "./src",
     "src/**/*.json"
   ],
-  // TODO - set correct
   "references": [
     {
       "path": "../cactus-common/tsconfig.json"

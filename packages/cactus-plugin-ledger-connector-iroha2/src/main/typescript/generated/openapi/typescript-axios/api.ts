@@ -22,36 +22,39 @@ import { DUMMY_BASE_URL, assertParamExists, setApiKeyToObject, setBasicAuthToObj
 import { BASE_PATH, COLLECTION_FORMATS, RequestArgs, BaseAPI, RequiredError } from './base';
 
 /**
- * Response type from WatchBlocks.
+ * Iroha V2 block response type.
  * @export
  * @enum {string}
  */
 
 export enum BlockTypeV1 {
+    /**
+    * Encoded format that must be decoded with Iroha SDK on client side before use
+    */
     Binary = 'binary'
 }
 
 /**
- * 
+ * Error response from the connector.
  * @export
  * @interface ErrorExceptionResponseV1
  */
 export interface ErrorExceptionResponseV1 {
     /**
-     * 
+     * Short error description message.
      * @type {string}
      * @memberof ErrorExceptionResponseV1
      */
     message: string;
     /**
-     * 
+     * Detailed error information.
      * @type {string}
      * @memberof ErrorExceptionResponseV1
      */
     error: string;
 }
 /**
- * 
+ * Iroha V2 account ID.
  * @export
  * @interface Iroha2AccountId
  */
@@ -70,13 +73,11 @@ export interface Iroha2AccountId {
     domainId: string;
 }
 /**
- * 
+ * Iroha V2 connection configuration.
  * @export
  * @interface Iroha2BaseConfig
  */
 export interface Iroha2BaseConfig {
-    [key: string]: object | any;
-
     /**
      * 
      * @type {Iroha2BaseConfigTorii}
@@ -103,7 +104,7 @@ export interface Iroha2BaseConfig {
     transaction?: Iroha2BaseConfigTransaction;
 }
 /**
- * 
+ * Iroha V2 peer connection information.
  * @export
  * @interface Iroha2BaseConfigTorii
  */
@@ -122,7 +123,7 @@ export interface Iroha2BaseConfigTorii {
     telemetryURL?: string;
 }
 /**
- * 
+ * Iroha V2 peer connection transaction configuration.
  * @export
  * @interface Iroha2BaseConfigTransaction
  */
@@ -141,7 +142,7 @@ export interface Iroha2BaseConfigTransaction {
     addNonce?: boolean;
 }
 /**
- * 
+ * Private/Public key JSON containing payload and digest function.
  * @export
  * @interface Iroha2KeyJson
  */
@@ -160,7 +161,7 @@ export interface Iroha2KeyJson {
     payload: string;
 }
 /**
- * 
+ * Pair of Iroha account private and public keys.
  * @export
  * @interface Iroha2KeyPair
  */
@@ -179,7 +180,7 @@ export interface Iroha2KeyPair {
     publicKey: string;
 }
 /**
- * 
+ * Command names that correspond to Iroha Special Instructions (https://hyperledger.github.io/iroha-2-docs/guide/advanced/isi.html)
  * @export
  * @enum {string}
  */
@@ -216,26 +217,26 @@ export enum IrohaInstruction {
 }
 
 /**
- * 
+ * Single Iroha V2 instruction to be executed request.
  * @export
  * @interface IrohaInstructionRequestV1
  */
 export interface IrohaInstructionRequestV1 {
     /**
-     * 
+     * Iroha V2 instruction name.
      * @type {IrohaInstruction}
      * @memberof IrohaInstructionRequestV1
      */
     name: IrohaInstruction;
     /**
-     * The list of arguments to pass in to the transaction request.
+     * The list of arguments to pass with specified instruction.
      * @type {Array<any>}
      * @memberof IrohaInstructionRequestV1
      */
     params: Array<any>;
 }
 /**
- * 
+ * Command names that correspond to Iroha queries (https://hyperledger.github.io/iroha-2-docs/guide/advanced/queries.html)
  * @export
  * @enum {string}
  */
@@ -292,32 +293,32 @@ export enum IrohaQuery {
 }
 
 /**
- * 
+ * Reference to entry stored in Cactus keychain plugin.
  * @export
  * @interface KeychainReference
  */
 export interface KeychainReference {
     /**
-     * 
+     * Keychain plugin ID.
      * @type {string}
      * @memberof KeychainReference
      */
     keychainId: string;
     /**
-     * 
+     * Key reference name.
      * @type {string}
      * @memberof KeychainReference
      */
     keychainRef: string;
 }
 /**
- * 
+ * Request to query endpoint.
  * @export
  * @interface QueryRequestV1
  */
 export interface QueryRequestV1 {
     /**
-     * 
+     * Name of the query to be executed.
      * @type {IrohaQuery}
      * @memberof QueryRequestV1
      */
@@ -329,27 +330,27 @@ export interface QueryRequestV1 {
      */
     baseConfig?: Iroha2BaseConfig;
     /**
-     * The list of arguments to pass in to the query request.
+     * The list of arguments to pass with the query.
      * @type {Array<any>}
      * @memberof QueryRequestV1
      */
     params?: Array<any>;
 }
 /**
- * 
+ * Response with query results.
  * @export
  * @interface QueryResponseV1
  */
 export interface QueryResponseV1 {
     /**
-     * 
+     * Query response data that varies between different queries.
      * @type {any}
      * @memberof QueryResponseV1
      */
     response: any;
 }
 /**
- * 
+ * Request to transact endpoint, can be passed one or multiple instructions to be executed.
  * @export
  * @interface TransactRequestV1
  */
@@ -368,7 +369,7 @@ export interface TransactRequestV1 {
     baseConfig?: Iroha2BaseConfig;
 }
 /**
- * 
+ * Response from transaction endpoint with operation status.
  * @export
  * @interface TransactResponseV1
  */
@@ -381,7 +382,7 @@ export interface TransactResponseV1 {
     status: string;
 }
 /**
- * response.
+ * Binary encoded response of block data.
  * @export
  * @interface WatchBlocksBinaryResponseV1
  */
@@ -406,7 +407,7 @@ export interface WatchBlocksOptionsV1 {
      */
     type?: BlockTypeV1;
     /**
-     * 
+     * Number of block to start monitoring from.
      * @type {string}
      * @memberof WatchBlocksOptionsV1
      */
@@ -447,7 +448,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
     return {
         /**
          * 
-         * @summary Executes a query on a Iroha V2 ledger
+         * @summary Executes a query on a Iroha V2 ledger and returns it\'s results.
          * @param {QueryRequestV1} [queryRequestV1] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -481,7 +482,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * 
-         * @summary Executes a transaction on a Iroha V2 ledger
+         * @summary Executes a transaction on a Iroha V2 ledger (by sending some instructions)
          * @param {TransactRequestV1} [transactRequestV1] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -525,7 +526,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
     return {
         /**
          * 
-         * @summary Executes a query on a Iroha V2 ledger
+         * @summary Executes a query on a Iroha V2 ledger and returns it\'s results.
          * @param {QueryRequestV1} [queryRequestV1] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -536,7 +537,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
-         * @summary Executes a transaction on a Iroha V2 ledger
+         * @summary Executes a transaction on a Iroha V2 ledger (by sending some instructions)
          * @param {TransactRequestV1} [transactRequestV1] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -557,7 +558,7 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
     return {
         /**
          * 
-         * @summary Executes a query on a Iroha V2 ledger
+         * @summary Executes a query on a Iroha V2 ledger and returns it\'s results.
          * @param {QueryRequestV1} [queryRequestV1] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -567,7 +568,7 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
         },
         /**
          * 
-         * @summary Executes a transaction on a Iroha V2 ledger
+         * @summary Executes a transaction on a Iroha V2 ledger (by sending some instructions)
          * @param {TransactRequestV1} [transactRequestV1] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -587,7 +588,7 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
 export class DefaultApi extends BaseAPI {
     /**
      * 
-     * @summary Executes a query on a Iroha V2 ledger
+     * @summary Executes a query on a Iroha V2 ledger and returns it\'s results.
      * @param {QueryRequestV1} [queryRequestV1] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
@@ -599,7 +600,7 @@ export class DefaultApi extends BaseAPI {
 
     /**
      * 
-     * @summary Executes a transaction on a Iroha V2 ledger
+     * @summary Executes a transaction on a Iroha V2 ledger (by sending some instructions)
      * @param {TransactRequestV1} [transactRequestV1] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}

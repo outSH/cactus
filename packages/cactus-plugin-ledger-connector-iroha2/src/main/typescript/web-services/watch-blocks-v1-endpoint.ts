@@ -1,3 +1,7 @@
+/**
+ * SocketIO `WatchBlocks` endpoint
+ */
+
 import { Socket as SocketIoSocket } from "socket.io";
 
 import {

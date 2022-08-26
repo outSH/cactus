@@ -13,6 +13,7 @@
     "schemas": {
       "IrohaInstruction": {
         "type": "string",
+        "description": "Command names that correspond to Iroha Special Instructions (https://hyperledger.github.io/iroha-2-docs/guide/advanced/isi.html)",
         "enum": [
           "registerDomain",
           "registerAssetDefinition",
@@ -43,6 +44,7 @@
       },
       "IrohaQuery": {
         "type": "string",
+        "description": "Command names that correspond to Iroha queries (https://hyperledger.github.io/iroha-2-docs/guide/advanced/queries.html)",
         "enum": [
           "findAllDomains",
           "findDomainById",
@@ -106,9 +108,12 @@
       },
       "BlockTypeV1": {
         "type": "string",
-        "description": "Response type from WatchBlocks.",
+        "description": "Iroha V2 block response type.",
         "enum": [
           "binary"
+        ],
+        "x-enum-descriptions": [
+          "Encoded format that must be decoded with Iroha SDK on client side before use"
         ],
         "x-enum-varnames": [
           "Binary"
@@ -126,18 +131,20 @@
           },
           "startBlock": {
             "type": "string",
+            "description": "Number of block to start monitoring from.",
             "minLength": 1,
             "nullable": false
           },
           "baseConfig": {
             "$ref": "#/components/schemas/Iroha2BaseConfig",
+            "description": "Iroha V2 connection configuration.",
             "nullable": false
           }
         }
       },
       "WatchBlocksBinaryResponseV1": {
         "type": "object",
-        "description": "response.",
+        "description": "Binary encoded response of block data.",
         "required": [
           "binaryBlock"
         ],
@@ -163,6 +170,7 @@
       },
       "Iroha2AccountId": {
         "type": "object",
+        "description": "Iroha V2 account ID.",
         "additionalProperties": false,
         "nullable": false,
         "required": [
@@ -182,6 +190,7 @@
       },
       "Iroha2KeyJson": {
         "type": "object",
+        "description": "Private/Public key JSON containing payload and digest function.",
         "additionalProperties": false,
         "nullable": false,
         "required": [
@@ -201,6 +210,7 @@
       },
       "KeychainReference": {
         "type": "object",
+        "description": "Reference to entry stored in Cactus keychain plugin.",
         "required": [
           "keychainId",
           "keychainRef"
@@ -208,12 +218,14 @@
         "properties": {
           "keychainId": {
             "type": "string",
+            "description": "Keychain plugin ID.",
             "minLength": 1,
             "maxLength": 100,
             "nullable": false
           },
           "keychainRef": {
             "type": "string",
+            "description": "Key reference name.",
             "minLength": 1,
             "maxLength": 100,
             "nullable": false
@@ -222,6 +234,7 @@
       },
       "Iroha2KeyPair": {
         "type": "object",
+        "description": "Pair of Iroha account private and public keys.",
         "required": [
           "privateKey",
           "publicKey"
@@ -239,6 +252,7 @@
       },
       "Iroha2BaseConfigTorii": {
         "type": "object",
+        "description": "Iroha V2 peer connection information.",
         "additionalProperties": false,
         "nullable": false,
         "properties": {
@@ -254,6 +268,7 @@
       },
       "Iroha2BaseConfigTransaction": {
         "type": "object",
+        "description": "Iroha V2 peer connection transaction configuration.",
         "additionalProperties": false,
         "nullable": false,
         "properties": {
@@ -269,7 +284,8 @@
       },
       "Iroha2BaseConfig": {
         "type": "object",
-        "additionalProperties": true,
+        "description": "Iroha V2 connection configuration.",
+        "additionalProperties": false,
         "required": [
           "torii"
         ],
@@ -302,6 +318,7 @@
       },
       "IrohaInstructionRequestV1": {
         "type": "object",
+        "description": "Single Iroha V2 instruction to be executed request.",
         "required": [
           "name",
           "params"
@@ -310,10 +327,11 @@
         "properties": {
           "name": {
             "type": "IrohaInstruction",
+            "description": "Iroha V2 instruction name.",
             "nullable": false
           },
           "params": {
-            "description": "The list of arguments to pass in to the transaction request.",
+            "description": "The list of arguments to pass with specified instruction.",
             "type": "array",
             "items": {}
           }
@@ -321,6 +339,7 @@
       },
       "TransactRequestV1": {
         "type": "object",
+        "description": "Request to transact endpoint, can be passed one or multiple instructions to be executed.",
         "required": [
           "instruction"
         ],
@@ -342,12 +361,14 @@
           },
           "baseConfig": {
             "$ref": "#/components/schemas/Iroha2BaseConfig",
+            "description": "Iroha V2 connection configuration.",
             "nullable": false
           }
         }
       },
       "TransactResponseV1": {
         "type": "object",
+        "description": "Response from transaction endpoint with operation status.",
         "required": [
           "status"
         ],
@@ -360,6 +381,7 @@
       },
       "QueryRequestV1": {
         "type": "object",
+        "description": "Request to query endpoint.",
         "required": [
           "queryName"
         ],
@@ -367,14 +389,16 @@
         "properties": {
           "queryName": {
             "type": "IrohaQuery",
+            "description": "Name of the query to be executed.",
             "nullable": false
           },
           "baseConfig": {
             "$ref": "#/components/schemas/Iroha2BaseConfig",
+            "description": "Iroha V2 connection configuration.",
             "nullable": false
           },
           "params": {
-            "description": "The list of arguments to pass in to the query request.",
+            "description": "The list of arguments to pass with the query.",
             "type": "array",
             "items": {}
           }
@@ -382,17 +406,20 @@
       },
       "QueryResponseV1": {
         "type": "object",
+        "description": "Response with query results.",
         "required": [
           "response"
         ],
         "properties": {
           "response": {
+            "description": "Query response data that varies between different queries.",
             "nullable": false
           }
         }
       },
       "ErrorExceptionResponseV1": {
         "type": "object",
+        "description": "Error response from the connector.",
         "required": [
           "message",
           "error"
@@ -400,10 +427,12 @@
         "properties": {
           "message": {
             "type": "string",
+            "description": "Short error description message.",
             "nullable": false
           },
           "error": {
             "type": "string",
+            "description": "Detailed error information.",
             "nullable": false
           }
         }
@@ -420,7 +449,7 @@
           }
         },
         "operationId": "TransactV1",
-        "summary": "Executes a transaction on a Iroha V2 ledger",
+        "summary": "Executes a transaction on a Iroha V2 ledger (by sending some instructions)",
         "parameters": [],
         "requestBody": {
           "content": {
@@ -464,7 +493,7 @@
           }
         },
         "operationId": "QueryV1",
-        "summary": "Executes a query on a Iroha V2 ledger",
+        "summary": "Executes a query on a Iroha V2 ledger and returns it's results.",
         "parameters": [],
         "requestBody": {
           "content": {

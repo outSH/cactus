@@ -1,3 +1,7 @@
+/**
+ * ExpressJS `transact` endpoint
+ */
+
 import type { Express, Request, Response } from "express";
 import safeStringify from "fast-safe-stringify";
 import sanitizeHtml from "sanitize-html";

@@ -1,3 +1,7 @@
+/**
+ * Main IrohaV2 connector plugin class logic.
+ */
+
 import type { Express } from "express";
 import type {
   Server as SocketIoServer,
@@ -66,8 +70,14 @@ function stringifyBigIntReplacer(key: string, value: bigint) {
   return value;
 }
 
+/**
+ * Abstract type that corresponds to length of supplied iterable ('1', '2', etc...)
+ */
 type LengthOf<T extends ArrayLike<unknown>> = T["length"];
 
+/**
+ * Input options for PluginLedgerConnectorIroha2.
+ */
 export interface IPluginLedgerConnectorIroha2Options
   extends ICactusPluginOptions {
   pluginRegistry: PluginRegistry;
@@ -75,6 +85,9 @@ export interface IPluginLedgerConnectorIroha2Options
   defaultConfig?: Iroha2BaseConfig;
 }
 
+/**
+ * Iroha V2 connector plugin.
+ */
 export class PluginLedgerConnectorIroha2
   implements
     IPluginLedgerConnector<never, never, TransactRequestV1, TransactResponseV1>,
@@ -101,19 +114,32 @@ export class PluginLedgerConnectorIroha2
     this.defaultConfig = options.defaultConfig;
   }
 
+  /**
+   * Iroha V2 ledger consensus family
+   */
   async getConsensusAlgorithmFamily(): Promise<ConsensusAlgorithmFamily> {
     return ConsensusAlgorithmFamily.Authority;
   }
 
+  /**
+   * Iroha V2 ledger transaction finality
+   */
   public async hasTransactionFinality(): Promise<boolean> {
     const currentConsensusAlgorithmFamily = await this.getConsensusAlgorithmFamily();
     return consensusHasTransactionFinality(currentConsensusAlgorithmFamily);
   }
 
+  /**
+   *
+   * @returns Open API JSON specification.
+   */
   public getOpenApiSpec(): unknown {
     return OAS;
   }
 
+  /**
+   * @warning Method not implemented - do not use!
+   */
   public deployContract(): Promise<never> {
     throw new Error("Method not implemented.");
   }
@@ -122,22 +148,35 @@ export class PluginLedgerConnectorIroha2
     return this.instanceId;
   }
 
+  /**
+   * Callback that should be called during plugin initialization.
+   * @returns Void
+   */
   public async onPluginInit(): Promise<unknown> {
     // Nothing to do...
     return;
   }
 
+  /**
+   * Callback that must be called during shutdown.
+   * Will cleanup allocated resources, stop the connections.
+   */
   public async shutdown(): Promise<void> {
     this.log.info(`Shutting down ${this.className}...`);
     this.runningWatchBlocksMonitors.forEach((m) => m.close());
     this.runningWatchBlocksMonitors.clear();
   }
 
+  /**
+   * Register all supported WebSocket endpoints on specific socket connected to the client.
+   *
+   * @param socket Connected socket
+   * @returns `socket` from input arg.
+   */
   private registerWatchBlocksSocketIOEndpoint(
     socket: SocketIoSocket,
   ): SocketIoSocket {
     this.log.debug("Register WatchBlocks.Subscribe handler.");
-
     socket.on(
       WatchBlocksV1.Subscribe,
       async (options: WatchBlocksOptionsV1) => {
@@ -158,7 +197,7 @@ export class PluginLedgerConnectorIroha2
         );
 
         socket.on("disconnect", async () => {
-          await cactusIrohaClient.clear();
+          cactusIrohaClient.clear();
           this.runningWatchBlocksMonitors.delete(monitor);
           this.log.debug(
             "Running monitors count:",
@@ -171,10 +210,19 @@ export class PluginLedgerConnectorIroha2
     return socket;
   }
 
+  /**
+   * Register Rest and WebSocket services on servers supplied in argument.
+   * Should be called by cactus cmd server.
+   *
+   * @param app ExpressJS app object.
+   * @param wsApi SocketIO server object.
+   * @returns registered endpoints list.
+   */
   async registerWebServices(
     app: Express,
     wsApi: SocketIoServer,
   ): Promise<IWebServiceEndpoint[]> {
+    // Add custom replacer to handle bigint responses correctly
     app.set("json replacer", stringifyBigIntReplacer);
 
     const webServices = await this.getOrCreateWebServices();
@@ -190,6 +238,12 @@ export class PluginLedgerConnectorIroha2
     return webServices;
   }
 
+  /**
+   * Get list of rest endpoints supported by this connector plugin.
+   * The list is initialized once and reused on subsequent calls.
+   *
+   * @returns List of web service endpoints.
+   */
   public async getOrCreateWebServices(): Promise<IWebServiceEndpoint[]> {
     if (Array.isArray(this.endpoints)) {
       return this.endpoints;
@@ -214,6 +268,14 @@ export class PluginLedgerConnectorIroha2
     return `@hyperledger/cactus-plugin-ledger-connector-iroha2`;
   }
 
+  /**
+   * Read entry with `keychainRef` from keychain with id `keychainId`.
+   * Assume it's stored in JSON-compatible format.
+   *
+   * @param keychainId keychain plugin ID.
+   * @param keychainRef entry key.
+   * @returns parsed entry value.
+   */
   private async getFromKeychain(keychainId: string, keychainRef: string) {
     const keychain = this.options.pluginRegistry.findOneByKeychainId(
       keychainId,
@@ -221,6 +283,12 @@ export class PluginLedgerConnectorIroha2
     return JSON.parse(await keychain.get(keychainRef));
   }
 
+  /**
+   * Return Iroha V2 SDK client compatible key pair object.
+   *
+   * @param signingCredentials Credentials received from the client in the request.
+   * @returns Iroha V2 SDK `KeyPair` object.
+   */
   private async getSigningKeyPair(
     signingCredentials: Iroha2KeyPair | KeychainReference,
   ): Promise<KeyPair> {
@@ -253,7 +321,13 @@ export class PluginLedgerConnectorIroha2
     return generateIrohaV2KeyPair(publicKeyString, privateKeyJson);
   }
 
-  // TODO - config merge on ApiClient side as well?
+  /**
+   * Create Cactus IrohaV2 client using both defaultConfig (defined during class creation)
+   * and config specified in arg.
+   *
+   * @param baseConfig Iroha V2 base connection configuration.
+   * @returns `CactusIrohaV2Client`
+   */
   public async getClient(
     baseConfig?: Iroha2BaseConfig,
   ): Promise<CactusIrohaV2Client> {
@@ -306,6 +380,15 @@ export class PluginLedgerConnectorIroha2
     );
   }
 
+  /**
+   * Helper function used to safely check that required number of parameters were supplied in the request.
+   *
+   * @param params Parameter list from the request.
+   * @param expectedCount Expected parameter count
+   * @param functionName Function that needs specified number of args (used for error logging only)
+   *
+   * @returns List of checked parameters (of `expectedCount` length).
+   */
   private checkArgsCount(
     params: unknown[] | undefined,
     expectedCount: number,
@@ -328,6 +411,18 @@ export class PluginLedgerConnectorIroha2
     return requiredParams;
   }
 
+  /**
+   * Validate required parameters and call transact method
+   * (will add instruction to the list of operations to be executed)
+   *
+   * @note `expectedCount` must be equal to number of args required by `transactFunction`,
+   * otherwise the code will not compile (this is intended safety-check)
+   *
+   * @param client `CactusIrohaV2Client` object.
+   * @param transactFunction Transact function to be executed
+   * @param params Parameter list from the request.
+   * @param expectedCount Expected parameter count
+   */
   private addTransactionWithCheckedParams<
     T extends (...args: any[]) => unknown
   >(
@@ -342,10 +437,18 @@ export class PluginLedgerConnectorIroha2
     );
   }
 
+  /**
+   * Transact endpoint logic.
+   *
+   * @param req Request with a list of instructions to be executed from the client.
+   * @returns Status of the operation.
+   */
   public async transact(req: TransactRequestV1): Promise<TransactResponseV1> {
     const client = await this.getClient(req.baseConfig);
 
     try {
+      // Convert single instruction scenario to list with one element
+      // (both single and multiple instructions are supported)
       let instructions: IrohaInstructionRequestV1[];
       if (Array.isArray(req.instruction)) {
         instructions = req.instruction;
@@ -353,6 +456,7 @@ export class PluginLedgerConnectorIroha2
         instructions = [req.instruction];
       }
 
+      // Each command adds transaction to the list that will be sent to Iroha V2
       instructions.forEach((cmd) => {
         switch (cmd.name) {
           case IrohaInstruction.RegisterDomain:
@@ -429,6 +533,19 @@ export class PluginLedgerConnectorIroha2
     }
   }
 
+  /**
+   * Validate required parameters and call the query method.
+   * Do not use for queries that does not require any parameters.
+   *
+   * @note `expectedCount` must be equal to number of args required by `transactFunction`,
+   * otherwise the code will not compile (this is intended safety-check)
+   *
+   * @param client `CactusIrohaV2Client` object.
+   * @param queryFunction Query function to be executed
+   * @param params Parameter list from the request.
+   * @param expectedCount Expected parameter count
+   * @returns Query result.
+   */
   private async runQueryWithCheckedParams<
     T extends (...args: any[]) => Promise<unknown>
   >(
@@ -445,6 +562,12 @@ export class PluginLedgerConnectorIroha2
     };
   }
 
+  /**
+   * Query endpoint logic.
+   *
+   * @param req Request with a query name.
+   * @returns Response from the query.
+   */
   public async query(req: QueryRequestV1): Promise<QueryResponseV1> {
     const client = await this.getClient(req.baseConfig);
 
