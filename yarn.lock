@@ -2963,7 +2963,7 @@
   dependencies:
     ws "^8.4.0"
 
-"@iroha2/client@^1.4.0":
+"@iroha2/client@1.4.0":
   version "1.4.0"
   resolved "https://nexus.iroha.tech/repository/npm-group/@iroha2/client/-/client-1.4.0.tgz#2623c83a2206b2a62857a9705668a8606ce738b4"
   integrity sha512-UdzX6uRAncEdHYzYX2T/3rGX43vC9pcAcOMJVW6+HRfXpO20ZBjpNMvHmP5Z5B+OAmMmOXtRXgi/gKTzDN9Wog==
@@ -2976,19 +2976,19 @@
     emittery "^0.10.1"
     json-bigint "^1.0.0"
 
-"@iroha2/crypto-core@^0.1.1":
+"@iroha2/crypto-core@0.1.1", "@iroha2/crypto-core@^0.1.1":
   version "0.1.1"
   resolved "https://nexus.iroha.tech/repository/npm-group/@iroha2/crypto-core/-/crypto-core-0.1.1.tgz#1a5ebe686946219cfea80e088c29d8b010c3820f"
   integrity sha512-BdZsIhHNwwLyMz8V8MQwPJ/Lce2FHyMkD3+Hy/BGBLScpiXVm/PRajb6oFmciXZgXmgveprTTFwQw/RU6FEahg==
 
-"@iroha2/crypto-target-node@^0.2.0":
-  version "0.2.0"
-  resolved "https://nexus.iroha.tech/repository/npm-group/@iroha2/crypto-target-node/-/crypto-target-node-0.2.0.tgz#5f3017c757259341cf95cc963bcf6b5e2953dd30"
-  integrity sha512-q17jl4/wqV/dXCxejdZ+iD9cEnD0AQJ7uTUF4bmhDzvN7b6zc/eIwsTwD6HiRrMkNjQsDviMKX+9VDD5xkm5yw==
+"@iroha2/crypto-target-node@0.3.0":
+  version "0.3.0"
+  resolved "https://nexus.iroha.tech/repository/npm-group/@iroha2/crypto-target-node/-/crypto-target-node-0.3.0.tgz#9180ed3b590afdc6c15a1da3ca2003453c6173e4"
+  integrity sha512-4UXJttfcnCyVROXvpHiR+y7Brt0Amb2JI2NV5SENGvjz6u0N+EJcmOWbMz6+uDQkQdrJodr99U7BHlxjkQpA2g==
   dependencies:
     "@iroha2/crypto-core" "^0.1.1"
 
-"@iroha2/data-model@1.4.0", "@iroha2/data-model@^1.4.0":
+"@iroha2/data-model@1.4.0":
   version "1.4.0"
   resolved "https://nexus.iroha.tech/repository/npm-group/@iroha2/data-model/-/data-model-1.4.0.tgz#2b859047e050c7089f32e8d72288c286a0bde3bd"
   integrity sha512-yhxaiWxTeqkllwFMudbUaXdPBcZ845vZPBnziBUlfLDjh+UU4AC344dcRkXDSBYsMQk02bZSVvtK3hpMkS4vRA==
@@ -12278,7 +12278,7 @@ gzip-size@^6.0.0:
   dependencies:
     duplexer "^0.1.2"
 
-hada@^0.0.8:
+hada@0.0.8:
   version "0.0.8"
   resolved "https://registry.yarnpkg.com/hada/-/hada-0.0.8.tgz#eeb69d44995fd3eca1c0dca20f6d20a26cda0c53"
   integrity sha512-CLzCvrb53E6Lh1rO/NFty1PG7VJV3r4pDCU5nR/0yaUCT05lk5ayLBd/0QX7z2QH4t6xu7jflYBa9Dwoo7giZA==
