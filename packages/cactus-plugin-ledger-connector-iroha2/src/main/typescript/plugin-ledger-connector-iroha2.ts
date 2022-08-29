@@ -56,8 +56,8 @@ import { AccountId, DomainId } from "@iroha2/data-model";
 import {
   CactusIrohaV2Client,
   generateIrohaV2KeyPair,
-} from "./cactus-iroha-sdk-wrapper/cactus-iroha2-client";
-import { CactusIrohaV2QueryClient } from "./cactus-iroha-sdk-wrapper/cactus-iroha2-query";
+} from "./cactus-iroha-sdk-wrapper/client";
+import { CactusIrohaV2QueryClient } from "./cactus-iroha-sdk-wrapper/query";
 import { LengthOf, stringifyBigIntReplacer } from "./utils";
 
 /**

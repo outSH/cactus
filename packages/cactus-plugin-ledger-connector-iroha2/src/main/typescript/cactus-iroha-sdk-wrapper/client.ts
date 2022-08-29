@@ -1,8 +1,9 @@
+/**
+ * Cactus wrapper around IrohaV2 Client and some related functions.
+ */
+
 import { crypto } from "@iroha2/crypto-target-node";
-// import safeStringify from "fast-safe-stringify";
-
 import { Client, setCrypto, UserConfig } from "@iroha2/client";
-
 import {
   AssetDefinitionId,
   AssetValueType,
@@ -23,9 +24,6 @@ import {
   RegisterBox,
   VecInstruction,
   Asset,
-  AssetId,
-  AccountId,
-  AssetValue,
   MintBox,
   EvaluatesToValue,
   EvaluatesToIdBox,
@@ -36,6 +34,7 @@ import {
   VecPublicKey,
   TransferBox,
 } from "@iroha2/data-model";
+import { Key, KeyPair } from "@iroha2/crypto-core";
 
 import {
   Checks,
@@ -43,13 +42,27 @@ import {
   LoggerProvider,
   LogLevelDesc,
 } from "@hyperledger/cactus-common";
-import { Key, KeyPair } from "@iroha2/crypto-core";
+
 import { hexToBytes } from "hada";
+
+import { CactusIrohaV2QueryClient } from "./query";
+import {
+  createAccountId,
+  createAssetId,
+  createAssetValue,
+  createIrohaValue,
+} from "./data-factories";
 
 setCrypto(crypto);
 
-import { CactusIrohaV2QueryClient } from "./cactus-iroha2-query";
-
+/**
+ * Generates key pair compatible with IrohaV2 SDK client.
+ *
+ * @warning Returned `KeyPair` must be freed by the caller! (use `.free()` method)
+ * @param publicKeyMultihash public key in multihash format.
+ * @param privateKeyJson private key payload and digest function.
+ * @returns IrohaV2 SDK `KeyPair`
+ */
 export function generateIrohaV2KeyPair(
   publicKeyMultihash: string,
   privateKeyJson: Key,
@@ -74,16 +87,33 @@ export function generateIrohaV2KeyPair(
   }
 }
 
+/**
+ * Single instruction internal representation.
+ */
 interface NamedIrohaV2Instruction {
   name: string;
   instruction: Instruction;
 }
 
-// Cactus wrapper around Iroha V2 Client SDK
+/**
+ * Cactus wrapper around Iroha V2 SDK Client. Should not be used outside of this connector.
+ * - Provides convenient functions to transact / query the ledger.
+ * - Each transaction method adds the instruction to the transaction list that is executed together during `send()` call.
+ * - Use `query` member to access query interface (that doesn't affect client transaction list)
+ * - Each method returns `this` so invocations can be chained.
+ */
 export class CactusIrohaV2Client {
   private readonly log: Logger;
   private readonly transactions: Array<NamedIrohaV2Instruction> = [];
+
+  /**
+   * Upstream IrohaV2 SDK client used by this wrapper.
+   */
   public readonly irohaClient: Client;
+
+  /**
+   * Separate interface for making the IrohaV2 queries.
+   */
   public readonly query: CactusIrohaV2QueryClient;
 
   constructor(
@@ -100,6 +130,12 @@ export class CactusIrohaV2Client {
     this.query = new CactusIrohaV2QueryClient(this.irohaClient, this.log);
   }
 
+  /**
+   * Add instruction to register a new domain.
+   *
+   * @param domainName
+   * @returns this
+   */
   public registerDomain(domainName: IrohaName): this {
     Checks.truthy(domainName, "registerDomain arg domainName");
 
@@ -134,6 +170,17 @@ export class CactusIrohaV2Client {
     return this;
   }
 
+  /**
+   * Add instruction to register a new asset definition.
+   * Each asset must be define before it's created or mined.
+   *
+   * @param assetName
+   * @param domainName
+   * @param valueType Type of stored asset value (e.g. `Quantity`, `Fixed`)
+   * @param mintable How asset can be minted (e.g. "Infinitely", "Not")
+   * @param metadata
+   * @returns this
+   */
   public registerAssetDefinition(
     assetName: IrohaName,
     domainName: IrohaName,
@@ -180,49 +227,31 @@ export class CactusIrohaV2Client {
     return this;
   }
 
+  /**
+   * Add instruction to register an asset that has been previously defined.
+   *
+   * @param assetName
+   * @param domainName
+   * @param accountName Asset owner name
+   * @param accountDomainName Asset owner domain name
+   * @param value Asset value must match `AssetValueType` from asset definition.
+   * @returns this
+   */
   public registerAsset(
     assetName: IrohaName,
     domainName: IrohaName,
     accountName: IrohaName,
     accountDomainName: IrohaName,
-    value: number | bigint | string | Metadata,
+    value: Parameters<typeof createAssetValue>[0],
   ): this {
     Checks.truthy(assetName, "registerAsset arg assetName");
     Checks.truthy(domainName, "registerAsset arg domainName");
     Checks.truthy(accountName, "registerAsset arg accountName");
     Checks.truthy(accountDomainName, "registerAsset arg accountDomainName");
 
-    let assetValue: AssetValue;
-    switch (typeof value) {
-      case "number":
-        assetValue = AssetValue("Quantity", value);
-        break;
-      case "bigint":
-        assetValue = AssetValue("BigQuantity", value);
-        break;
-      case "string":
-        assetValue = AssetValue("Fixed", value);
-        break;
-      case "object":
-        assetValue = AssetValue("Store", value);
-      default:
-        throw new Error(`Unknown AssetValue: ${value}, type: ${typeof value}`);
-    }
-
     const assetDefinition = Asset({
-      id: AssetId({
-        account_id: AccountId({
-          name: accountName,
-          domain_id: DomainId({
-            name: accountDomainName,
-          }),
-        }),
-        definition_id: AssetDefinitionId({
-          name: assetName,
-          domain_id: DomainId({ name: domainName }),
-        }),
-      }),
-      value: assetValue,
+      id: createAssetId(assetName, domainName, accountName, accountDomainName),
+      value: createAssetValue(value),
     });
 
     const registerBox = RegisterBox({
@@ -244,12 +273,22 @@ export class CactusIrohaV2Client {
     return this;
   }
 
+  /**
+   * Add instruction to mint specified amount of an asset.
+   *
+   * @param assetName
+   * @param domainName
+   * @param accountName Asset owner name
+   * @param accountDomainName Asset owner domain name
+   * @param value Asset value must match `AssetValueType` from asset definition.
+   * @returns this
+   */
   public mintAsset(
-    assetName: string,
-    domainName: string,
-    accountName: string,
-    accountDomainName: string,
-    value: number | bigint | string | Metadata,
+    assetName: IrohaName,
+    domainName: IrohaName,
+    accountName: IrohaName,
+    accountDomainName: IrohaName,
+    value: Parameters<typeof createIrohaValue>[0],
   ): this {
     Checks.truthy(assetName, "mintAsset arg assetName");
     Checks.truthy(domainName, "mintAsset arg domainName");
@@ -257,45 +296,25 @@ export class CactusIrohaV2Client {
     Checks.truthy(accountDomainName, "mintAsset arg accountDomainName");
     Checks.truthy(value, "mintAsset arg value");
 
-    const assetId = AssetId({
-      account_id: AccountId({
-        name: accountName,
-        domain_id: DomainId({
-          name: accountDomainName,
-        }),
-      }),
-      definition_id: AssetDefinitionId({
-        name: assetName,
-        domain_id: DomainId({ name: domainName }),
-      }),
-    });
-
-    // todo - factory method
-    let assetValue: IrohaValue;
-    switch (typeof value) {
-      case "number":
-        assetValue = IrohaValue("U32", value);
-        break;
-      case "bigint":
-        assetValue = IrohaValue("U128", value);
-        break;
-      case "string":
-        assetValue = IrohaValue("Fixed", value);
-        break;
-      case "object":
-        assetValue = IrohaValue("LimitedMetadata", value);
-      default:
-        throw new Error(`Unknown AssetValue: ${value}, type: ${typeof value}`);
-    }
-
     const mintBox = MintBox({
       object: EvaluatesToValue({
-        expression: Expression("Raw", assetValue),
+        expression: Expression("Raw", createIrohaValue(value)),
       }),
       destination_id: EvaluatesToIdBox({
         expression: Expression(
           "Raw",
-          IrohaValue("Id", IdBox("AssetId", assetId)),
+          IrohaValue(
+            "Id",
+            IdBox(
+              "AssetId",
+              createAssetId(
+                assetName,
+                domainName,
+                accountName,
+                accountDomainName,
+              ),
+            ),
+          ),
         ),
       }),
     });
@@ -310,11 +329,21 @@ export class CactusIrohaV2Client {
     return this;
   }
 
+  /**
+   * Add instruction to burn specified amount of an asset.
+   *
+   * @param assetName
+   * @param domainName
+   * @param accountName Asset owner name
+   * @param accountDomainName Asset owner domain name
+   * @param value Asset value to burn must match `AssetValueType` from asset definition.
+   * @returns this
+   */
   public burnAsset(
-    assetName: string,
-    domainName: string,
-    accountName: string,
-    accountDomainName: string,
+    assetName: IrohaName,
+    domainName: IrohaName,
+    accountName: IrohaName,
+    accountDomainName: IrohaName,
     value: number | bigint | string | Metadata,
   ): this {
     Checks.truthy(assetName, "burnAsset arg assetName");
@@ -323,45 +352,25 @@ export class CactusIrohaV2Client {
     Checks.truthy(accountDomainName, "burnAsset arg accountDomainName");
     Checks.truthy(value, "burnAsset arg value");
 
-    const assetId = AssetId({
-      account_id: AccountId({
-        name: accountName,
-        domain_id: DomainId({
-          name: accountDomainName,
-        }),
-      }),
-      definition_id: AssetDefinitionId({
-        name: assetName,
-        domain_id: DomainId({ name: domainName }),
-      }),
-    });
-
-    // todo - factory method
-    let assetValue: IrohaValue;
-    switch (typeof value) {
-      case "number":
-        assetValue = IrohaValue("U32", value);
-        break;
-      case "bigint":
-        assetValue = IrohaValue("U128", value);
-        break;
-      case "string":
-        assetValue = IrohaValue("Fixed", value);
-        break;
-      case "object":
-        assetValue = IrohaValue("LimitedMetadata", value);
-      default:
-        throw new Error(`Unknown AssetValue: ${value}, type: ${typeof value}`);
-    }
-
     const burnBox = BurnBox({
       object: EvaluatesToValue({
-        expression: Expression("Raw", assetValue),
+        expression: Expression("Raw", createIrohaValue(value)),
       }),
       destination_id: EvaluatesToIdBox({
         expression: Expression(
           "Raw",
-          IrohaValue("Id", IdBox("AssetId", assetId)),
+          IrohaValue(
+            "Id",
+            IdBox(
+              "AssetId",
+              createAssetId(
+                assetName,
+                domainName,
+                accountName,
+                accountDomainName,
+              ),
+            ),
+          ),
         ),
       }),
     });
@@ -376,13 +385,25 @@ export class CactusIrohaV2Client {
     return this;
   }
 
+  /**
+   * Add instruction to transfer asset between two accounts.
+   *
+   * @param assetName
+   * @param assetDomainName
+   * @param sourceAccountName Origin account name.
+   * @param sourceAccountDomain Origin account domain name.
+   * @param targetAccountName Target account name.
+   * @param targetAccountDomain Target account domain name.
+   * @param valueToTransfer Asset value to transfer must match `AssetValueType` from asset definition.
+   * @returns this
+   */
   public transferAsset(
-    assetName: string,
-    assetDomainName: string,
-    sourceAccountName: string,
-    sourceAccountDomain: string,
-    targetAccountName: string,
-    targetAccountDomain: string,
+    assetName: IrohaName,
+    assetDomainName: IrohaName,
+    sourceAccountName: IrohaName,
+    sourceAccountDomain: IrohaName,
+    targetAccountName: IrohaName,
+    targetAccountDomain: IrohaName,
     valueToTransfer: number | bigint | string | Metadata,
   ): this {
     Checks.truthy(assetName, "transferAsset arg assetName");
@@ -393,65 +414,42 @@ export class CactusIrohaV2Client {
     Checks.truthy(targetAccountDomain, "transferAsset arg targetAccountDomain");
     Checks.truthy(valueToTransfer, "transferAsset arg valueToTransfer");
 
-    const assetDefinition = AssetDefinitionId({
-      name: assetName,
-      domain_id: DomainId({ name: assetDomainName }),
-    });
-
-    const sourceAssetId = AssetId({
-      account_id: AccountId({
-        name: sourceAccountName,
-        domain_id: DomainId({
-          name: sourceAccountDomain,
-        }),
-      }),
-      definition_id: assetDefinition,
-    });
-
-    const targetAssetId = AssetId({
-      account_id: AccountId({
-        name: targetAccountName,
-        domain_id: DomainId({
-          name: targetAccountDomain,
-        }),
-      }),
-      definition_id: assetDefinition,
-    });
-
-    // todo - factory method
-    let transferValue: IrohaValue;
-    switch (typeof valueToTransfer) {
-      case "number":
-        transferValue = IrohaValue("U32", valueToTransfer);
-        break;
-      case "bigint":
-        transferValue = IrohaValue("U128", valueToTransfer);
-        break;
-      case "string":
-        transferValue = IrohaValue("Fixed", valueToTransfer);
-        break;
-      case "object":
-        transferValue = IrohaValue("LimitedMetadata", valueToTransfer);
-      default:
-        throw new Error(
-          `Unknown AssetValue: ${valueToTransfer}, type: ${typeof valueToTransfer}`,
-        );
-    }
-
     const transferBox = TransferBox({
       source_id: EvaluatesToIdBox({
         expression: Expression(
           "Raw",
-          IrohaValue("Id", IdBox("AssetId", sourceAssetId)),
+          IrohaValue(
+            "Id",
+            IdBox(
+              "AssetId",
+              createAssetId(
+                assetName,
+                assetDomainName,
+                sourceAccountName,
+                sourceAccountDomain,
+              ),
+            ),
+          ),
         ),
       }),
       object: EvaluatesToValue({
-        expression: Expression("Raw", transferValue),
+        expression: Expression("Raw", createIrohaValue(valueToTransfer)),
       }),
       destination_id: EvaluatesToIdBox({
         expression: Expression(
           "Raw",
-          IrohaValue("Id", IdBox("AssetId", targetAssetId)),
+          IrohaValue(
+            "Id",
+            IdBox(
+              "AssetId",
+              createAssetId(
+                assetName,
+                assetDomainName,
+                targetAccountName,
+                targetAccountDomain,
+              ),
+            ),
+          ),
         ),
       }),
     });
@@ -469,9 +467,19 @@ export class CactusIrohaV2Client {
     return this;
   }
 
+  /**
+   * Add instruction to register new account on the ledger.
+   *
+   * @param accountName
+   * @param domainName
+   * @param publicKeyPayload Public key, either HEX encoded string or raw `Uint8Array` bytes.
+   * @param publicKeyDigestFunction
+   * @param metadata
+   * @returns this
+   */
   public registerAccount(
-    accountName: string,
-    domainName: string,
+    accountName: IrohaName,
+    domainName: IrohaName,
     publicKeyPayload: string | Uint8Array,
     publicKeyDigestFunction = "ed25519",
     metadata: Map<IrohaName, IrohaValue> = new Map(),
@@ -483,13 +491,6 @@ export class CactusIrohaV2Client {
       publicKeyDigestFunction,
       "registerAccount arg publicKeyDigestFunction",
     );
-
-    const accountId = AccountId({
-      name: accountName,
-      domain_id: DomainId({
-        name: domainName,
-      }),
-    });
 
     let publicKeyBytes: Uint8Array;
     if (typeof publicKeyPayload === "string") {
@@ -512,7 +513,7 @@ export class CactusIrohaV2Client {
             IdentifiableBox(
               "NewAccount",
               NewAccount({
-                id: accountId,
+                id: createAccountId(accountName, domainName),
                 signatories: VecPublicKey([publicKey]),
                 metadata: Metadata({ map: MapNameValue(metadata) }),
               }),
@@ -532,11 +533,21 @@ export class CactusIrohaV2Client {
     return this;
   }
 
+  /**
+   * Clear all the instructions stored in current transaction.
+   *
+   * @returns this
+   */
   public clear(): this {
     this.transactions.length = 0;
     return this;
   }
 
+  /**
+   * Get summary report of all instructions stored in a current transaction.
+   *
+   * @returns printable string report
+   */
   public getTransactionSummary(): string {
     const header = `Transaction Summary (total: ${this.transactions.length}):\n`;
     const instructions = this.transactions.map(
@@ -547,6 +558,11 @@ export class CactusIrohaV2Client {
     return header.concat(...instructions);
   }
 
+  /**
+   * Send all the stored instructions as single Iroha transaction.
+   *
+   * @returns this
+   */
   public async send(): Promise<this> {
     if (this.transactions.length === 0) {
       this.log.warn("send() ignored - no instructions to be sent!");
@@ -570,6 +586,10 @@ export class CactusIrohaV2Client {
     return this;
   }
 
+  /**
+   * Free all allocated resources.
+   * Should be called before the shutdown.
+   */
   public free(): void {
     this.log.debug("Free CactusIrohaV2Client key pair");
     this.irohaClient.keyPair?.free();

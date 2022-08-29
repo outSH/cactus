@@ -1,7 +1,9 @@
-import safeStringify from "fast-safe-stringify";
+/**
+ * Cactus wrapper around IrohaV2 Client query utilities.
+ * Intended to be used through `CactusIrohaV2Client` interface but can be instantiated separately if needed.
+ */
 
-import { Client } from "@iroha2/client";
-
+import { Client, RequestResult } from "@iroha2/client";
 import {
   DomainId,
   Expression,
@@ -10,9 +12,7 @@ import {
   FindDomainById,
   EvaluatesToDomainId,
   IdBox,
-  AssetId,
-  AccountId,
-  AssetDefinitionId,
+  Name as IrohaName,
   FindAssetById,
   EvaluatesToAssetId,
   FindAssetDefinitionById,
@@ -21,12 +21,31 @@ import {
   EvaluatesToAccountId,
   FindTransactionByHash,
   EvaluatesToHash,
+  Domain,
+  VecValue,
+  AssetDefinition,
+  Asset,
+  Account,
+  TransactionValue,
+  Peer,
 } from "@iroha2/data-model";
 
 import { Checks, Logger } from "@hyperledger/cactus-common";
-import { hexToBytes } from "hada";
 
-// TODO - pagination once supported by upstream
+import safeStringify from "fast-safe-stringify";
+import { hexToBytes } from "hada";
+import {
+  createAccountId,
+  createAssetDefinitionId,
+  createAssetId,
+} from "./data-factories";
+
+/**
+ * Cactus wrapper around IrohaV2 Client query utilities.
+ * Intended to be used through `CactusIrohaV2Client` interface but can be instantiated separately if needed.
+ *
+ * @todo Implement pagination once it's supported by the upstream iroha-javascript SDK.
+ */
 export class CactusIrohaV2QueryClient {
   constructor(
     private readonly irohaClient: Client,
@@ -35,25 +54,52 @@ export class CactusIrohaV2QueryClient {
     this.log.debug("CactusIrohaV2QueryClient created.");
   }
 
+  /**
+   * Helper function to match vector response from Iroha and handle possible errors.
+   *
+   * @param result Query result object
+   * @param queryName Query name for diagnostics.
+   * @returns Vector result
+   */
+  private matchVectorResult(
+    result: RequestResult,
+    queryName: string,
+  ): VecValue {
+    return result.match({
+      Ok: (res) => res.result.as("Vec"),
+      Err: (error) => {
+        throw new Error(`${queryName} query error: ${safeStringify(error)}`);
+      },
+    });
+  }
+
   // Domains
-  public async findAllDomains(): Promise<unknown> {
+
+  /**
+   * Query all the domains details in the ledger.
+   * Can return a lot of data.
+   *
+   * @returns domain list
+   */
+  public async findAllDomains(): Promise<Domain[]> {
     const result = await this.irohaClient.request(
       QueryBox("FindAllDomains", null),
     );
 
-    const vectorResult = result.match({
-      Ok: (res) => res.result.as("Vec"),
-      Err: (error) => {
-        throw new Error(`findAllDomains query error: ${safeStringify(error)}`);
-      },
-    });
+    const vectorResult = this.matchVectorResult(result, "findAllDomains");
     const domains = vectorResult.map((i) => i.as("Identifiable").as("Domain"));
 
     this.log.debug("findAllDomains:", domains);
     return domains;
   }
 
-  public async findDomainById(domainName: string): Promise<unknown> {
+  /**
+   * Query single domain by it's name
+   *
+   * @param domainName
+   * @returns Domain data
+   */
+  public async findDomainById(domainName: IrohaName): Promise<Domain> {
     Checks.truthy(domainName, "findDomainById arg domainName");
 
     const result = await this.irohaClient.request(
@@ -92,17 +138,20 @@ export class CactusIrohaV2QueryClient {
   }
 
   // Assets
+
+  /**
+   * Query single asset definition using it's name and domain.
+   *
+   * @param name
+   * @param domainName
+   * @returns Asset definition
+   */
   public async findAssetDefinitionById(
-    name: string,
-    domainName: string,
-  ): Promise<unknown> {
+    name: IrohaName,
+    domainName: IrohaName,
+  ): Promise<AssetDefinition> {
     Checks.truthy(name, "findAssetDefinitionById arg name");
     Checks.truthy(domainName, "findAssetDefinitionById arg domainName");
-
-    const assetDefId = AssetDefinitionId({
-      name: name,
-      domain_id: DomainId({ name: domainName }),
-    });
 
     const result = await this.irohaClient.request(
       QueryBox(
@@ -111,7 +160,13 @@ export class CactusIrohaV2QueryClient {
           id: EvaluatesToAssetDefinitionId({
             expression: Expression(
               "Raw",
-              Value("Id", IdBox("AssetDefinitionId", assetDefId)),
+              Value(
+                "Id",
+                IdBox(
+                  "AssetDefinitionId",
+                  createAssetDefinitionId(name, domainName),
+                ),
+              ),
             ),
           }),
         }),
@@ -131,19 +186,21 @@ export class CactusIrohaV2QueryClient {
     return assetDef;
   }
 
-  public async findAllAssetsDefinitions(): Promise<unknown> {
+  /**
+   * Query all defined asset definitions.
+   * Can return a lot of data.
+   *
+   * @returns List of asset definitions.
+   */
+  public async findAllAssetsDefinitions(): Promise<AssetDefinition[]> {
     const result = await this.irohaClient.request(
       QueryBox("FindAllAssetsDefinitions", null),
     );
 
-    const vectorResult = result.match({
-      Ok: (res) => res.result.as("Vec"),
-      Err: (error) => {
-        throw new Error(
-          `findAllAssetsDefinitions query error: ${safeStringify(error)}`,
-        );
-      },
-    });
+    const vectorResult = this.matchVectorResult(
+      result,
+      "findAllAssetsDefinitions",
+    );
     const assetDefs = vectorResult.map((d) =>
       d.as("Identifiable").as("AssetDefinition"),
     );
@@ -152,29 +209,25 @@ export class CactusIrohaV2QueryClient {
     return assetDefs;
   }
 
+  /**
+   * Query single asset by it's name, domain and account definition.
+   *
+   * @param assetName
+   * @param assetDomainName
+   * @param accountName Owner account name
+   * @param accountDomainName Owner account domain name
+   * @returns Asset
+   */
   public async findAssetById(
-    assetName: string,
-    assetDomainName: string,
-    accountName: string,
-    accountDomainName: string,
-  ): Promise<unknown> {
+    assetName: IrohaName,
+    assetDomainName: IrohaName,
+    accountName: IrohaName,
+    accountDomainName: IrohaName,
+  ): Promise<Asset> {
     Checks.truthy(assetName, "findAssetById arg assetName");
     Checks.truthy(assetDomainName, "findAssetById arg assetDomainName");
     Checks.truthy(accountName, "findAssetById arg accountName");
     Checks.truthy(accountDomainName, "findAssetById arg accountDomainName");
-
-    const assetId = AssetId({
-      account_id: AccountId({
-        name: accountName,
-        domain_id: DomainId({
-          name: accountDomainName,
-        }),
-      }),
-      definition_id: AssetDefinitionId({
-        name: assetName,
-        domain_id: DomainId({ name: assetDomainName }),
-      }),
-    });
 
     const result = await this.irohaClient.request(
       QueryBox(
@@ -183,7 +236,18 @@ export class CactusIrohaV2QueryClient {
           id: EvaluatesToAssetId({
             expression: Expression(
               "Raw",
-              Value("Id", IdBox("AssetId", assetId)),
+              Value(
+                "Id",
+                IdBox(
+                  "AssetId",
+                  createAssetId(
+                    assetName,
+                    assetDomainName,
+                    accountName,
+                    accountDomainName,
+                  ),
+                ),
+              ),
             ),
           }),
         }),
@@ -201,17 +265,18 @@ export class CactusIrohaV2QueryClient {
     return asset;
   }
 
-  public async findAllAssets(): Promise<unknown> {
+  /**
+   * Query all assets on the ledger.
+   * Can return a lot of data.
+   *
+   * @returns List of assets.
+   */
+  public async findAllAssets(): Promise<Asset[]> {
     const result = await this.irohaClient.request(
       QueryBox("FindAllAssets", null),
     );
 
-    const vectorResult = result.match({
-      Ok: (res) => res.result.as("Vec"),
-      Err: (error) => {
-        throw new Error(`findAllAssets query error: ${safeStringify(error)}`);
-      },
-    });
+    const vectorResult = this.matchVectorResult(result, "findAllAssets");
     const assets = vectorResult.map((i) => i.as("Identifiable").as("Asset"));
 
     this.log.debug("findAllAssets:", assets);
@@ -219,19 +284,20 @@ export class CactusIrohaV2QueryClient {
   }
 
   // Account
+
+  /**
+   * Query single account by it's name and domain.
+   *
+   * @param name
+   * @param domainName
+   * @returns Account
+   */
   public async findAccountById(
-    name: string,
-    domainName: string,
-  ): Promise<unknown> {
+    name: IrohaName,
+    domainName: IrohaName,
+  ): Promise<Account> {
     Checks.truthy(name, "findAccountById arg name");
     Checks.truthy(domainName, "findAccountById arg domainName");
-
-    const accountId = AccountId({
-      name: name,
-      domain_id: DomainId({
-        name: domainName,
-      }),
-    });
 
     const result = await this.irohaClient.request(
       QueryBox(
@@ -240,7 +306,10 @@ export class CactusIrohaV2QueryClient {
           id: EvaluatesToAccountId({
             expression: Expression(
               "Raw",
-              Value("Id", IdBox("AccountId", accountId)),
+              Value(
+                "Id",
+                IdBox("AccountId", createAccountId(name, domainName)),
+              ),
             ),
           }),
         }),
@@ -258,18 +327,18 @@ export class CactusIrohaV2QueryClient {
     return account;
   }
 
-  public async findAllAccounts(): Promise<unknown> {
+  /**
+   * Query all accounts on the ledger.
+   * Can return a lot of data.
+   *
+   * @returns List of accounts.
+   */
+  public async findAllAccounts(): Promise<Account[]> {
     const result = await this.irohaClient.request(
       QueryBox("FindAllAccounts", null),
     );
 
-    // todo: getVectorResult() helper func
-    const vectorResult = result.match({
-      Ok: (res) => res.result.as("Vec"),
-      Err: (error) => {
-        throw new Error(`findAllAccounts query error: ${safeStringify(error)}`);
-      },
-    });
+    const vectorResult = this.matchVectorResult(result, "findAllAccounts");
     const accounts = vectorResult.map((i) =>
       i.as("Identifiable").as("Account"),
     );
@@ -279,28 +348,34 @@ export class CactusIrohaV2QueryClient {
   }
 
   // Transactions
-  public async findAllTransactions(): Promise<unknown> {
+
+  /**
+   * Query all transactions on the ledger.
+   * Can return a lot of data.
+   *
+   * @returns List of transactions.
+   */
+  public async findAllTransactions(): Promise<TransactionValue[]> {
     const result = await this.irohaClient.request(
       QueryBox("FindAllTransactions", null),
     );
 
-    const vectorResult = result.match({
-      Ok: (res) => res.result.as("Vec"),
-      Err: (error) => {
-        throw new Error(
-          `findAllTransactions query error: ${safeStringify(error)}`,
-        );
-      },
-    });
+    const vectorResult = this.matchVectorResult(result, "findAllTransactions");
     const transactions = vectorResult.map((i) => i.as("TransactionValue"));
 
     this.log.debug("findAllTransactions:", transactions);
     return transactions;
   }
 
+  /**
+   * Query single transaction using it's hash.
+   *
+   * @param hash Either HEX encoded string or raw `Uint8Array` bytes.
+   * @returns Transaction
+   */
   public async findTransactionByHash(
     hash: string | Uint8Array,
-  ): Promise<unknown> {
+  ): Promise<TransactionValue> {
     Checks.truthy(hash, "findTransactionByHash arg hash");
 
     this.log.debug("findTransactionByHash - search for", hash);
@@ -335,35 +410,38 @@ export class CactusIrohaV2QueryClient {
     return transaction;
   }
 
-  // Other
-  public async findAllPeers(): Promise<unknown> {
+  // Misc
+
+  /**
+   * Query all peers on the ledger.
+   * Can return a lot of data.
+   *
+   * @returns List of peers.
+   */
+  public async findAllPeers(): Promise<Peer[]> {
     const result = await this.irohaClient.request(
       QueryBox("FindAllPeers", null),
     );
 
-    const vectorResult = result.match({
-      Ok: (res) => res.result.as("Vec"),
-      Err: (error) => {
-        throw new Error(`findAllPeers query error: ${safeStringify(error)}`);
-      },
-    });
+    const vectorResult = this.matchVectorResult(result, "findAllPeers");
     const peers = vectorResult.map((i) => i.as("Identifiable").as("Peer"));
 
     this.log.debug("findAllPeers:", peers);
     return peers;
   }
 
+  /**
+   * Query all blocks on the ledger.
+   * Can return a lot of data.
+   *
+   * @returns List of blocks.
+   */
   public async findAllBlocks(): Promise<unknown> {
     const result = await this.irohaClient.request(
       QueryBox("FindAllBlocks", null),
     );
 
-    const vectorResult = result.match({
-      Ok: (res) => res.result.as("Vec"),
-      Err: (error) => {
-        throw new Error(`findAllBlocks query error: ${safeStringify(error)}`);
-      },
-    });
+    const vectorResult = this.matchVectorResult(result, "findAllBlocks");
     const blocks = vectorResult.map((i) => i.as("Block"));
 
     this.log.debug(`findAllBlocks: Total ${blocks.length}`);
