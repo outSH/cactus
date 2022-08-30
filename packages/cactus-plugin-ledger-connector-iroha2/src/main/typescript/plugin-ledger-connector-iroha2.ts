@@ -96,7 +96,12 @@ export class PluginLedgerConnectorIroha2
     this.log = LoggerProvider.getOrCreate({ level, label: this.className });
 
     this.instanceId = options.instanceId;
+
     this.defaultConfig = options.defaultConfig;
+    // Remove proto in case we use merge method vulnerable to proto pollution
+    if (this.defaultConfig instanceof Object) {
+      Object.setPrototypeOf(this.defaultConfig, null);
+    }
   }
 
   /**
