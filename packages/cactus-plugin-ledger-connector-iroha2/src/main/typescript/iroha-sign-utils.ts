@@ -3,14 +3,34 @@
  * SPDX-License-Identifier: Apache-2.0
  *
  * Signing utility functions for HL Iroha V2 ledger.
+ * Remember to free key objects supplied to the signing methods.
  */
 
-import { Signer, makeSignedTransaction } from "@iroha2/client";
-import { TransactionPayload, VersionedTransaction } from "@iroha2/data-model";
+import { Signer, makeSignedTransaction, makeSignedQuery } from "@iroha2/client";
+import {
+  QueryPayload,
+  TransactionPayload,
+  VersionedSignedQueryRequest,
+  VersionedTransaction,
+} from "@iroha2/data-model";
 
 import { generateIrohaV2KeyPair } from "./cactus-iroha-sdk-wrapper/client";
 import { createAccountId } from "./cactus-iroha-sdk-wrapper/data-factories";
 import { Iroha2KeyPair } from "./public-api";
+
+function getSigner(
+  accountName: string,
+  domainName: string,
+  keyPair: Iroha2KeyPair,
+): Signer {
+  const account = createAccountId(accountName, domainName);
+  const irohaKeyPair = generateIrohaV2KeyPair(
+    keyPair.publicKey,
+    keyPair.privateKey,
+  );
+
+  return new Signer(account, irohaKeyPair);
+}
 
 /**
  * Sign transaction binary received from `GenerateTransactionV1` endpoint.
@@ -29,14 +49,19 @@ export function signIrohaV2Transaction(
   keyPair: Iroha2KeyPair,
 ): Uint8Array {
   const unsignedTx = TransactionPayload.fromBuffer(serializedTx);
-
-  const account = createAccountId(accountName, domainName);
-  const irohaKeyPair = generateIrohaV2KeyPair(
-    keyPair.publicKey,
-    keyPair.privateKey,
-  );
-  const signer = new Signer(account, irohaKeyPair);
+  const signer = getSigner(accountName, domainName, keyPair);
   const signedTx = makeSignedTransaction(unsignedTx, signer);
-
   return VersionedTransaction.toBuffer(signedTx);
+}
+
+export function signIrohaV2Query(
+  serializedQuery: Uint8Array,
+  accountName: string,
+  domainName: string,
+  keyPair: Iroha2KeyPair,
+): Uint8Array {
+  const unsignedQueryReq = QueryPayload.fromBuffer(serializedQuery);
+  const signer = getSigner(accountName, domainName, keyPair);
+  const queryReq = makeSignedQuery(unsignedQueryReq, signer);
+  return VersionedSignedQueryRequest.toBuffer(queryReq);
 }
