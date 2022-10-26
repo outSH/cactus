@@ -1,23 +1,32 @@
-FROM docker:20.10.17-dind
+FROM rust:1.71-alpine as builder
+
+RUN apk update \
+  && apk add --no-cache \
+  git \
+  musl-dev \
+  openssl-dev
+
+WORKDIR "/build"
+RUN git clone --depth 1 -b iroha2-lts https://github.com/hyperledger/iroha.git .
+# Reset to LTS state as of 26.07.2023
+RUN git reset 9273a912c8a97f9ce1bfaa302c7192554f7abf00 --hard
+
+RUN cargo build -p iroha_client_cli
+
+FROM docker:24.0.2-dind
 
 ENV APP_ROOT="/app"
 
 # Install docker-compose
 RUN apk update \
   && apk add --no-cache \
-    # docker-compose dependencies
-    py-pip \
-    python3-dev \
-    libffi-dev \
-    openssl-dev \
-    # Other dependencies
-    supervisor \
-    jq \
-  && pip install wheel \
-  && pip install docker-compose
+  docker-cli \
+  docker-cli-compose \
+  supervisor \
+  jq
 
-# Copy iroha_client_cli proxy script
-COPY ./iroha_client_cli.sh /bin/iroha_client_cli
+# Copy iroha_client_cli binary
+COPY --from=builder /build/target/debug/iroha_client_cli /bin/iroha_client_cli
 RUN chmod +x /bin/iroha_client_cli
 
 # Setup healtcheck
@@ -35,8 +44,8 @@ EXPOSE 8080
 # Peer0 telemetry
 EXPOSE 8180
 
-ENV IROHA_VERSION="dev-nightly-75da907f66d5270f407a50e06bc76cec41d3d409"
-ENV IROHA_CLI_VERSION="dev-nightly-75da907f66d5270f407a50e06bc76cec41d3d409"
+# Iroha LTS image digests as of 26.07.2023
+ENV IROHA_IMAGE_DIGEST="sha256:57d8d2c8dd5ead90200f365be6809b995ecfad14a77796b9f6de1e32d0da62a3"
 
 # Setup supervisor entrypoint
 COPY supervisord.conf /etc/supervisord.conf

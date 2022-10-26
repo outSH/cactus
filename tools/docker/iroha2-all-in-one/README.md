@@ -22,7 +22,7 @@ docker-compose build && docker-compose up -d
 
 ``` bash
 # Build
-DOCKER_BUILDKIT=1 docker build . -t cactus_iroha2_all_in_one
+DOCKER_BUILDKIT=1 docker build ./tools/docker/iroha2-all-in-one -t cactus_iroha2_all_in_one
 
 # Run
 docker run --rm --name iroha2_aio_testnet --detach --privileged -p 8080:8080 -p 8180:8180 cactus_iroha2_all_in_one
@@ -50,5 +50,5 @@ docker exec -ti iroha2_aio_testnet iroha_client_cli domain list all
 - Use typescript [Iroha2TestLedger helper class](../../../packages/cactus-test-tooling/src/main/typescript/iroha/iroha2-test-ledger.ts) to start this ledger and use it from inside of automatic test.
 
 ## Possible improvements
-- Use specific iroha docker image tag when they are available.
 - Freeze images like it's done in fabric-all-in-one, to speed up the startup (although it's pretty fast already).
+- Use single iroha node setup.

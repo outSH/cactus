@@ -4,7 +4,7 @@
 
 // Ledger settings
 const containerImageName = "ghcr.io/outsh/cactus-iroha2-all-in-one";
-const containerImageVersion = "0.3";
+const containerImageVersion = "0.5";
 const useRunningLedger = false;
 
 // Log settings
@@ -203,14 +203,18 @@ export class IrohaV2TestEnv {
       logLevel: sutLogLevel,
     });
 
+    const [accountName, accountDomain] = this.clientConfig.ACCOUNT_ID.split(
+      "@",
+    );
+
     this._defaultBaseConfig = {
       torii: {
         apiURL: this.clientConfig.TORII_API_URL,
         telemetryURL: this.clientConfig.TORII_TELEMETRY_URL,
       },
       accountId: {
-        name: this.clientConfig.ACCOUNT_ID.name,
-        domainId: this.clientConfig.ACCOUNT_ID.domain_id.name,
+        name: accountName,
+        domainId: accountDomain,
       },
       signingCredential: this.keychainCredentials,
     };

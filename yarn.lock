@@ -2920,13 +2920,13 @@
   dependencies:
     multiformats "^9.5.4"
 
-"@iroha2/client@3.0.0":
-  version "3.0.0"
-  resolved "https://nexus.iroha.tech/repository/npm-group/@iroha2/client/-/client-3.0.0.tgz#6c4fce7eb491d4b71e94e73a7b5993b386923d58"
-  integrity sha512-fh5B+ET/mjSQUI5rovzyD4GL8z/J3NQEjeA8q3/ACS4Wv/Llcd32IjqSeNAUE/irBvVQirx192xQyS/+tSqy6A==
+"@iroha2/client@4.0.0":
+  version "4.0.0"
+  resolved "https://nexus.iroha.tech/repository/npm-group/@iroha2/client/-/client-4.0.0.tgz#481cc4c867855540d56ace60408e9fed1234c70e"
+  integrity sha512-gNsIkyFNkUs69M+PJxyytT7kpDS3yIeNtNhroV00ILGnJEiJ3q1JZg4PK5Ij5q0JekyIDG/ffOnlUZTJp5QpgA==
   dependencies:
     "@iroha2/crypto-core" "^0.1.1"
-    "@iroha2/data-model" "3.0.0"
+    "@iroha2/data-model" "4.0.0"
     "@types/ws" "^8.2.2"
     debug "^4.3.4"
     emittery "^0.10.1"
@@ -2945,10 +2945,10 @@
   dependencies:
     "@iroha2/crypto-core" "^0.1.1"
 
-"@iroha2/data-model@3.0.0":
-  version "3.0.0"
-  resolved "https://nexus.iroha.tech/repository/npm-group/@iroha2/data-model/-/data-model-3.0.0.tgz#ac5d99da8dc507717c0fb93acfb23a2cc2c4c298"
-  integrity sha512-no3oB0AwN8Ti+Dpm2zBxorRhRXKSBolGCSB20p/GNTg94sdJCacAzihisICyHNkEtDFsZnDOIvQzZ2sMaEHCSQ==
+"@iroha2/data-model@4.0.0":
+  version "4.0.0"
+  resolved "https://nexus.iroha.tech/repository/npm-group/@iroha2/data-model/-/data-model-4.0.0.tgz#eadbffc471e9771ea1333a5891a8712b94b204eb"
+  integrity sha512-86KO4gFjQIJFWTLIdcMWcwQM3IODETl0hrfdtj1yD0IjYM/l6obMnHqNXeu8+rToDmjGInP6Tyvotf8EK38BOg==
   dependencies:
     "@iroha2/i64-fixnum" "^0.4.2"
     "@scale-codec/definition-runtime" "^2.2.2"
@@ -23768,9 +23768,9 @@ ws@^8.1.0:
   integrity sha512-BWX0SWVgLPzYwF8lTzEy1egjhS4S4OEAHfsO8o65WOVsrnSRGaSiUaa9e0ggGlkMTtBlmOpEXiie9RUcBO86qg==
 
 ws@^8.4.0:
-  version "8.8.1"
-  resolved "https://registry.yarnpkg.com/ws/-/ws-8.8.1.tgz#5dbad0feb7ade8ecc99b830c1d77c913d4955ff0"
-  integrity sha512-bGy2JzvzkPowEJV++hF07hAD6niYSr0JzBNo/J29WsB57A2r7Wlc1UFcTR9IzrPvuNVO4B8LGqF8qcpsVOhJCA==
+  version "8.13.0"
+  resolved "https://registry.yarnpkg.com/ws/-/ws-8.13.0.tgz#9a9fb92f93cf41512a0735c8f4dd09b8a1211cd0"
+  integrity sha512-x9vcZYTrFPC7aSIbj7sRCYo7L/Xb8Iy+pW0ng0wt2vCJv7M9HOMy0UoN3rr+IFC7hb7vXoqS+P9ktyLLLhO+LA==
 
 ws@~7.4.2:
   version "7.4.6"
