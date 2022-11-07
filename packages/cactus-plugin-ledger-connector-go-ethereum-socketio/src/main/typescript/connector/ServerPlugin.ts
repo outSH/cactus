@@ -12,7 +12,10 @@
  */
 
 // configuration file
-import { configRead, signMessageJwt } from "@hyperledger/cactus-cmd-socket-server";
+import {
+  configRead,
+  signMessageJwt,
+} from "@hyperledger/cactus-cmd-socket-server";
 // Log settings
 import { getLogger } from "log4js";
 const logger = getLogger("ServerPlugin[" + process.pid + "]");
@@ -23,6 +26,41 @@ import * as SplugUtil from "./PluginUtil";
 import Web3 from "web3";
 import { AbiItem } from "web3-utils";
 import { safeStringifyException } from "@hyperledger/cactus-common";
+
+var WEB3_HTTP_PROVIDER_OPTIONS = {
+  keepAlive: true,
+};
+
+const WEB3_WS_PROVIDER_OPTIONS = {
+  // Enable auto reconnection
+  reconnect: {
+    auto: true,
+    delay: 3000, // ms
+    maxAttempts: 30,
+    onTimeout: false,
+  },
+};
+
+function getWeb3Provider(host: string) {
+  const hostUrl = new URL(host);
+
+  switch (hostUrl.protocol) {
+    case "http:":
+    case "https:":
+      return new Web3.providers.HttpProvider(host, WEB3_HTTP_PROVIDER_OPTIONS);
+    case "ws:":
+      return new Web3.providers.WebsocketProvider(
+        host,
+        WEB3_WS_PROVIDER_OPTIONS,
+      );
+    default:
+      throw new Error(
+        `Unknown host protocol ${hostUrl.protocol} in URL ${host}`,
+      );
+  }
+}
+
+const web3 = new Web3(getWeb3Provider(configRead("ledgerUrl")));
 
 /*
  * ServerPlugin
@@ -84,7 +122,7 @@ export class ServerPlugin {
           status: 504,
           errorDetail: emsg,
         },
-        id: reqID
+        id: reqID,
       };
     }
 
@@ -92,7 +130,6 @@ export class ServerPlugin {
 
     // Handling exceptions to absorb the difference of interest.
     try {
-      const web3 = new Web3(configRead("ledgerUrl"));
       const balance = await web3.eth.getBalance(ethargs);
       const amountVal = parseInt(balance, 10);
       const retObj = {
@@ -100,7 +137,7 @@ export class ServerPlugin {
           status: 200,
           amount: amountVal,
         },
-        id: reqID
+        id: reqID,
       };
       logger.debug(`##getNumericBalance: retObj: ${JSON.stringify(retObj)}`);
       return retObj;
@@ -110,7 +147,7 @@ export class ServerPlugin {
           status: 504,
           errorDetail: safeStringifyException(e),
         },
-        id: reqID
+        id: reqID,
       };
 
       logger.error(`##getNumericBalance: retObj: ${JSON.stringify(retObj)}`);
@@ -175,7 +212,6 @@ export class ServerPlugin {
 
       // Handle the exception once to absorb the difference of interest.
       try {
-        const web3 = new Web3(configRead("ledgerUrl"));
         const res = web3.eth[sendFunction](sendArgs);
 
         retObj = {
@@ -237,7 +273,7 @@ export class ServerPlugin {
           status: 504,
           errorDetail: emsg,
         },
-        id: reqID
+        id: reqID,
       };
     }
 
@@ -249,7 +285,6 @@ export class ServerPlugin {
 
     // Handling exceptions to absorb the difference of interest.
     try {
-      const web3 = new Web3(configRead("ledgerUrl"));
       const txnCount = await web3.eth.getTransactionCount(ethargs);
       logger.info(`getNonce(): txnCount: ${txnCount}`);
       const hexStr = web3.utils.toHex(txnCount);
@@ -267,7 +302,7 @@ export class ServerPlugin {
           status: 200,
           data: signedResults,
         },
-        id: reqID
+        id: reqID,
       };
 
       logger.debug(`##getNonce: retObj: ${JSON.stringify(retObj)}`);
@@ -279,7 +314,7 @@ export class ServerPlugin {
           status: 504,
           errorDetail: safeStringifyException(e),
         },
-        id: reqID
+        id: reqID,
       };
 
       logger.error(`##getNonce: retObj: ${JSON.stringify(retObj)}`);
@@ -313,7 +348,7 @@ export class ServerPlugin {
           status: 504,
           errorDetail: emsg,
         },
-        id: reqID
+        id: reqID,
       };
     }
 
@@ -321,7 +356,6 @@ export class ServerPlugin {
 
     // Handling exceptions to absorb the difference of interest.
     try {
-      const web3 = new Web3(configRead("ledgerUrl"));
       const hexStr = web3.utils.toHex(targetValue);
       logger.info(`toHex(): hexStr: ${hexStr}`);
       const result = {
@@ -337,7 +371,7 @@ export class ServerPlugin {
           status: 200,
           data: signedResults,
         },
-        id: reqID
+        id: reqID,
       };
 
       logger.debug(`##toHex: retObj: ${JSON.stringify(retObj)}`);
@@ -348,7 +382,7 @@ export class ServerPlugin {
           status: 504,
           errorDetail: safeStringifyException(e),
         },
-        id: reqID
+        id: reqID,
       };
       logger.error(retObj);
 
@@ -386,14 +420,13 @@ export class ServerPlugin {
             status: 504,
             errorDetail: emsg,
           },
-          id: reqID
+          id: reqID,
         };
       }
 
       const serializedTx = funcParam["serializedTx"];
       logger.info("serializedTx  :" + serializedTx);
 
-      const web3 = new Web3(configRead("ledgerUrl"));
       const res = await web3.eth.sendSignedTransaction(serializedTx);
       const result = {
         txid: res.transactionHash,
@@ -406,7 +439,7 @@ export class ServerPlugin {
           status: 200,
           data: signedResults,
         },
-        id: reqID
+        id: reqID,
       };
 
       logger.debug(`##sendRawTransaction: retObj: ${JSON.stringify(retObj)}`);
@@ -418,7 +451,7 @@ export class ServerPlugin {
           status: 504,
           errorDetail: safeStringifyException(e),
         },
-        id: reqID
+        id: reqID,
       };
 
       logger.error(`##sendRawTransaction: retObj: ${JSON.stringify(retObj)}`);
@@ -450,11 +483,11 @@ export class ServerPlugin {
 
     // Handle the exception once to absorb the difference of interest.
     try {
-      const web3 = new Web3(configRead("ledgerUrl"));
       const looseWeb3Eth = web3.eth as any;
 
-      const isSafeToCall = Object.prototype.hasOwnProperty.call(looseWeb3Eth, sendFunction)
-        && typeof looseWeb3Eth[sendFunction] === "function"
+      const isSafeToCall =
+        Object.prototype.hasOwnProperty.call(looseWeb3Eth, sendFunction) &&
+        typeof looseWeb3Eth[sendFunction] === "function";
       if (!isSafeToCall) {
         throw new Error(
           `Invalid method name provided in request. ${sendFunction} does not exist on the Web3.Eth 1.7+ object.`,
@@ -469,7 +502,7 @@ export class ServerPlugin {
           status: 200,
           data: signedResults,
         },
-        id: reqID
+        id: reqID,
       };
 
       logger.debug(`##web3Eth: retObj: ${JSON.stringify(retObj)}`);
@@ -481,7 +514,7 @@ export class ServerPlugin {
           status: 504,
           errorDetail: safeStringifyException(e),
         },
-        id: reqID
+        id: reqID,
       };
       logger.error(retObj);
 
@@ -517,15 +550,15 @@ export class ServerPlugin {
 
     // Handle the exception once to absorb the difference of interest.
     try {
-      const web3 = new Web3(configRead("ledgerUrl"));
-
       const contract = new web3.eth.Contract(
         args.contract.abi as AbiItem[],
         args.contract.address,
       );
+      (contract as any).setProvider(web3.currentProvider);
 
-      const isSafeToCall = Object.prototype.hasOwnProperty.call(contract.methods, sendCommand)
-        && typeof contract.methods[sendCommand] === "function"
+      const isSafeToCall =
+        Object.prototype.hasOwnProperty.call(contract.methods, sendCommand) &&
+        typeof contract.methods[sendCommand] === "function";
       if (!isSafeToCall) {
         throw new Error(
           `Invalid method name provided in request. ${sendCommand} does not exist on the Web3 contract object's "methods" property.`,
@@ -533,7 +566,9 @@ export class ServerPlugin {
       }
 
       // TODO - args.invocationParams do last
-      const result = await contract.methods[sendCommand](...sendArgs)[sendFunction]();
+      const result = await contract.methods[sendCommand](...sendArgs)[
+        sendFunction
+      ]();
       logger.debug(`##contract: result: ${result}`);
 
       const signedResults = signMessageJwt({ result: result });
@@ -542,7 +577,7 @@ export class ServerPlugin {
           status: 200,
           data: signedResults,
         },
-        id: reqID
+        id: reqID,
       };
 
       logger.debug(`##contract: retObj: ${JSON.stringify(retObj)}`);
@@ -554,7 +589,7 @@ export class ServerPlugin {
           status: 504,
           errorDetail: safeStringifyException(e),
         },
-        id: reqID
+        id: reqID,
       };
       logger.error(retObj);
 
