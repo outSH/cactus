@@ -20,7 +20,7 @@ if (!process.env["NODE_CONFIG_DIR"]) {
   // Must be set before import config
   process.env["NODE_CONFIG_DIR"] = DEFAULT_NODE_CONFIG_DIR;
 }
-import { configRead } from "@hyperledger/cactus-cmd-socket-server";
+import { configRead } from "@hyperledger/cactus-cmd-socketio-server";
 
 import fs = require("fs");
 import { Server } from "socket.io"

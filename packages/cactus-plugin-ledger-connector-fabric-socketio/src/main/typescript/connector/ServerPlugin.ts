@@ -12,7 +12,7 @@
  */
 
 // config file
-import { configRead, signMessageJwt } from "@hyperledger/cactus-cmd-socket-server";
+import { configRead, signMessageJwt } from "@hyperledger/cactus-cmd-socketio-server";
 
 // Log settings
 import { getLogger } from "log4js";
@@ -387,7 +387,7 @@ export class ServerPlugin {
       throw errObj;
     }
 
-    const signedBlock = ValidatorAuthentication.sign({
+    const signedBlock = signMessageJwt({
       result: block,
     });
 

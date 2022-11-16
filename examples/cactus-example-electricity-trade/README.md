@@ -79,7 +79,7 @@ In this example, we use the Sawtooth intkey transaction processor as an applicat
 For development purposes, it might be useful to run the sample application outside of docker-compose environment.
 
 1. Configure cactus and start the ledgers as described above.
-1. Run `./script-dockerless-config-patch.sh` from `cactus-example-discounted-asset-trade/` directory. This will patch the configs and copy it to global location.
+1. Run `./script-dockerless-config-patch.sh` from `cactus-example-electricity-trade/` directory. This will patch the configs and copy it to global location.
 1. Start validators (each in separate cmd window).
     1. `cd packages/cactus-plugin-ledger-connector-go-ethereum-socketio/ && npm run start`
     1. `cd packages/cactus-plugin-ledger-connector-sawtooth-socketio/ && npm run start`

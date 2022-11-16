@@ -15,7 +15,7 @@
 
 // configuration file
 const SplugUtil = require("./PluginUtil");
-import { configRead, signMessageJwt } from "@hyperledger/cactus-cmd-socket-server";
+import { configRead, signMessageJwt } from "@hyperledger/cactus-cmd-socketio-server";
 // Log settings
 import { getLogger } from "log4js";
 const logger = getLogger("ServerMonitorPlugin[" + process.pid + "]");

@@ -11,7 +11,7 @@
  */
 
 //Dependent library
-import { configRead } from "@hyperledger/cactus-cmd-socket-server";
+import { configRead } from "@hyperledger/cactus-cmd-socketio-server";
 const path = require("path");
 import fs from "fs";
 
