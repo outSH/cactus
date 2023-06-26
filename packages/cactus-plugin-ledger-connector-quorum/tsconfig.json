@@ -6,6 +6,7 @@
     "declarationDir": "dist/lib",
     "resolveJsonModule": true,
     "rootDir": "./src",
+    "typeRoots": ["../../node_modules/@types", "./typings"],
     "tsBuildInfoFile": "../../.build-cache/cactus-plugin-ledger-connector-quorum.tsbuildinfo"
   },
   "include": [
