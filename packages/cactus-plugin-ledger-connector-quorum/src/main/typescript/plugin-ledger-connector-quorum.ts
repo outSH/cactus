@@ -12,9 +12,7 @@ import Web3JsQuorum, {
   ISendRawTransaction,
   IPrivateTransactionReceipt,
 } from "web3js-quorum";
-import { AbiItem } from "web3-utils";
-import { Contract } from "web3-eth-contract";
-import { ContractSendMethod } from "web3-eth-contract";
+import { Contract, PayableMethodObject } from "web3-eth-contract";
 import { TransactionReceipt } from "web3-eth";
 
 import OAS from "../json/openapi.json";
@@ -440,13 +438,14 @@ export class PluginLedgerConnectorQuorum
       );
     }
 
-    const methodRef = contractInstance.methods[req.methodName];
+    const methodRef = contractInstance.methods[req.methodName] as (
+      ...args: unknown[]
+    ) => PayableMethodObject;
     Checks.truthy(methodRef, `${fnTag} YourContract.${req.methodName}`);
 
-    const method: ContractSendMethod = methodRef(...req.params);
+    const method = methodRef(...req.params);
     if (req.invocationType === EthContractInvocationType.Call) {
-      contractInstance.methods[req.methodName];
-      const callOutput = await (method as any).call();
+      const callOutput = await method.call();
       const success = true;
       return { success, callOutput };
     } else if (req.invocationType === EthContractInvocationType.Send) {
@@ -460,7 +459,7 @@ export class PluginLedgerConnectorQuorum
       const { params } = payload;
       const [transactionConfig] = params;
       if (!req.gas) {
-        req.gas = await this.web3Quorum.eth.estimateGas(transactionConfig);
+        req.gas = 22000; // await this.web3Quorum.eth.estimateGas(transactionConfig);
       }
       transactionConfig.from = web3SigningCredential.ethAccount;
       transactionConfig.gas = req.gas;
@@ -884,10 +883,7 @@ export class PluginLedgerConnectorQuorum
       );
     }
 
-    const contract = new this.web3.eth.Contract(
-      args.abi as AbiItem[],
-      args.address,
-    );
+    const contract = new this.web3.eth.Contract(args.abi, args.address);
 
     const isSafeToCall = await this.isSafeToCallContractMethod(
       contract,
