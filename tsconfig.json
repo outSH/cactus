@@ -98,6 +98,9 @@
       "path": "./packages/cactus-test-plugin-ledger-connector-besu/tsconfig.json"
     },
     {
+      "path": "./packages/cactus-test-plugin-ledger-connector-ethereum/tsconfig.json"
+    },
+    {
       "path": "./packages/cactus-test-plugin-ledger-connector-quorum/tsconfig.json"
     },
     {
