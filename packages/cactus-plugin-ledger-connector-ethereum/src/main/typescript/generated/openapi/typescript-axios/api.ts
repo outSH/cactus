@@ -321,10 +321,10 @@ export interface EthereumTransactionConfig {
     'gasPrice'?: string;
     /**
      * 
-     * @type {number}
+     * @type {string}
      * @memberof EthereumTransactionConfig
      */
-    'nonce'?: number;
+    'nonce'?: string;
     /**
      * 
      * @type {string}
@@ -370,28 +370,28 @@ export interface InvokeContractJsonObjectV1Request {
     'contractAddress': string;
     /**
      * 
-     * @type {InvokeContractV1RequestValue}
+     * @type {string}
      * @memberof InvokeContractJsonObjectV1Request
      */
-    'value'?: InvokeContractV1RequestValue;
+    'value'?: string;
     /**
      * 
-     * @type {InvokeContractV1RequestValue}
+     * @type {string}
      * @memberof InvokeContractJsonObjectV1Request
      */
-    'gas'?: InvokeContractV1RequestValue;
+    'gas'?: string;
     /**
      * 
-     * @type {InvokeContractV1RequestValue}
+     * @type {string}
      * @memberof InvokeContractJsonObjectV1Request
      */
-    'gasPrice'?: InvokeContractV1RequestValue;
+    'gasPrice'?: string;
     /**
      * 
-     * @type {number}
+     * @type {string}
      * @memberof InvokeContractJsonObjectV1Request
      */
-    'nonce'?: number;
+    'nonce'?: string;
     /**
      * The amount of milliseconds to wait for a transaction receipt beforegiving up and crashing. Only has any effect if the invocation type is SEND
      * @type {number}
@@ -445,28 +445,28 @@ export interface InvokeContractV1Request {
     'params': Array<any>;
     /**
      * 
-     * @type {InvokeContractV1RequestValue}
+     * @type {string}
      * @memberof InvokeContractV1Request
      */
-    'value'?: InvokeContractV1RequestValue;
+    'value'?: string;
     /**
      * 
-     * @type {InvokeContractV1RequestValue}
+     * @type {string}
      * @memberof InvokeContractV1Request
      */
-    'gas'?: InvokeContractV1RequestValue;
+    'gas'?: string;
     /**
      * 
-     * @type {InvokeContractV1RequestValue}
+     * @type {string}
      * @memberof InvokeContractV1Request
      */
-    'gasPrice'?: InvokeContractV1RequestValue;
+    'gasPrice'?: string;
     /**
      * 
-     * @type {number}
+     * @type {string}
      * @memberof InvokeContractV1Request
      */
-    'nonce'?: number;
+    'nonce'?: string;
     /**
      * The amount of milliseconds to wait for a transaction receipt beforegiving up and crashing. Only has any effect if the invocation type is SEND
      * @type {number}
@@ -481,12 +481,6 @@ export interface InvokeContractV1Request {
     'keychainId': string;
 }
 
-
-/**
- * @type InvokeContractV1RequestValue
- * @export
- */
-export type InvokeContractV1RequestValue = number | string;
 
 /**
  * 
@@ -912,10 +906,10 @@ export interface WatchBlocksV1BlockData {
     'gasUsed': number;
     /**
      * 
-     * @type {InvokeContractV1RequestValue}
+     * @type {WatchBlocksV1BlockDataTimestamp}
      * @memberof WatchBlocksV1BlockData
      */
-    'timestamp': InvokeContractV1RequestValue;
+    'timestamp': WatchBlocksV1BlockDataTimestamp;
     /**
      * 
      * @type {number}
@@ -941,6 +935,12 @@ export interface WatchBlocksV1BlockData {
      */
     'transactions': Array<Web3Transaction>;
 }
+/**
+ * @type WatchBlocksV1BlockDataTimestamp
+ * @export
+ */
+export type WatchBlocksV1BlockDataTimestamp = number | string;
+
 /**
  * 
  * @export

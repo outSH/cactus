@@ -232,7 +232,7 @@
             "type": "string"
           },
           "nonce": {
-            "type": "number"
+            "type": "string"
           },
           "data": {
             "type": "string"
@@ -564,37 +564,16 @@
             "items": {}
           },
           "value": {
-            "oneOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "number"
-              }
-            ]
+            "type": "string"
           },
           "gas": {
-            "oneOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "number"
-              }
-            ]
+            "type": "string"
           },
           "gasPrice": {
-            "oneOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "number"
-              }
-            ]
+            "type": "string"
           },
           "nonce": {
-            "type": "number"
+            "type": "string"
           },
           "timeoutMs": {
             "type": "number",
@@ -651,37 +630,16 @@
             "nullable": false
           },
           "value": {
-            "oneOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "number"
-              }
-            ]
+            "type": "string"
           },
           "gas": {
-            "oneOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "number"
-              }
-            ]
+            "type": "string"
           },
           "gasPrice": {
-            "oneOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "number"
-              }
-            ]
+            "type": "string"
           },
           "nonce": {
-            "type": "number"
+            "type": "string"
           },
           "timeoutMs": {
             "type": "number",

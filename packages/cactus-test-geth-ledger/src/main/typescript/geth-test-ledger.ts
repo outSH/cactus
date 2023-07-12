@@ -37,8 +37,8 @@ export const GETH_TEST_LEDGER_DEFAULT_OPTIONS = Object.freeze({
 
 export const WHALE_ACCOUNT_PRIVATE_KEY =
   "86bbf98cf5e5b1c43d2c8701764897357e0fa24982c0137efabf6dc3a6e7b69e";
-export const WHALE_ACCOUNT_PUBLIC_KEY =
-  "6a2ec8c50ba1a9ce47c52d1cb5b7136ee9d0ccc0";
+export const WHALE_ACCOUNT_ADDRESS =
+  "0x6A2EC8c50BA1a9cE47c52d1cb5B7136Ee9d0cCC0";
 
 export class GethTestLedger {
   public static readonly CLASS_NAME = "GethTestLedger";
@@ -318,7 +318,7 @@ export class GethTestLedger {
 
     const tx = await this.web3.eth.accounts.signTransaction(
       {
-        from: WHALE_ACCOUNT_PUBLIC_KEY,
+        from: WHALE_ACCOUNT_ADDRESS,
         to: targetAccount,
         value: value,
         gas: 1000000,
@@ -356,12 +356,10 @@ export class GethTestLedger {
     // Send TX
     const signedTx = await this.web3.eth.accounts.signTransaction(
       {
-        from: WHALE_ACCOUNT_PUBLIC_KEY,
+        from: WHALE_ACCOUNT_ADDRESS,
         data: contractTx.encodeABI(),
         gas: 8000000, // Max possible gas
-        nonce: await this.web3.eth.getTransactionCount(
-          WHALE_ACCOUNT_PUBLIC_KEY,
-        ),
+        nonce: await this.web3.eth.getTransactionCount(WHALE_ACCOUNT_ADDRESS),
       },
       WHALE_ACCOUNT_PRIVATE_KEY,
     );

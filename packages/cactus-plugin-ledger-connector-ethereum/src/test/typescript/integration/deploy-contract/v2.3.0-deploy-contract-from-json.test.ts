@@ -10,9 +10,10 @@ import {
 
 import { PluginKeychainMemory } from "@hyperledger/cactus-plugin-keychain-memory";
 
-import HelloWorldContractJson from "../../../../solidity/hello-world-contract/HelloWorld.json";
+import HelloWorldContractJson from "../../../solidity/hello-world-contract/HelloWorld.json";
+import HelloWorldWithArgContractJson from "../../../solidity/hello-world-with-arg-contract/HelloWorldWithArg.json";
 
-import { K_CACTUS_ETHEREUM_TOTAL_TX_COUNT } from "../../../../../main/typescript/prometheus-exporter/metrics";
+import { K_CACTUS_ETHEREUM_TOTAL_TX_COUNT } from "../../../../main/typescript/prometheus-exporter/metrics";
 
 import {
   EthContractInvocationType,
@@ -20,14 +21,13 @@ import {
   Web3SigningCredentialCactusKeychainRef,
   Web3SigningCredentialType,
   DefaultApi as EthereumApi,
-} from "../../../../../main/typescript/public-api";
+} from "../../../../main/typescript/public-api";
 
+import { pruneDockerAllIfGithubAction } from "@hyperledger/cactus-test-tooling";
 import {
-  QuorumTestLedger,
-  IQuorumGenesisOptions,
-  IAccount,
-  pruneDockerAllIfGithubAction,
-} from "@hyperledger/cactus-test-tooling";
+  GethTestLedger,
+  WHALE_ACCOUNT_ADDRESS,
+} from "@hyperledger/cactus-test-geth-ledger";
 import { PluginRegistry } from "@hyperledger/cactus-core";
 import express from "express";
 import bodyParser from "body-parser";
@@ -37,13 +37,13 @@ import { Configuration, Constants } from "@hyperledger/cactus-core-api";
 import { Server as SocketIoServer } from "socket.io";
 
 const testCase = "Ethereum Ledger Connector Plugin";
+const BASE_FEE = 0x1ac017b6;
 
 describe(testCase, () => {
-  const logLevel: LogLevelDesc = "INFO";
+  const logLevel: LogLevelDesc = "DEBUG";
   const contractName = "HelloWorld";
   const keychainEntryKey = uuidV4();
-  let firstHighNetWorthAccount: string,
-    testEthAccount: Web3Account,
+  let testEthAccount: Web3Account,
     web3: Web3,
     addressInfo,
     address: string,
@@ -51,7 +51,7 @@ describe(testCase, () => {
     contractAddress: string,
     apiHost,
     apiConfig,
-    ledger: QuorumTestLedger,
+    ledger: GethTestLedger,
     apiClient: EthereumApi,
     connector: PluginLedgerConnectorEthereum,
     rpcApiHttpHost: string,
@@ -70,25 +70,9 @@ describe(testCase, () => {
   });
 
   beforeAll(async () => {
-    const containerImageVersion = "2021-01-08-7a055c3"; // Quorum v2.3.0, Tessera v0.10.0
-    const containerImageName = "hyperledger/cactus-quorum-all-in-one";
-    const ledgerOptions = { containerImageName, containerImageVersion };
-    ledger = new QuorumTestLedger(ledgerOptions);
-    await ledger.start();
-
-    const ethereumGenesisOptions: IQuorumGenesisOptions = await ledger.getGenesisJsObject();
-
-    expect(ethereumGenesisOptions).toBeTruthy();
-    expect(ethereumGenesisOptions.alloc).toBeTruthy();
-
-    const highNetWorthAccounts: string[] = Object.keys(
-      ethereumGenesisOptions.alloc,
-    ).filter((address: string) => {
-      const anAccount: IAccount = ethereumGenesisOptions.alloc[address];
-      const theBalance = parseInt(anAccount.balance, 10);
-      return theBalance > 10e7;
-    });
-    [firstHighNetWorthAccount] = highNetWorthAccounts;
+    //ledger = new GethTestLedger({ emitContainerLogs: true, logLevel });
+    ledger = new GethTestLedger({});
+    await ledger.start(true);
   });
 
   afterAll(async () => {
@@ -102,9 +86,8 @@ describe(testCase, () => {
     const pruning = pruneDockerAllIfGithubAction({ logLevel });
     await expect(pruning).resolves.toBeTruthy();
   });
-  beforeAll(async () => {
-    await ledger.start();
 
+  beforeAll(async () => {
     const listenOptions: IListenOptions = {
       hostname: "0.0.0.0",
       port: 0,
@@ -133,6 +116,10 @@ describe(testCase, () => {
       HelloWorldContractJson.contractName,
       JSON.stringify(HelloWorldContractJson),
     );
+    keychainPlugin.set(
+      HelloWorldWithArgContractJson.contractName,
+      JSON.stringify(HelloWorldWithArgContractJson),
+    );
     connector = new PluginLedgerConnectorEthereum({
       instanceId: uuidV4(),
       rpcApiHttpHost,
@@ -147,15 +134,15 @@ describe(testCase, () => {
     await connector.getOrCreateWebServices();
     await connector.registerWebServices(expressApp, wsApi);
 
-    const initTransferValue = (10e9).toString();
+    const initTransferValue = web3.utils.toWei(5000, "ether");
     await connector.transact({
       web3SigningCredential: {
-        ethAccount: firstHighNetWorthAccount,
+        ethAccount: WHALE_ACCOUNT_ADDRESS,
         secret: "",
         type: Web3SigningCredentialType.GethKeychainPassword,
       },
       transactionConfig: {
-        from: firstHighNetWorthAccount,
+        from: WHALE_ACCOUNT_ADDRESS,
         to: testEthAccount.address,
         value: initTransferValue,
       },
@@ -171,7 +158,7 @@ describe(testCase, () => {
       contractName: HelloWorldContractJson.contractName,
       keychainId: keychainPlugin.getKeychainId(),
       web3SigningCredential: {
-        ethAccount: firstHighNetWorthAccount,
+        ethAccount: WHALE_ACCOUNT_ADDRESS,
         secret: "",
         type: Web3SigningCredentialType.GethKeychainPassword,
       },
@@ -190,11 +177,11 @@ describe(testCase, () => {
       keychainId: keychainPlugin.getKeychainId(),
       params: [],
       web3SigningCredential: {
-        ethAccount: firstHighNetWorthAccount,
+        ethAccount: WHALE_ACCOUNT_ADDRESS,
         secret: "",
         type: Web3SigningCredentialType.GethKeychainPassword,
       },
-      gas: 1000000,
+      gas: "1000000",
     });
     expect(helloMsg).toBeTruthy();
     expect(typeof helloMsg).toBe("string");
@@ -209,11 +196,11 @@ describe(testCase, () => {
       keychainId: keychainPlugin.getKeychainId(),
       params: [newName],
       web3SigningCredential: {
-        ethAccount: firstHighNetWorthAccount,
+        ethAccount: WHALE_ACCOUNT_ADDRESS,
         secret: "",
         type: Web3SigningCredentialType.GethKeychainPassword,
       },
-      nonce: 2,
+      nonce: "2",
     });
     expect(setNameOut).toBeTruthy();
 
@@ -224,13 +211,13 @@ describe(testCase, () => {
         methodName: "setName",
         keychainId: keychainPlugin.getKeychainId(),
         params: [newName],
-        gas: 1000000,
+        gas: "1000000",
         web3SigningCredential: {
-          ethAccount: firstHighNetWorthAccount,
+          ethAccount: WHALE_ACCOUNT_ADDRESS,
           secret: "",
           type: Web3SigningCredentialType.GethKeychainPassword,
         },
-        nonce: 2,
+        nonce: "2",
       });
       fail("Expected getContractInfoKeychain call to fail but it succeeded.");
     } catch (error) {
@@ -244,7 +231,7 @@ describe(testCase, () => {
       keychainId: keychainPlugin.getKeychainId(),
       params: [],
       web3SigningCredential: {
-        ethAccount: firstHighNetWorthAccount,
+        ethAccount: WHALE_ACCOUNT_ADDRESS,
         secret: "",
         type: Web3SigningCredentialType.GethKeychainPassword,
       },
@@ -259,7 +246,7 @@ describe(testCase, () => {
         keychainId: keychainPlugin.getKeychainId(),
         params: [],
         web3SigningCredential: {
-          ethAccount: firstHighNetWorthAccount,
+          ethAccount: WHALE_ACCOUNT_ADDRESS,
           secret: "",
           type: Web3SigningCredentialType.GethKeychainPassword,
         },
@@ -272,12 +259,15 @@ describe(testCase, () => {
     const testEthAccount2 = web3.eth.accounts.create();
 
     const value = 10e6;
+
     const { rawTransaction } = await web3.eth.accounts.signTransaction(
       {
         from: testEthAccount.address,
         to: testEthAccount2.address,
         value,
-        gas: 1000000,
+        maxPriorityFeePerGas: 0,
+        maxFeePerGas: BASE_FEE,
+        gasLimit: 21000,
       },
       testEthAccount.privateKey,
     );
@@ -309,7 +299,7 @@ describe(testCase, () => {
         secret: testEthAccount.privateKey,
         type: Web3SigningCredentialType.PrivateKeyHex,
       },
-      nonce: 1,
+      nonce: "1",
     });
     expect(setNameOut).toBeTruthy();
 
@@ -320,13 +310,13 @@ describe(testCase, () => {
         methodName: "setName",
         keychainId: keychainPlugin.getKeychainId(),
         params: [newName],
-        gas: 1000000,
+        gas: "1000000",
         web3SigningCredential: {
           ethAccount: testEthAccount.address,
           secret: testEthAccount.privateKey,
           type: Web3SigningCredentialType.PrivateKeyHex,
         },
-        nonce: 1,
+        nonce: "1",
       });
       fail("Expected getContractInfoKeychain call to fail but it succeeded.");
     } catch (error) {
@@ -339,7 +329,7 @@ describe(testCase, () => {
       methodName: "getName",
       keychainId: keychainPlugin.getKeychainId(),
       params: [],
-      gas: 1000000,
+      gas: "1000000",
       web3SigningCredential: {
         ethAccount: testEthAccount.address,
         secret: testEthAccount.privateKey,
@@ -354,7 +344,7 @@ describe(testCase, () => {
       methodName: "getName",
       keychainId: keychainPlugin.getKeychainId(),
       params: [],
-      gas: 1000000,
+      gas: "1000000",
       web3SigningCredential: {
         ethAccount: testEthAccount.address,
         secret: testEthAccount.privateKey,
@@ -380,9 +370,9 @@ describe(testCase, () => {
       methodName: "setName",
       keychainId: keychainPlugin.getKeychainId(),
       params: [newName],
-      gas: 1000000,
+      gas: "1000000",
       web3SigningCredential,
-      nonce: 3,
+      nonce: "3",
     });
     expect(setNameOut).toBeTruthy();
 
@@ -393,13 +383,13 @@ describe(testCase, () => {
         methodName: "setName",
         keychainId: keychainPlugin.getKeychainId(),
         params: [newName],
-        gas: 1000000,
+        gas: "1000000",
         web3SigningCredential: {
-          ethAccount: firstHighNetWorthAccount,
+          ethAccount: WHALE_ACCOUNT_ADDRESS,
           secret: "",
           type: Web3SigningCredentialType.GethKeychainPassword,
         },
-        nonce: 3,
+        nonce: "3",
       });
       fail("Expected getContractInfoKeychain call to fail but it succeeded.");
     } catch (error) {
@@ -412,7 +402,7 @@ describe(testCase, () => {
       methodName: "getName",
       keychainId: keychainPlugin.getKeychainId(),
       params: [],
-      gas: 1000000,
+      gas: "1000000",
       web3SigningCredential,
     });
     expect(getNameOut).toContain(newName);
@@ -423,7 +413,7 @@ describe(testCase, () => {
       methodName: "getName",
       keychainId: keychainPlugin.getKeychainId(),
       params: [],
-      gas: 1000000,
+      gas: "1000000",
       web3SigningCredential,
     });
     expect(getNameOut2).toBeTruthy();
@@ -450,16 +440,16 @@ describe(testCase, () => {
 
   test("deploys contract via .json file with constructorArgs", async () => {
     const deployOut = await connector.deployContract({
-      contractName: HelloWorldContractJson.contractName,
-      contractJSON: HelloWorldContractJson,
+      contractName: HelloWorldWithArgContractJson.contractName,
+      contractJSON: HelloWorldWithArgContractJson,
       keychainId: keychainPlugin.getKeychainId(),
       web3SigningCredential: {
-        ethAccount: firstHighNetWorthAccount,
+        ethAccount: WHALE_ACCOUNT_ADDRESS,
         secret: "",
         type: Web3SigningCredentialType.GethKeychainPassword,
       },
       gas: 1000000,
-      constructorArgs: ["Test Arg"],
+      constructorArgs: ["Johnny"],
     });
     expect(deployOut).toBeTruthy();
     expect(deployOut.transactionReceipt).toBeTruthy();

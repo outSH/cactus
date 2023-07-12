@@ -66,6 +66,8 @@ import { isWeb3SigningCredentialNone } from "./model-type-guards";
 import { PrometheusExporter } from "./prometheus-exporter/prometheus-exporter";
 import { RuntimeError } from "run-time-error";
 
+const DEFAULT_BASE_FEE = 0x1ac017b6;
+
 type ReplaceNumbersWithString<T> = {
   [K in keyof T]: T[K] extends Numbers | Bytes ? string : T[K];
 };
@@ -95,6 +97,10 @@ function stringifyObjectFields<T extends object>(
   }
 
   return result as ReplaceNumbersWithString<T>;
+}
+
+function receiptStatusToBool(status: Numbers): boolean {
+  return status.toString() === "1";
 }
 
 export interface IPluginLedgerConnectorEthereumOptions
@@ -420,6 +426,15 @@ export class PluginLedgerConnectorEthereum
     return this.invokeContract(req);
   }
 
+  public async estimateMaxFeePerGas(
+    priorityFee: number | string = 0,
+  ): Promise<string> {
+    const pendingBlock = await this.web3.eth.getBlock("pending");
+    const baseFee = pendingBlock.baseFeePerGas ?? BigInt(DEFAULT_BASE_FEE);
+    const estimate = BigInt(2) * baseFee + BigInt(priorityFee);
+    return estimate.toString();
+  }
+
   public async invokeContract(
     req: InvokeContractJsonObjectV1Request,
   ): Promise<InvokeContractV1Response> {
@@ -438,7 +453,7 @@ export class PluginLedgerConnectorEthereum
       throw new Error(`${fnTag} Contract ABI is necessary`);
     }
 
-    const contractInstance: InstanceType<typeof Contract> = new this.web3.eth.Contract(
+    const contractInstance: Contract<any> = new this.web3.eth.Contract(
       abi,
       contractAddress,
     );
@@ -471,25 +486,29 @@ export class PluginLedgerConnectorEthereum
       const web3SigningCredential = req.web3SigningCredential as
         | Web3SigningCredentialPrivateKeyHex
         | Web3SigningCredentialCactusKeychainRef;
-      const payload = (method.send as any).request();
-      const { params } = payload;
-      const [transactionConfig] = params;
+
       if (!req.gas) {
-        const estimatedGas = await this.web3.eth.estimateGas(transactionConfig);
+        const estimatedGas = await method.estimateGas();
         req.gas = estimatedGas.toString();
       }
-      transactionConfig.from = web3SigningCredential.ethAccount;
-      transactionConfig.gas = req.gas;
-      transactionConfig.gasPrice = req.gasPrice;
-      transactionConfig.value = req.value;
-      transactionConfig.nonce = req.nonce;
 
-      const txReq: RunTransactionRequest = {
+      const maxFeePerGas = await this.estimateMaxFeePerGas();
+      const transactionConfig = {
+        from: web3SigningCredential.ethAccount,
+        to: contractAddress,
+        maxPriorityFeePerGas: req.gasPrice ?? 0,
+        maxFeePerGas,
+        gasLimit: req.gas,
+        value: req.value,
+        nonce: req.nonce,
+        data: method.encodeABI(),
+      };
+
+      const out = await this.transact({
         transactionConfig,
         web3SigningCredential,
         timeoutMs: req.timeoutMs || 60000,
-      };
-      const out = await this.transact(txReq);
+      });
       const success = out.transactionReceipt.status;
       const data = { success, out };
       return data;
@@ -504,35 +523,43 @@ export class PluginLedgerConnectorEthereum
     req: RunTransactionRequest,
   ): Promise<RunTransactionResponse> {
     const fnTag = `${this.className}#transact()`;
-
-    switch (req.web3SigningCredential.type) {
-      case Web3SigningCredentialType.CactusKeychainRef: {
-        return this.transactCactusKeychainRef(req);
-      }
-      case Web3SigningCredentialType.GethKeychainPassword: {
-        return this.transactGethKeychain(req);
-      }
-      case Web3SigningCredentialType.PrivateKeyHex: {
-        return this.transactPrivateKey(req);
-      }
-      case Web3SigningCredentialType.None: {
-        if (req.transactionConfig.rawTransaction) {
-          return this.transactSigned(req.transactionConfig.rawTransaction);
-        } else {
+    try {
+      switch (req.web3SigningCredential.type) {
+        case Web3SigningCredentialType.CactusKeychainRef: {
+          return await this.transactCactusKeychainRef(req);
+        }
+        case Web3SigningCredentialType.GethKeychainPassword: {
+          return await this.transactGethKeychain(req);
+        }
+        case Web3SigningCredentialType.PrivateKeyHex: {
+          return await this.transactPrivateKey(req);
+        }
+        case Web3SigningCredentialType.None: {
+          if (req.transactionConfig.rawTransaction) {
+            return await this.transactSigned(
+              req.transactionConfig.rawTransaction,
+            );
+          } else {
+            throw new Error(
+              `${fnTag} Expected pre-signed raw transaction ` +
+                ` since signing credential is specified as` +
+                `Web3SigningCredentialType.NONE`,
+            );
+          }
+        }
+        default: {
           throw new Error(
-            `${fnTag} Expected pre-signed raw transaction ` +
-              ` since signing credential is specified as` +
-              `Web3SigningCredentialType.NONE`,
+            `${fnTag} Unrecognized Web3SigningCredentialType: ` +
+              `${req.web3SigningCredential.type} Supported ones are: ` +
+              `${Object.values(Web3SigningCredentialType).join(";")}`,
           );
         }
       }
-      default: {
-        throw new Error(
-          `${fnTag} Unrecognized Web3SigningCredentialType: ` +
-            `${req.web3SigningCredential.type} Supported ones are: ` +
-            `${Object.values(Web3SigningCredentialType).join(";")}`,
-        );
+    } catch (error) {
+      if ("toJSON" in error) {
+        this.log.warn("transact() error:", error.toJSON());
       }
+      throw error;
     }
   }
 
@@ -540,13 +567,12 @@ export class PluginLedgerConnectorEthereum
     rawTransaction: string,
   ): Promise<RunTransactionResponse> {
     const receipt = await this.web3.eth.sendSignedTransaction(rawTransaction);
-    this.log.error("CHECK RECEIPT:", JSON.stringify(receipt));
 
     this.prometheusExporter.addCurrentTransaction();
     return {
       transactionReceipt: {
         ...stringifyObjectFields(receipt),
-        status: true, // TODO - from status?
+        status: receiptStatusToBool(receipt.status),
       },
     };
   }
@@ -569,7 +595,7 @@ export class PluginLedgerConnectorEthereum
       return {
         transactionReceipt: {
           ...stringifyObjectFields(transactionReceipt),
-          status: true, // TODO - from status?
+          status: receiptStatusToBool(transactionReceipt.status),
         },
       };
     } catch (ex) {
@@ -653,13 +679,22 @@ export class PluginLedgerConnectorEthereum
     timeoutMs = 60000,
   ): Promise<TransactionReceipt> {
     const fnTag = `${this.className}#pollForTxReceipt()`;
-    let txReceipt: TransactionReceipt;
+    let txReceipt: TransactionReceipt | undefined = undefined;
     let timedOut = false;
     let tries = 0;
     const startedAt = new Date();
 
     do {
-      txReceipt = await this.web3.eth.getTransactionReceipt(txHash);
+      try {
+        txReceipt = await this.web3.eth.getTransactionReceipt(txHash);
+      } catch (error) {
+        this.log.debug(
+          "pollForTxReceipt getTransactionReceipt failed - (retry)",
+        );
+      }
+
+      // Sleep for 1 second
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       tries++;
       timedOut = Date.now() >= startedAt.getTime() + timeoutMs;
     } while (!timedOut && !txReceipt);
