@@ -9,7 +9,7 @@
     "tsBuildInfoFile": "../../.build-cache/cactus-plugin-ledger-connector-ethereum.tsbuildinfo"
   },
   "include": [
-    "./src",
+    "./src/main",
     "src/**/*.json"
   ],
   "references": [

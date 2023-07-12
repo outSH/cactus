@@ -1,5 +1,5 @@
 import Web3 from "web3";
-import { Account } from "web3-core";
+import { Web3Account } from "web3-eth-accounts";
 import { v4 as uuidV4 } from "uuid";
 import "jest-extended";
 import {
@@ -59,7 +59,7 @@ describe(testCase, () => {
     apiConfig,
     apiClient: EthereumApi,
     web3: Web3,
-    testEthAccount: Account,
+    testEthAccount: Web3Account,
     keychainEntryKey: string,
     keychainEntryValue: string,
     keychainPlugin: PluginKeychainMemory,
@@ -92,7 +92,7 @@ describe(testCase, () => {
     expect(ethereumGenesisOptions.alloc).toBeTruthy();
 
     web3 = new Web3(rpcApiHttpHost);
-    testEthAccount = web3.eth.accounts.create(uuidV4());
+    testEthAccount = web3.eth.accounts.create();
 
     keychainEntryKey = uuidV4();
     keychainEntryValue = testEthAccount.privateKey;
@@ -108,7 +108,7 @@ describe(testCase, () => {
     connector = new PluginLedgerConnectorEthereum({
       instanceId: uuidV4(),
       rpcApiHttpHost,
-      logLevel,
+      logLevel: "DEBUG",
       pluginRegistry: new PluginRegistry({ plugins: [keychainPlugin] }),
     });
     const listenOptions: IListenOptions = {
@@ -122,7 +122,8 @@ describe(testCase, () => {
     apiConfig = new Configuration({ basePath: apiHost });
     apiClient = new EthereumApi(apiConfig);
   });
-  test("Bootsrap test ETH account with funds from genesis", async () => {
+
+  test.only("Bootsrap test ETH account with funds from genesis", async () => {
     const highNetWorthAccounts: string[] = Object.keys(
       ethereumGenesisOptions.alloc,
     ).filter((address: string) => {
@@ -139,7 +140,8 @@ describe(testCase, () => {
     // private key we want to use for one of our tests
     await connector.registerWebServices(expressApp, wsApi);
 
-    await connector.transact({
+    const initTransferValue = (10e9).toString();
+    const res = await connector.transact({
       web3SigningCredential: {
         ethAccount: firstHighNetWorthAccount,
         secret: "",
@@ -148,13 +150,13 @@ describe(testCase, () => {
       transactionConfig: {
         from: firstHighNetWorthAccount,
         to: testEthAccount.address,
-        value: 10e9,
+        value: initTransferValue,
       },
     });
-
+    console.error("RES:", JSON.stringify(res));
     const balance = await web3.eth.getBalance(testEthAccount.address);
     expect(balance).toBeTruthy();
-    expect(parseInt(balance, 10)).toBe(10e9);
+    expect(balance.toString()).toBe(initTransferValue);
   });
 
   test("deploys contract via .json file", async () => {
@@ -263,13 +265,14 @@ describe(testCase, () => {
   });
 
   test("invoke Web3SigningCredentialType.NONE", async () => {
-    const testEthAccount2 = web3.eth.accounts.create(uuidV4());
+    const testEthAccount2 = web3.eth.accounts.create();
 
+    const value = 10e6;
     const { rawTransaction } = await web3.eth.accounts.signTransaction(
       {
         from: testEthAccount.address,
         to: testEthAccount2.address,
-        value: 10e6,
+        value,
         gas: 1000000,
       },
       testEthAccount.privateKey,
@@ -286,7 +289,7 @@ describe(testCase, () => {
 
     const balance2 = await web3.eth.getBalance(testEthAccount2.address);
     expect(balance2).toBeTruthy();
-    expect(parseInt(balance2, 10)).toEqual(10e6);
+    expect(balance2.toString()).toEqual(value.toString());
   });
 
   test("invoke Web3SigningCredentialType.PrivateKeyHex", async () => {

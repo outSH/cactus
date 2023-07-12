@@ -3,8 +3,9 @@
 
 ## Usage
 
-```
-// TODO: DEMONSTRATE API
+``` sh
+# In root project dir
+npx jest cactus-test-plugin-ledger-connector-ethereum
 ```
 
 ## FAQ

@@ -53,7 +53,7 @@ describe(testCase, () => {
     const [firstHighNetWorthAccount] = highNetWorthAccounts;
 
     const web3 = new Web3(rpcApiHttpHost);
-    const testEthAccount = web3.eth.accounts.create(uuidV4());
+    const testEthAccount = web3.eth.accounts.create();
 
     const keychainEntryKey = uuidV4();
     const keychainEntryValue = testEthAccount.privateKey;
@@ -81,6 +81,7 @@ describe(testCase, () => {
       },
     );
 
+    const initTransferValue = (10e9).toString();
     await connector.transact({
       web3SigningCredential: {
         ethAccount: firstHighNetWorthAccount,
@@ -90,13 +91,13 @@ describe(testCase, () => {
       transactionConfig: {
         from: firstHighNetWorthAccount,
         to: testEthAccount.address,
-        value: 10e9,
+        value: initTransferValue,
       },
     });
 
     const balance = await web3.eth.getBalance(testEthAccount.address);
     expect(balance).toBeTruthy();
-    expect(parseInt(balance, 10)).toEqual(10e9);
+    expect(balance.toString()).toEqual(initTransferValue);
     let contractAddress: string;
 
     {
@@ -202,12 +203,13 @@ describe(testCase, () => {
     }
 
     {
-      const testEthAccount2 = web3.eth.accounts.create(uuidV4());
+      const testEthAccount2 = web3.eth.accounts.create();
+      const value = 10e6;
       const { rawTransaction } = await web3.eth.accounts.signTransaction(
         {
           from: testEthAccount.address,
           to: testEthAccount2.address,
-          value: 10e6,
+          value,
           gas: 1000000,
         },
         testEthAccount.privateKey,
@@ -224,7 +226,7 @@ describe(testCase, () => {
 
       const balance2 = await web3.eth.getBalance(testEthAccount2.address);
       expect(balance2).toBeTruthy();
-      expect(parseInt(balance2, 10)).toEqual(10e6);
+      expect(balance2.toString()).toEqual(value.toString());
     }
 
     {

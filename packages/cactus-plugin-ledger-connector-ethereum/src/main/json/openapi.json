@@ -217,61 +217,25 @@
             "nullable": false
           },
           "from": {
-            "oneOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "number"
-              }
-            ]
+            "type": "string"
           },
           "to": {
-            "oneOf": [
-              {
-                "type": "string"
-              }
-            ]
+            "type": "string"
           },
           "value": {
-            "oneOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "number"
-              }
-            ]
+            "type": "string"
           },
           "gas": {
-            "oneOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "number"
-              }
-            ]
+            "type": "string"
           },
           "gasPrice": {
-            "oneOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "number"
-              }
-            ]
+            "type": "string"
           },
           "nonce": {
             "type": "number"
           },
           "data": {
-            "oneOf": [
-              {
-                "type": "string"
-              }
-            ]
+            "type": "string"
           }
         }
       },
@@ -300,7 +264,7 @@
             "pattern": "^0x([A-Fa-f0-9]{64})$"
           },
           "transactionIndex": {
-            "type": "number",
+            "type": "string",
             "nullable": false
           },
           "blockHash": {
@@ -310,11 +274,11 @@
             "pattern": "^0x([A-Fa-f0-9]{64})$"
           },
           "blockNumber": {
-            "type": "number",
+            "type": "string",
             "nullable": false
           },
           "gasUsed": {
-            "type": "number",
+            "type": "string",
             "nullable": false
           },
           "contractAddress": {
@@ -793,9 +757,7 @@
         "additionalProperties": false,
         "properties": {
           "abi": {
-            "description": "The application binary interface of the solidity contract",
-            "type": "array",
-            "items": {}
+            "description": "The application binary interface of the solidity contract"
           },
           "address": {
             "description": "Deployed solidity contract address",
@@ -872,44 +834,26 @@
       "Web3BlockHeader": {
         "type": "object",
         "required": [
-          "number",
-          "hash",
-          "parentHash",
-          "nonce",
           "sha3Uncles",
-          "logsBloom",
           "transactionRoot",
-          "stateRoot",
           "receiptRoot",
-          "miner",
-          "extraData",
           "gasLimit",
-          "gasUsed",
-          "timestamp"
+          "gasUsed"
         ],
         "properties": {
           "number": {
-            "type": "number"
-          },
-          "hash": {
             "type": "string"
           },
           "parentHash": {
             "type": "string"
           },
-          "nonce": {
-            "type": "string"
-          },
           "sha3Uncles": {
-            "type": "string"
-          },
-          "logsBloom": {
-            "type": "string"
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           "transactionsRoot": {
-            "type": "string"
-          },
-          "stateRoot": {
             "type": "string"
           },
           "receiptsRoot": {
@@ -924,24 +868,14 @@
           "miner": {
             "type": "string"
           },
-          "extraData": {
+          "gasLimit": {
             "type": "string"
           },
-          "gasLimit": {
-            "type": "integer"
-          },
           "gasUsed": {
-            "type": "integer"
+            "type": "string"
           },
           "timestamp": {
-            "oneOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "number"
-              }
-            ]
+            "type": "string"
           }
         }
       },
@@ -972,8 +906,7 @@
             "nullable": true
           },
           "blockNumber": {
-            "type": "number",
-            "nullable": true
+            "type": "string"
           },
           "transactionIndex": {
             "type": "number",
