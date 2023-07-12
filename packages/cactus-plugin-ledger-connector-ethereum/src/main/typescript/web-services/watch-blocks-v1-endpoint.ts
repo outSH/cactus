@@ -11,13 +11,44 @@ import {
   WatchBlocksV1BlockData,
 } from "../generated/openapi/typescript-axios";
 import { Socket as SocketIoSocket } from "socket.io";
-import Web3 from "web3";
+import Web3, { Bytes, Numbers } from "web3";
 
 export interface IWatchBlocksV1EndpointConfiguration {
   logLevel?: LogLevelDesc;
   socket: SocketIoSocket;
   web3: Web3;
   options?: WatchBlocksV1Options;
+}
+
+type ReplaceNumbersWithString<T> = {
+  [K in keyof T]: T[K] extends Numbers | Bytes | undefined ? string : T[K];
+};
+
+/**
+ * 1D only
+ * does not convert arrays, object, etc..
+ * every fields with toString will be converted. types only for Numbers and Bytes
+ * @param input
+ * @returns
+ */
+function stringifyObjectFields<T extends object>(
+  input: T,
+): ReplaceNumbersWithString<T> {
+  const result: Record<string, unknown> = {};
+
+  for (const key in input) {
+    if (Object.prototype.hasOwnProperty.call(input, key)) {
+      const value = input[key] as any;
+
+      if (typeof value["toString"] === "function") {
+        result[key] = value.toString();
+      } else {
+        result[key] = value;
+      }
+    }
+  }
+
+  return result as ReplaceNumbersWithString<T>;
 }
 
 export class WatchBlocksV1Endpoint {
@@ -54,50 +85,44 @@ export class WatchBlocksV1Endpoint {
     const { socket, log, web3, isGetBlockData } = this;
     log.debug(`${WatchBlocksV1.Subscribe} => ${socket.id}`);
 
-    const sub = web3.eth.subscribe(
-      "newBlockHeaders",
-      async (ex, blockHeader) => {
-        log.debug("newBlockHeaders: Error=%o BlockHeader=%o", ex, blockHeader);
+    const newBlocksSubscription = await web3.eth.subscribe("newBlockHeaders");
 
-        if (ex) {
-          socket.emit(WatchBlocksV1.Error, ex.message);
-          sub.unsubscribe();
-        } else if (blockHeader) {
-          let next: WatchBlocksV1Progress;
+    newBlocksSubscription.on("data", async (blockHeader) => {
+      log.debug("newBlockHeaders: BlockHeader=%o", blockHeader);
+      let next: WatchBlocksV1Progress;
 
-          if (isGetBlockData) {
-            const web3BlockData = await web3.eth.getBlock(
-              blockHeader.hash,
-              true,
-            );
+      if (isGetBlockData) {
+        const web3BlockData = await web3.eth.getBlock(blockHeader.number, true);
 
-            next = {
-              // difficulty and totalDifficulty returned from the ledger are string, forcing typecast
-              blockData: (web3BlockData as unknown) as WatchBlocksV1BlockData,
-            };
-          } else {
-            next = { blockHeader };
-          }
+        next = {
+          // difficulty and totalDifficulty returned from the ledger are string, forcing typecast
+          blockData: (web3BlockData as unknown) as WatchBlocksV1BlockData,
+        };
+      } else {
+        next = { blockHeader: stringifyObjectFields(blockHeader) };
+      }
 
-          socket.emit(WatchBlocksV1.Next, next);
-        }
-      },
-    );
+      socket.emit(WatchBlocksV1.Next, next);
+    });
+
+    newBlocksSubscription.on("error", (error) => {
+      console.log("Error when subscribing to New block header: ", error);
+      socket.emit(WatchBlocksV1.Error, error.message);
+      newBlocksSubscription.unsubscribe();
+    });
 
     log.debug("Subscribing to Web3 new block headers event...");
 
     socket.on("disconnect", async (reason: string) => {
       log.debug("WebSocket:disconnect reason=%o", reason);
-      sub.unsubscribe((ex: Error, success: boolean) => {
-        log.debug("Web3 unsubscribe success=%o, ex=%", success, ex);
-      });
+      await newBlocksSubscription.unsubscribe();
+      log.debug("Web3 unsubscribe done.");
     });
 
-    socket.on(WatchBlocksV1.Unsubscribe, () => {
+    socket.on(WatchBlocksV1.Unsubscribe, async () => {
       log.debug(`${WatchBlocksV1.Unsubscribe}: unsubscribing Web3...`);
-      sub.unsubscribe((ex: Error, success: boolean) => {
-        log.debug("Web3 unsubscribe error=%o, success=%", ex, success);
-      });
+      await newBlocksSubscription.unsubscribe();
+      log.debug("Web3 unsubscribe done.");
     });
   }
 }

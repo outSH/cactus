@@ -4,11 +4,8 @@ import type {
 } from "socket.io";
 
 import { Express } from "express";
-import Web3 from "web3";
-import { AbiItem } from "web3-utils";
-import { Contract } from "web3-eth-contract";
-import { ContractSendMethod } from "web3-eth-contract";
-import { TransactionReceipt } from "web3-eth";
+import Web3, { Bytes, ContractAbi, Numbers, TransactionReceipt } from "web3";
+import { Contract, PayableMethodObject } from "web3-eth-contract";
 
 import OAS from "../json/openapi.json";
 
@@ -68,6 +65,37 @@ import { InvokeRawWeb3EthContractEndpoint } from "./web-services/invoke-raw-web3
 import { isWeb3SigningCredentialNone } from "./model-type-guards";
 import { PrometheusExporter } from "./prometheus-exporter/prometheus-exporter";
 import { RuntimeError } from "run-time-error";
+
+type ReplaceNumbersWithString<T> = {
+  [K in keyof T]: T[K] extends Numbers | Bytes ? string : T[K];
+};
+
+/**
+ * 1D only
+ * does not convert arrays, object, etc..
+ * every fields with toString will be converted. types only for Numbers and Bytes
+ * @param input
+ * @returns
+ */
+function stringifyObjectFields<T extends object>(
+  input: T,
+): ReplaceNumbersWithString<T> {
+  const result: Record<string, unknown> = {};
+
+  for (const key in input) {
+    if (Object.prototype.hasOwnProperty.call(input, key)) {
+      const value = input[key] as any;
+
+      if (typeof value["toString"] === "function") {
+        result[key] = value.toString();
+      } else {
+        result[key] = value;
+      }
+    }
+  }
+
+  return result as ReplaceNumbersWithString<T>;
+}
 
 export interface IPluginLedgerConnectorEthereumOptions
   extends ICactusPluginOptions {
@@ -351,7 +379,7 @@ export class PluginLedgerConnectorEthereum
     const contractJSON = JSON.parse(contractStr);
 
     // if not exists a contract deployed, we deploy it
-    const networkId = await this.web3.eth.net.getId();
+    const networkId = (await this.web3.eth.net.getId()).toString();
     if (
       !contractJSON.networks ||
       !contractJSON.networks[networkId] ||
@@ -425,13 +453,15 @@ export class PluginLedgerConnectorEthereum
       );
     }
 
-    const methodRef = contractInstance.methods[req.methodName];
+    const methodRef = contractInstance.methods[req.methodName] as (
+      ...args: unknown[]
+    ) => PayableMethodObject;
     Checks.truthy(methodRef, `${fnTag} YourContract.${req.methodName}`);
 
-    const method: ContractSendMethod = methodRef(...req.params);
+    const method = methodRef(...req.params);
     if (req.invocationType === EthContractInvocationType.Call) {
       contractInstance.methods[req.methodName];
-      const callOutput = await (method as any).call();
+      const callOutput = await method.call();
       const success = true;
       return { success, callOutput };
     } else if (req.invocationType === EthContractInvocationType.Send) {
@@ -445,7 +475,8 @@ export class PluginLedgerConnectorEthereum
       const { params } = payload;
       const [transactionConfig] = params;
       if (!req.gas) {
-        req.gas = await this.web3.eth.estimateGas(transactionConfig);
+        const estimatedGas = await this.web3.eth.estimateGas(transactionConfig);
+        req.gas = estimatedGas.toString();
       }
       transactionConfig.from = web3SigningCredential.ethAccount;
       transactionConfig.gas = req.gas;
@@ -508,33 +539,39 @@ export class PluginLedgerConnectorEthereum
   public async transactSigned(
     rawTransaction: string,
   ): Promise<RunTransactionResponse> {
-    const fnTag = `${this.className}#transactSigned()`;
-
     const receipt = await this.web3.eth.sendSignedTransaction(rawTransaction);
+    this.log.error("CHECK RECEIPT:", JSON.stringify(receipt));
 
-    if (receipt instanceof Error) {
-      this.log.debug(`${fnTag} Web3 sendSignedTransaction failed`, receipt);
-      throw receipt;
-    } else {
-      this.prometheusExporter.addCurrentTransaction();
-      return { transactionReceipt: receipt };
-    }
+    this.prometheusExporter.addCurrentTransaction();
+    return {
+      transactionReceipt: {
+        ...stringifyObjectFields(receipt),
+        status: true, // TODO - from status?
+      },
+    };
   }
 
   public async transactGethKeychain(
     txIn: RunTransactionRequest,
   ): Promise<RunTransactionResponse> {
     const fnTag = `${this.className}#transactGethKeychain()`;
-    const { sendTransaction } = this.web3.eth.personal;
     const { transactionConfig, web3SigningCredential } = txIn;
     const {
       secret,
     } = web3SigningCredential as Web3SigningCredentialGethKeychainPassword;
 
     try {
-      const txHash = await sendTransaction(transactionConfig, secret);
+      const txHash = await this.web3.eth.personal.sendTransaction(
+        transactionConfig,
+        secret,
+      );
       const transactionReceipt = await this.pollForTxReceipt(txHash);
-      return { transactionReceipt };
+      return {
+        transactionReceipt: {
+          ...stringifyObjectFields(transactionReceipt),
+          status: true, // TODO - from status?
+        },
+      };
     } catch (ex) {
       throw new Error(
         `${fnTag} Failed to invoke web3.eth.personal.sendTransaction(). ` +
@@ -593,9 +630,8 @@ export class PluginLedgerConnectorEthereum
       this.log.debug(
         `${fnTag} Gas not specified in the transaction values. Using the estimate from web3`,
       );
-      transactionConfig.gas = await this.web3.eth.estimateGas(
-        transactionConfig,
-      );
+      const estimatedGas = await this.web3.eth.estimateGas(transactionConfig);
+      transactionConfig.gas = estimatedGas.toString();
       this.log.debug(
         `${fnTag} Gas estimated from web3 is: `,
         transactionConfig.gas,
@@ -617,7 +653,7 @@ export class PluginLedgerConnectorEthereum
     timeoutMs = 60000,
   ): Promise<TransactionReceipt> {
     const fnTag = `${this.className}#pollForTxReceipt()`;
-    let txReceipt;
+    let txReceipt: TransactionReceipt;
     let timedOut = false;
     let tries = 0;
     const startedAt = new Date();
@@ -708,7 +744,7 @@ export class PluginLedgerConnectorEthereum
       receipt.transactionReceipt.contractAddress &&
       receipt.transactionReceipt.contractAddress != null
     ) {
-      const networkId = await this.web3.eth.net.getId();
+      const networkId = (await this.web3.eth.net.getId()).toString();
       const address = { address: receipt.transactionReceipt.contractAddress };
       const network = { [networkId]: address };
       contractJSON.networks = network;
@@ -781,7 +817,7 @@ export class PluginLedgerConnectorEthereum
     }
 
     const contract = new this.web3.eth.Contract(
-      args.abi as AbiItem[],
+      args.abi as ContractAbi,
       args.address,
     );
 
@@ -795,8 +831,11 @@ export class PluginLedgerConnectorEthereum
       );
     }
 
-    return contract.methods[args.contractMethod](...contractMethodArgs)[
-      args.invocationType
-    ](args.invocationParams);
+    const methodRef = contract.methods[args.contractMethod] as (
+      ...args: unknown[]
+    ) => any;
+    return methodRef(...contractMethodArgs)[args.invocationType](
+      args.invocationParams,
+    );
   }
 }

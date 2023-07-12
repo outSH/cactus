@@ -291,34 +291,34 @@ export interface EthereumTransactionConfig {
     'rawTransaction'?: string;
     /**
      * 
-     * @type {EthereumTransactionConfigFrom}
+     * @type {string}
      * @memberof EthereumTransactionConfig
      */
-    'from'?: EthereumTransactionConfigFrom;
+    'from'?: string;
     /**
      * 
-     * @type {EthereumTransactionConfigTo}
+     * @type {string}
      * @memberof EthereumTransactionConfig
      */
-    'to'?: EthereumTransactionConfigTo;
+    'to'?: string;
     /**
      * 
-     * @type {EthereumTransactionConfigFrom}
+     * @type {string}
      * @memberof EthereumTransactionConfig
      */
-    'value'?: EthereumTransactionConfigFrom;
+    'value'?: string;
     /**
      * 
-     * @type {EthereumTransactionConfigFrom}
+     * @type {string}
      * @memberof EthereumTransactionConfig
      */
-    'gas'?: EthereumTransactionConfigFrom;
+    'gas'?: string;
     /**
      * 
-     * @type {EthereumTransactionConfigFrom}
+     * @type {string}
      * @memberof EthereumTransactionConfig
      */
-    'gasPrice'?: EthereumTransactionConfigFrom;
+    'gasPrice'?: string;
     /**
      * 
      * @type {number}
@@ -327,23 +327,11 @@ export interface EthereumTransactionConfig {
     'nonce'?: number;
     /**
      * 
-     * @type {EthereumTransactionConfigTo}
+     * @type {string}
      * @memberof EthereumTransactionConfig
      */
-    'data'?: EthereumTransactionConfigTo;
+    'data'?: string;
 }
-/**
- * @type EthereumTransactionConfigFrom
- * @export
- */
-export type EthereumTransactionConfigFrom = number | string;
-
-/**
- * @type EthereumTransactionConfigTo
- * @export
- */
-export type EthereumTransactionConfigTo = string;
-
 /**
  * 
  * @export
@@ -382,22 +370,22 @@ export interface InvokeContractJsonObjectV1Request {
     'contractAddress': string;
     /**
      * 
-     * @type {EthereumTransactionConfigFrom}
+     * @type {InvokeContractV1RequestValue}
      * @memberof InvokeContractJsonObjectV1Request
      */
-    'value'?: EthereumTransactionConfigFrom;
+    'value'?: InvokeContractV1RequestValue;
     /**
      * 
-     * @type {EthereumTransactionConfigFrom}
+     * @type {InvokeContractV1RequestValue}
      * @memberof InvokeContractJsonObjectV1Request
      */
-    'gas'?: EthereumTransactionConfigFrom;
+    'gas'?: InvokeContractV1RequestValue;
     /**
      * 
-     * @type {EthereumTransactionConfigFrom}
+     * @type {InvokeContractV1RequestValue}
      * @memberof InvokeContractJsonObjectV1Request
      */
-    'gasPrice'?: EthereumTransactionConfigFrom;
+    'gasPrice'?: InvokeContractV1RequestValue;
     /**
      * 
      * @type {number}
@@ -457,22 +445,22 @@ export interface InvokeContractV1Request {
     'params': Array<any>;
     /**
      * 
-     * @type {EthereumTransactionConfigFrom}
+     * @type {InvokeContractV1RequestValue}
      * @memberof InvokeContractV1Request
      */
-    'value'?: EthereumTransactionConfigFrom;
+    'value'?: InvokeContractV1RequestValue;
     /**
      * 
-     * @type {EthereumTransactionConfigFrom}
+     * @type {InvokeContractV1RequestValue}
      * @memberof InvokeContractV1Request
      */
-    'gas'?: EthereumTransactionConfigFrom;
+    'gas'?: InvokeContractV1RequestValue;
     /**
      * 
-     * @type {EthereumTransactionConfigFrom}
+     * @type {InvokeContractV1RequestValue}
      * @memberof InvokeContractV1Request
      */
-    'gasPrice'?: EthereumTransactionConfigFrom;
+    'gasPrice'?: InvokeContractV1RequestValue;
     /**
      * 
      * @type {number}
@@ -493,6 +481,12 @@ export interface InvokeContractV1Request {
     'keychainId': string;
 }
 
+
+/**
+ * @type InvokeContractV1RequestValue
+ * @export
+ */
+export type InvokeContractV1RequestValue = number | string;
 
 /**
  * 
@@ -527,10 +521,10 @@ export interface InvokeContractV1Response {
 export interface InvokeRawWeb3EthContractV1Request {
     /**
      * The application binary interface of the solidity contract
-     * @type {Array<any>}
+     * @type {any}
      * @memberof InvokeRawWeb3EthContractV1Request
      */
-    'abi': Array<any>;
+    'abi': any;
     /**
      * Deployed solidity contract address
      * @type {string}
@@ -918,10 +912,10 @@ export interface WatchBlocksV1BlockData {
     'gasUsed': number;
     /**
      * 
-     * @type {EthereumTransactionConfigFrom}
+     * @type {InvokeContractV1RequestValue}
      * @memberof WatchBlocksV1BlockData
      */
-    'timestamp': EthereumTransactionConfigFrom;
+    'timestamp': InvokeContractV1RequestValue;
     /**
      * 
      * @type {number}
@@ -987,52 +981,28 @@ export interface WatchBlocksV1Progress {
 export interface Web3BlockHeader {
     /**
      * 
-     * @type {number}
+     * @type {string}
      * @memberof Web3BlockHeader
      */
-    'number': number;
+    'number'?: string;
     /**
      * 
      * @type {string}
      * @memberof Web3BlockHeader
      */
-    'hash': string;
+    'parentHash'?: string;
     /**
      * 
-     * @type {string}
+     * @type {Array<string>}
      * @memberof Web3BlockHeader
      */
-    'parentHash': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof Web3BlockHeader
-     */
-    'nonce': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof Web3BlockHeader
-     */
-    'sha3Uncles': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof Web3BlockHeader
-     */
-    'logsBloom': string;
+    'sha3Uncles': Array<string>;
     /**
      * 
      * @type {string}
      * @memberof Web3BlockHeader
      */
     'transactionsRoot'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof Web3BlockHeader
-     */
-    'stateRoot': string;
     /**
      * 
      * @type {string}
@@ -1056,31 +1026,25 @@ export interface Web3BlockHeader {
      * @type {string}
      * @memberof Web3BlockHeader
      */
-    'miner': string;
+    'miner'?: string;
     /**
      * 
      * @type {string}
      * @memberof Web3BlockHeader
      */
-    'extraData': string;
+    'gasLimit': string;
     /**
      * 
-     * @type {number}
+     * @type {string}
      * @memberof Web3BlockHeader
      */
-    'gasLimit': number;
+    'gasUsed': string;
     /**
      * 
-     * @type {number}
+     * @type {string}
      * @memberof Web3BlockHeader
      */
-    'gasUsed': number;
-    /**
-     * 
-     * @type {EthereumTransactionConfigFrom}
-     * @memberof Web3BlockHeader
-     */
-    'timestamp': EthereumTransactionConfigFrom;
+    'timestamp'?: string;
 }
 /**
  * @type Web3SigningCredential
@@ -1232,10 +1196,10 @@ export interface Web3Transaction {
     'blockHash': string | null;
     /**
      * 
-     * @type {number}
+     * @type {string}
      * @memberof Web3Transaction
      */
-    'blockNumber': number | null;
+    'blockNumber': string;
     /**
      * 
      * @type {number}
@@ -1319,10 +1283,10 @@ export interface Web3TransactionReceipt {
     'transactionHash': string;
     /**
      * 
-     * @type {number}
+     * @type {string}
      * @memberof Web3TransactionReceipt
      */
-    'transactionIndex': number;
+    'transactionIndex': string;
     /**
      * 
      * @type {string}
@@ -1331,16 +1295,16 @@ export interface Web3TransactionReceipt {
     'blockHash': string;
     /**
      * 
-     * @type {number}
+     * @type {string}
      * @memberof Web3TransactionReceipt
      */
-    'blockNumber': number;
+    'blockNumber': string;
     /**
      * 
-     * @type {number}
+     * @type {string}
      * @memberof Web3TransactionReceipt
      */
-    'gasUsed': number;
+    'gasUsed': string;
     /**
      * 
      * @type {string}

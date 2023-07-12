@@ -8,14 +8,14 @@ import {
   Servers,
 } from "@hyperledger/cactus-common";
 
-import HelloWorldContractJson from "../../../../solidity/hello-world-contract/HelloWorld.json";
+import HelloWorldContractJson from "../../../solidity/hello-world-contract/HelloWorld.json";
 
 import {
   EthContractInvocationType,
   PluginLedgerConnectorEthereum,
   Web3SigningCredentialType,
   DefaultApi as EthereumApi,
-} from "../../../../../main/typescript/public-api";
+} from "../../../../main/typescript/public-api";
 
 import {
   QuorumTestLedger,
@@ -59,7 +59,7 @@ test("Ethereum Ledger Connector Plugin", async (t: Test) => {
   const [firstHighNetWorthAccount] = highNetWorthAccounts;
 
   const web3 = new Web3(rpcApiHttpHost);
-  const testEthAccount = web3.eth.accounts.create(uuidV4());
+  const testEthAccount = web3.eth.accounts.create();
   const connector: PluginLedgerConnectorEthereum = new PluginLedgerConnectorEthereum(
     {
       instanceId: uuidV4(),
@@ -95,6 +95,7 @@ test("Ethereum Ledger Connector Plugin", async (t: Test) => {
   await connector.getOrCreateWebServices();
   await connector.registerWebServices(expressApp, wsApi);
 
+  const initTransferValue = (10e9).toString();
   await connector.transact({
     web3SigningCredential: {
       ethAccount: firstHighNetWorthAccount,
@@ -104,13 +105,17 @@ test("Ethereum Ledger Connector Plugin", async (t: Test) => {
     transactionConfig: {
       from: firstHighNetWorthAccount,
       to: testEthAccount.address,
-      value: 10e9,
+      value: initTransferValue,
     },
   });
 
   const balance = await web3.eth.getBalance(testEthAccount.address);
   t.ok(balance, "Retrieved balance of test account OK");
-  t.equals(parseInt(balance, 10), 10e9, "Balance of test account is OK");
+  t.equals(
+    balance.toString(),
+    initTransferValue,
+    "Balance of test account is OK",
+  );
 
   let contractAddress: string;
 
@@ -175,7 +180,7 @@ test("Ethereum Ledger Connector Plugin", async (t: Test) => {
         secret: "",
         type: Web3SigningCredentialType.GethKeychainPassword,
       },
-      nonce: txCount,
+      nonce: Number(txCount),
       contractJSON: HelloWorldContractJson,
     });
     t2.ok(setNameOut.data, "setName() invocation #1 output is truthy OK");
@@ -243,13 +248,14 @@ test("Ethereum Ledger Connector Plugin", async (t: Test) => {
   });
 
   test("invoke Web3SigningCredentialType.NONE", async (t2: Test) => {
-    const testEthAccount2 = web3.eth.accounts.create(uuidV4());
+    const testEthAccount2 = web3.eth.accounts.create();
 
+    const value = 10e6;
     const { rawTransaction } = await web3.eth.accounts.signTransaction(
       {
         from: testEthAccount.address,
         to: testEthAccount2.address,
-        value: 10e6,
+        value,
         gas: 1000000,
       },
       testEthAccount.privateKey,
@@ -266,7 +272,11 @@ test("Ethereum Ledger Connector Plugin", async (t: Test) => {
 
     const balance2 = await web3.eth.getBalance(testEthAccount2.address);
     t2.ok(balance2, "Retrieved balance of test account 2 OK");
-    t2.equals(parseInt(balance2, 10), 10e6, "Balance of test account2 is OK");
+    t2.equals(
+      balance2.toString(),
+      value.toString(),
+      "Balance of test account2 is OK",
+    );
     t2.end();
   });
 
@@ -283,7 +293,7 @@ test("Ethereum Ledger Connector Plugin", async (t: Test) => {
         secret: testEthAccount.privateKey,
         type: Web3SigningCredentialType.PrivateKeyHex,
       },
-      nonce: txCount,
+      nonce: Number(txCount),
       contractJSON: HelloWorldContractJson,
     });
     t2.ok(setNameOut.data, "setName() invocation #1 output is truthy OK");

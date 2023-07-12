@@ -1,6 +1,6 @@
 import Web3 from "web3";
 import "jest-extended";
-import { Account } from "web3-core";
+import { Web3Account } from "web3-eth-accounts";
 import { v4 as uuidV4 } from "uuid";
 
 import { LogLevelDesc } from "@hyperledger/cactus-common";
@@ -39,7 +39,7 @@ describe(testcase, () => {
     rpcApiHttpHost: string,
     web3: Web3,
     keychainPlugin: PluginKeychainMemory,
-    testEthAccount: Account,
+    testEthAccount: Web3Account,
     ethereumGenesisOptions: IQuorumGenesisOptions,
     highNetWorthAccounts: string[],
     firstHighNetWorthAccount: string;
@@ -53,7 +53,7 @@ describe(testcase, () => {
     await ledger.start();
     rpcApiHttpHost = await ledger.getRpcApiHttpHost();
     web3 = new Web3(rpcApiHttpHost);
-    testEthAccount = web3.eth.accounts.create(uuidV4());
+    testEthAccount = web3.eth.accounts.create();
 
     const keychainEntryValue = testEthAccount.privateKey;
     keychainPlugin = new PluginKeychainMemory({
@@ -94,6 +94,7 @@ describe(testcase, () => {
     // Instantiate connector with the keychain plugin that already has the
     // private key we want to use for one of our tests
 
+    const initTransferValue = (10e9).toString();
     await connector.transact({
       web3SigningCredential: {
         ethAccount: firstHighNetWorthAccount,
@@ -103,13 +104,13 @@ describe(testcase, () => {
       transactionConfig: {
         from: firstHighNetWorthAccount,
         to: testEthAccount.address,
-        value: 10e9,
+        value: initTransferValue,
       },
     });
 
     const balance = await web3.eth.getBalance(testEthAccount.address);
     expect(balance).toBeTruthy();
-    expect(parseInt(balance, 10)).toEqual(10e9);
+    expect(balance.toString()).toEqual(initTransferValue);
   });
 
   test("deploys contract via .json file", async () => {
@@ -217,13 +218,14 @@ describe(testcase, () => {
   });
 
   test("invoke Web3SigningCredentialType.NONE", async () => {
-    const testEthAccount2 = web3.eth.accounts.create(uuidV4());
+    const testEthAccount2 = web3.eth.accounts.create();
 
+    const value = 10e6;
     const { rawTransaction } = await web3.eth.accounts.signTransaction(
       {
         from: testEthAccount.address,
         to: testEthAccount2.address,
-        value: 10e6,
+        value,
         gas: 1000000,
       },
       testEthAccount.privateKey,
@@ -240,7 +242,7 @@ describe(testcase, () => {
 
     const balance2 = await web3.eth.getBalance(testEthAccount2.address);
     expect(balance2).toBeTruthy();
-    expect(parseInt(balance2, 10)).toEqual(10e6);
+    expect(balance2.toString()).toEqual(value.toString());
   });
 
   test("invoke Web3SigningCredentialType.PrivateKeyHex", async () => {

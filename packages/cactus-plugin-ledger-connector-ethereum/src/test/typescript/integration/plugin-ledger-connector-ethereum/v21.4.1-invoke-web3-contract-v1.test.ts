@@ -28,10 +28,10 @@ import {
   pruneDockerAllIfGithubAction,
 } from "@hyperledger/cactus-test-tooling";
 import { Logger, LoggerProvider } from "@hyperledger/cactus-common";
-import { AbiItem } from "web3-utils";
 
 import HelloWorldContractJson from "../../../../solidity/hello-world-contract/HelloWorld.json";
 import { PluginKeychainMemory } from "@hyperledger/cactus-plugin-keychain-memory";
+import { ContractAbi } from "web3";
 
 // Unit Test logger setup
 const log: Logger = LoggerProvider.getOrCreate({
@@ -44,7 +44,7 @@ describe("invokeRawWeb3EthContract Tests", () => {
   let ethereumTestLedger: QuorumTestLedger;
   let connector: PluginLedgerConnectorEthereum;
   let firstHighNetWorthAccount: string;
-  let contractAbi: AbiItem[];
+  let contractAbi: ContractAbi;
   let contractAddress: string;
 
   //////////////////////////////////
@@ -114,7 +114,7 @@ describe("invokeRawWeb3EthContract Tests", () => {
     expect(deployOut.transactionReceipt.contractAddress).toBeTruthy();
     expect(deployOut.transactionReceipt.status).toBeTrue();
 
-    contractAbi = HelloWorldContractJson.abi as AbiItem[];
+    contractAbi = HelloWorldContractJson.abi;
     contractAddress = deployOut.transactionReceipt.contractAddress as string;
   });
 

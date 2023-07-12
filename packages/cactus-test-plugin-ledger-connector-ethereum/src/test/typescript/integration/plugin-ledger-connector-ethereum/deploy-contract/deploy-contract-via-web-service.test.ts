@@ -173,6 +173,7 @@ describe(testCase, () => {
     const web3 = new Web3(rpcApiHttpHost);
     const testEthAccount = web3.eth.accounts.create(uuidV4());
 
+    const initTransferValue = (10e9).toString();
     const res1 = await client.runTransactionV1({
       web3SigningCredential: {
         ethAccount: firstHighNetWorthAccount,
@@ -182,7 +183,7 @@ describe(testCase, () => {
       transactionConfig: {
         from: firstHighNetWorthAccount,
         to: testEthAccount.address,
-        value: 10e9,
+        value: initTransferValue,
       },
     });
     expect(res1).toBeTruthy();
