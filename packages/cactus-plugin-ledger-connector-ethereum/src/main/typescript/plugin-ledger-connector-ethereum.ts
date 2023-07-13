@@ -187,10 +187,10 @@ export class PluginLedgerConnectorEthereum
   public async shutdown(): Promise<void> {
     this.log.info(`Shutting down ${this.className}...`);
     const provider = this.web3.currentProvider;
-    if (provider && typeof provider == "object") {
-      if ("disconnect" in provider) {
-        provider.disconnect(1000, "shutdown");
-      }
+    try {
+      provider?.disconnect(1000, "shutdown");
+    } catch (error) {
+      this.log.info("Could not disconnect the provider - may not be supported");
     }
   }
 
@@ -818,10 +818,13 @@ export class PluginLedgerConnectorEthereum
     );
 
     const looseWeb3Eth = this.web3.eth as any;
-    const isSafeToCall = this.isSafeToCallObjectMethod(
-      looseWeb3Eth,
-      args.methodName,
-    );
+    // web3.eth methods in 4.X are stored in parent class
+    const isSafeToCall =
+      this.isSafeToCallObjectMethod(looseWeb3Eth, args.methodName) ||
+      this.isSafeToCallObjectMethod(
+        Object.getPrototypeOf(looseWeb3Eth),
+        args.methodName,
+      );
     if (!isSafeToCall) {
       throw new RuntimeError(
         `Invalid method name provided in request. ${args.methodName} does not exist on the Web3.Eth object.`,

@@ -130,15 +130,11 @@ args: {
 
 ## Running the tests
 
-To check that all has been installed correctly and that the pugin has no errors, run both `tap` and `jest` test suites:
+To check that all has been installed correctly and that the pugin has no errors run jest test suites.
 
 * Run this command at the project's root:
 
 ```sh
-# Tap
-npx tap --ts --jobs=1 --timeout=60 ./packages/cactus-plugin-ledger-connector-ethereum/src/test/typescript/integration/plugin-ledger-connector-ethereum/deploy-contract/openapi/openapi-validation-no-keychain.test.ts ./packages/cactus-plugin-ledger-connector-ethereum/src/test/typescript/integration/plugin-ledger-connector-ethereum/deploy-contract/openapi/openapi-validation.test.ts ./packages/cactus-plugin-ledger-connector-ethereum/src/test/typescript/integration/plugin-ledger-connector-ethereum/deploy-contract/v2.3.0-deploy-contract-from-json-json-object-endpoints.test.ts ./packages/cactus-plugin-ledger-connector-ethereum/src/test/typescript/integration/plugin-ledger-connector-ethereum/deploy-contract/v2.3.0-deploy-contract-from-json-json-object.test.ts ./packages/cactus-plugin-ledger-connector-ethereum/src/test/typescript/integration/plugin-ledger-connector-ethereum/deploy-contract/v2.3.0-invoke-contract-json-object-endpoints.test.ts ./packages/cactus-plugin-ledger-connector-ethereum/src/test/typescript/integration/plugin-ledger-connector-ethereum/deploy-contract/v2.3.0-invoke-contract-json-object.test.ts ./packages/cactus-plugin-ledger-connector-ethereum/src/test/typescript/integration/plugin-ledger-connector-ethereum/deploy-contract/v21.4.1-deploy-contract-from-json-json-object-endpoints.test.ts ./packages/cactus-plugin-ledger-connector-ethereum/src/test/typescript/integration/plugin-ledger-connector-ethereum/deploy-contract/v21.4.1-deploy-contract-from-json-json-object.test.ts ./packages/cactus-plugin-ledger-connector-ethereum/src/test/typescript/integration/plugin-ledger-connector-ethereum/deploy-contract/v21.4.1-invoke-contract-json-object-endpoints.test.ts ./packages/cactus-plugin-ledger-connector-ethereum/src/test/typescript/integration/plugin-ledger-connector-ethereum/deploy-contract/v21.4.1-invoke-contract-json-object.test.ts
-
-# Jest
 npx jest cactus-plugin-ledger-connector-ethereum
 ```
 

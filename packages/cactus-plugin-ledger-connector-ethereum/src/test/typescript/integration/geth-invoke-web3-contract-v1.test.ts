@@ -10,8 +10,6 @@
 const testLogLevel = "info";
 const sutLogLevel = "info";
 
-const containerImageVersion = "2021-05-03-quorum-v21.4.1";
-
 import "jest-extended";
 import { v4 as uuidv4 } from "uuid";
 import { PluginRegistry } from "@hyperledger/cactus-core";
@@ -20,30 +18,28 @@ import {
   InvokeRawWeb3EthContractV1Request,
   PluginLedgerConnectorEthereum,
   Web3SigningCredentialType,
-} from "../../../../../main/typescript/index";
+} from "../../../main/typescript/index";
+import { pruneDockerAllIfGithubAction } from "@hyperledger/cactus-test-tooling";
 import {
-  QuorumTestLedger,
-  IQuorumGenesisOptions,
-  IAccount,
-  pruneDockerAllIfGithubAction,
-} from "@hyperledger/cactus-test-tooling";
+  GethTestLedger,
+  WHALE_ACCOUNT_ADDRESS,
+} from "@hyperledger/cactus-test-geth-ledger";
 import { Logger, LoggerProvider } from "@hyperledger/cactus-common";
 
-import HelloWorldContractJson from "../../../../solidity/hello-world-contract/HelloWorld.json";
+import HelloWorldContractJson from "../../solidity/hello-world-contract/HelloWorld.json";
 import { PluginKeychainMemory } from "@hyperledger/cactus-plugin-keychain-memory";
 import { ContractAbi } from "web3";
 
 // Unit Test logger setup
 const log: Logger = LoggerProvider.getOrCreate({
-  label: "v21.4.1-invoke-web3-contract-v1.test",
+  label: "geth-invoke-web3-contract-v1.test",
   level: testLogLevel,
 });
 log.info("Test started");
 
 describe("invokeRawWeb3EthContract Tests", () => {
-  let ethereumTestLedger: QuorumTestLedger;
+  let ethereumTestLedger: GethTestLedger;
   let connector: PluginLedgerConnectorEthereum;
-  let firstHighNetWorthAccount: string;
   let contractAbi: ContractAbi;
   let contractAddress: string;
 
@@ -55,26 +51,10 @@ describe("invokeRawWeb3EthContract Tests", () => {
     log.info("Prune Docker...");
     await pruneDockerAllIfGithubAction({ logLevel: testLogLevel });
 
-    log.info("Start QuorumTestLedger...");
-    log.debug("Ethereum version:", containerImageVersion);
-    ethereumTestLedger = new QuorumTestLedger({
-      containerImageVersion,
-    });
-    await ethereumTestLedger.start();
-
-    log.info("Get highNetWorthAccounts...");
-    const ethereumGenesisOptions: IQuorumGenesisOptions = await ethereumTestLedger.getGenesisJsObject();
-    expect(ethereumGenesisOptions).toBeTruthy();
-    expect(ethereumGenesisOptions.alloc).toBeTruthy();
-
-    const highNetWorthAccounts: string[] = Object.keys(
-      ethereumGenesisOptions.alloc,
-    ).filter((address: string) => {
-      const anAccount: IAccount = ethereumGenesisOptions.alloc[address];
-      const theBalance = parseInt(anAccount.balance, 10);
-      return theBalance > 10e7;
-    });
-    [firstHighNetWorthAccount] = highNetWorthAccounts;
+    log.info("Start GethTestLedger...");
+    // log.debug("Ethereum version:", containerImageVersion);
+    ethereumTestLedger = new GethTestLedger({});
+    await ethereumTestLedger.start(true);
 
     const rpcApiHttpHost = await ethereumTestLedger.getRpcApiHttpHost();
     log.debug("rpcApiHttpHost:", rpcApiHttpHost);
@@ -103,7 +83,7 @@ describe("invokeRawWeb3EthContract Tests", () => {
       contractName: HelloWorldContractJson.contractName,
       keychainId: keychainPlugin.getKeychainId(),
       web3SigningCredential: {
-        ethAccount: firstHighNetWorthAccount,
+        ethAccount: WHALE_ACCOUNT_ADDRESS,
         secret: "",
         type: Web3SigningCredentialType.GethKeychainPassword,
       },
@@ -135,7 +115,7 @@ describe("invokeRawWeb3EthContract Tests", () => {
 
     // 1. Set new value (send)
     const sendInvocationArgs = {
-      from: firstHighNetWorthAccount,
+      from: WHALE_ACCOUNT_ADDRESS,
     };
 
     const sendInvokeArgs: InvokeRawWeb3EthContractV1Request = {
@@ -151,7 +131,7 @@ describe("invokeRawWeb3EthContract Tests", () => {
       sendInvokeArgs,
     );
     expect(resultsSend).toBeTruthy();
-    expect(resultsSend.status).toBeTrue();
+    expect(resultsSend.status.toString()).toEqual("1");
 
     // // 2. Get new, updated value (call)
     const callInvokeArgs: InvokeRawWeb3EthContractV1Request = {

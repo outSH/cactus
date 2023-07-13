@@ -216,7 +216,7 @@ describe(testCase, () => {
       invocationType: EthContractInvocationType.Send,
       methodName: "setName",
       params: [newName],
-      gas: 1000000,
+      gas: "1000000",
       web3SigningCredential: {
         ethAccount: testEthAccount.address,
         secret: testEthAccount.privateKey,
@@ -234,7 +234,7 @@ describe(testCase, () => {
       invocationType: EthContractInvocationType.Call,
       methodName: "getName",
       params: [],
-      gas: 1000000,
+      gas: "1000000",
       web3SigningCredential: {
         ethAccount: testEthAccount.address,
         secret: testEthAccount.privateKey,
@@ -254,7 +254,7 @@ describe(testCase, () => {
       invocationType: EthContractInvocationType.Send,
       methodName: "getName",
       params: [],
-      gas: 1000000,
+      gas: "1000000",
       web3SigningCredential: {
         ethAccount: testEthAccount.address,
         secret: testEthAccount.privateKey,
