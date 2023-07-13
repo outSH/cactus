@@ -95,8 +95,9 @@ export class WatchBlocksV1Endpoint {
         const web3BlockData = await web3.eth.getBlock(blockHeader.number, true);
 
         next = {
-          // difficulty and totalDifficulty returned from the ledger are string, forcing typecast
-          blockData: (web3BlockData as unknown) as WatchBlocksV1BlockData,
+          blockData: (stringifyObjectFields(
+            web3BlockData,
+          ) as unknown) as WatchBlocksV1BlockData,
         };
       } else {
         next = { blockHeader: stringifyObjectFields(blockHeader) };

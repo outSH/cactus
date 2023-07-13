@@ -924,7 +924,7 @@
         ],
         "properties": {
           "number": {
-            "type": "number"
+            "type": "string"
           },
           "hash": {
             "type": "string"
@@ -936,7 +936,7 @@
             "type": "string"
           },
           "sha3Uncles": {
-            "type": "string"
+            "type": "string[]"
           },
           "logsBloom": {
             "type": "string"
@@ -963,10 +963,10 @@
             "type": "string"
           },
           "gasLimit": {
-            "type": "integer"
+            "type": "string"
           },
           "gasUsed": {
-            "type": "integer"
+            "type": "string"
           },
           "timestamp": {
             "oneOf": [
@@ -979,7 +979,7 @@
             ]
           },
           "size": {
-            "type": "number"
+            "type": "string"
           },
           "totalDifficulty": {
             "type": "string"

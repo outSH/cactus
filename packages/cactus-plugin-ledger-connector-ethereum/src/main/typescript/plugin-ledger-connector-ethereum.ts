@@ -112,6 +112,17 @@ export interface IPluginLedgerConnectorEthereumOptions
   pluginRegistry: PluginRegistry;
 }
 
+/**
+ * `JSON.stringify` replacer function to handle BigInt.
+ * See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt#use_within_json
+ */
+function stringifyBigIntReplacer(key: string, value: bigint): string {
+  if (typeof value === "bigint") {
+    return value.toString();
+  }
+  return value;
+}
+
 export class PluginLedgerConnectorEthereum
   implements
     IPluginLedgerConnector<
@@ -186,12 +197,12 @@ export class PluginLedgerConnectorEthereum
 
   public async shutdown(): Promise<void> {
     this.log.info(`Shutting down ${this.className}...`);
-    const provider = this.web3.currentProvider;
-    try {
-      provider?.disconnect(1000, "shutdown");
-    } catch (error) {
-      this.log.info("Could not disconnect the provider - may not be supported");
-    }
+    // const provider = this.web3.currentProvider;
+    // try {
+    //   provider?.disconnect(1000, "shutdown");
+    // } catch (error) {
+    //   this.log.info("Could not disconnect the provider - may not be supported");
+    // }
   }
 
   public async onPluginInit(): Promise<unknown> {
@@ -202,6 +213,9 @@ export class PluginLedgerConnectorEthereum
     app: Express,
     wsApi: SocketIoServer,
   ): Promise<IWebServiceEndpoint[]> {
+    // Add custom replacer to handle bigint responses correctly
+    app.set("json replacer", stringifyBigIntReplacer);
+
     const { web3 } = this;
     const { logLevel } = this.options;
     const webServices = await this.getOrCreateWebServices();
