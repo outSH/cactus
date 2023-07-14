@@ -58,6 +58,9 @@
     "web3": "dev",
     "web3-eth-accounts": "dev"
   },
+  "devDependencies": {
+    "@types/dockerode": "3.2.7"
+  },
   "engines": {
     "node": ">=10",
     "npm": ">=6"

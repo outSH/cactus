@@ -34,7 +34,8 @@ ENTRYPOINT [ \
     "--mine", \
     "--password", "/dev/null", \
     "--allow-insecure-unlock", \
-    "--miner.etherbase", "0x6A2EC8c50BA1a9cE47c52d1cb5B7136Ee9d0cCC0" \
+    "--miner.etherbase", "0x6A2EC8c50BA1a9cE47c52d1cb5B7136Ee9d0cCC0", \
+    "--verbosity", "5" \
     ]
 CMD [ \
     "--networkid", "10", \
