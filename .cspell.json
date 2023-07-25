@@ -141,7 +141,8 @@
         "uuidv",
         "vscc",
         "wasm",
-        "Xdai"
+        "Xdai",
+        "outsh"
     ],
     "dictionaries": [
         "typescript,node,npm,go,rust"
