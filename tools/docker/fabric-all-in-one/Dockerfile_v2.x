@@ -12,23 +12,7 @@ WORKDIR /
 RUN apk update
 
 # Install dependencies of Docker Compose
-RUN apk add py-pip python3-dev libffi-dev openssl-dev gcc libc-dev make
-
-# Install python/pip - We need this because DinD 18.x has Python 2
-# And we cannot upgrade to DinD 19 because of
-# https://github.com/docker-library/docker/issues/170
-ENV PYTHONUNBUFFERED=1
-RUN apk add --update --no-cache python3 && ln -sf python3 /usr/bin/python
-RUN python3 -m ensurepip
-RUN pip3 install --no-cache --upgrade "pip>=21" setuptools
-
-# Without this the docker-compose installation crashes, complaining about
-# a lack of rust compiler...
-# RUN pip install setuptools_rust
-ENV CRYPTOGRAPHY_DONT_BUILD_RUST=1
-
-# Install Docker Compose which is a dependency of Fabric Samples
-RUN pip install docker-compose
+RUN apk add docker-cli docker-cli-compose
 
 # Need git to clone the sources of the Fabric Samples repository from GitHub
 RUN apk add --no-cache git
@@ -62,7 +46,7 @@ RUN apk add --no-cache libc6-compat
 ENV CACTUS_CFG_PATH=/etc/hyperledger/cactus
 RUN mkdir -p $CACTUS_CFG_PATH
 # OpenSSH - need to have it so we can shell in and install/instantiate contracts
-RUN apk add --no-cache openssh augeas
+RUN apk add --no-cache augeas
 
 # Configure the OpenSSH server we just installed
 RUN augtool 'set /files/etc/ssh/sshd_config/AuthorizedKeysFile ".ssh/authorized_keys /etc/authorized_keys/%u"'
