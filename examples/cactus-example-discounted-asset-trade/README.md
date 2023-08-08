@@ -224,7 +224,7 @@ For development purposes, it might be useful to run the sample application outsi
    **After sending the requests**
 
    - The transactions are executed by order.
-   - When the following log appears on the BLP console, the transactions are completed.
+   - When the following log appears on the BLP console, the transactions are completed (you may need to scroll a bit to find it).
 
    ```
    [INFO] BusinessLogicAssetTrade - ##INFO: completed asset-trade, businessLogicID: guks32pf, tradeID: *******-001

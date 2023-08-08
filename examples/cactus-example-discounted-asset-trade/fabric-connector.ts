@@ -16,7 +16,7 @@ import express from "express";
 import bodyParser from "body-parser";
 import { AddressInfo } from "net";
 import { v4 as uuidv4 } from "uuid";
-import { FileSystemWallet } from "fabric-network";
+import { Wallets } from "fabric-network";
 import { getLogger } from "log4js";
 import { Server as SocketIoServer } from "socket.io";
 
@@ -108,25 +108,22 @@ logger.debug("Use connection profile:", connectionProfile);
  * Export all users in wallet into Map that can be used by keychain plugin.
  */
 async function exportWalletToKeychain() {
-  const wallet = new FileSystemWallet("/etc/cactus/connector-fabric/wallet");
+  const wallet = await Wallets.newFileSystemWallet(
+    "/etc/cactus/connector-fabric/wallet",
+  ); // TODO - from var
 
   const userList = await wallet.list();
   const keychainMap = new Map();
 
   for (const user of userList) {
-    const walletEntry: any = await wallet.export(user.label);
-
-    keychainMap.set(
-      user.label,
-      JSON.stringify({
-        credentials: {
-          certificate: walletEntry.certificate,
-          privateKey: walletEntry.privateKey,
-        },
-        mspId: walletEntry.mspId,
-        type: "X.509", //walletEntry.type,
-      }),
-    );
+    const walletEntry = await wallet.get(user);
+    if (walletEntry && walletEntry.type === "X.509") {
+      keychainMap.set(user, JSON.stringify(walletEntry));
+    } else {
+      logger.error(
+        `Could not add identiy for user ${user}. Wallet identity: ${walletEntry}`,
+      );
+    }
   }
 
   return keychainMap;
