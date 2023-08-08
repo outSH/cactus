@@ -1,6 +1,6 @@
 # We need to use the older, more stable v18 here because of
 # https://github.com/docker-library/docker/issues/170
-FROM docker:24.0.2-dind
+FROM docker:24.0.5-dind
 
 ARG FABRIC_VERSION=2.2.0
 ARG CA_VERSION=1.4.9
@@ -9,7 +9,7 @@ ARG COUCH_VERSION=3.1.1
 
 WORKDIR /
 
-RUN apk update
+RUN apk update && apk --no-cache upgrade openssh-client
 
 # Install dependencies of Docker Compose
 RUN apk add docker-cli docker-cli-compose
@@ -46,7 +46,7 @@ RUN apk add --no-cache libc6-compat
 ENV CACTUS_CFG_PATH=/etc/hyperledger/cactus
 RUN mkdir -p $CACTUS_CFG_PATH
 # OpenSSH - need to have it so we can shell in and install/instantiate contracts
-RUN apk add --no-cache augeas
+RUN apk add --no-cache openssh augeas
 
 # Configure the OpenSSH server we just installed
 RUN augtool 'set /files/etc/ssh/sshd_config/AuthorizedKeysFile ".ssh/authorized_keys /etc/authorized_keys/%u"'
@@ -72,11 +72,8 @@ RUN cp $CACTUS_CFG_PATH/fabric-aio-image.pub ~/.ssh/authorized_keys
 # OpenSSH Server (needed for chaincode deployment )
 EXPOSE 22
 
-# supervisord web ui/dashboard
-EXPOSE 9001
-
-# peer1.org2.example.com
-EXPOSE 10051
+# orderer.example.com
+EXPOSE 7050
 
 # peer0.org1.example.com
 EXPOSE 7051
@@ -84,17 +81,17 @@ EXPOSE 7051
 # peer0.org2.example.com
 EXPOSE 9051
 
-# peer1.org1.example.com
-EXPOSE 8051
-
-# orderer.example.com
-EXPOSE 7050
-
-# ca_peerOrg1
+# ca_org1
 EXPOSE 7054
 
-# ca_peerOrg2
+# ca_org2
 EXPOSE 8054
+
+# ca_orderer
+EXPOSE 9054
+
+# supervisord web ui/dashboard
+EXPOSE 9001
 
 # couchdb0, couchdb1, couchdb2, couchdb3
 EXPOSE 5984 6984 7984 8984

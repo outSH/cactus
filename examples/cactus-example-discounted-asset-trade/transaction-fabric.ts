@@ -24,6 +24,12 @@ import { FileSystemWallet } from "fabric-network";
 
 const config: any = ConfigUtil.getConfig();
 import { getLogger } from "log4js";
+import {
+  getFabricConnector,
+  getGatewayOptionForUser,
+} from "./fabric-connector";
+import { FabricContractInvocationType } from "@hyperledger/cactus-plugin-ledger-connector-fabric";
+
 const moduleName = "TransactionFabric";
 const logger = getLogger(`${moduleName}`);
 logger.level = config.logLevel;
@@ -171,4 +177,73 @@ export function makeSignedProposal<T extends ISocketApiClient<unknown>>(
       return reject(e);
     }
   });
+}
+
+export async function transferOwnership(
+  assetID: string,
+  fabricAccountTo: string,
+) {
+  const connector = await getFabricConnector();
+
+  const transferResponse = await connector.transact({
+    gatewayOptions: getGatewayOptionForUser(
+      config.assetTradeInfo.fabric.submitter.name,
+    ),
+    channelName: config.assetTradeInfo.fabric.channelName,
+    invocationType: FabricContractInvocationType.Send,
+    contractName: config.assetTradeInfo.fabric.chaincodeID,
+    methodName: "TransferAsset",
+    params: [assetID, fabricAccountTo],
+  });
+  logger.debug("transferResponse:", transferResponse);
+
+  if (!transferResponse.success) {
+    throw new Error(`Transfer failed! ${transferResponse.functionOutput}`);
+  }
+
+  return transferResponse;
+}
+
+export async function queryAsset(assetID: string): Promise<unknown> {
+  const connector = await getFabricConnector();
+
+  const queryResponse = await connector.transact({
+    gatewayOptions: getGatewayOptionForUser(
+      config.assetTradeInfo.fabric.submitter.name,
+    ),
+    channelName: config.assetTradeInfo.fabric.channelName,
+    invocationType: FabricContractInvocationType.Call,
+    contractName: config.assetTradeInfo.fabric.chaincodeID,
+    methodName: "ReadAsset",
+    params: [assetID],
+  });
+  logger.debug("queryResponse:", queryResponse);
+
+  if (!queryResponse.success) {
+    throw new Error(`ReadAsset failed! ${queryResponse.functionOutput}`);
+  }
+
+  return JSON.parse(queryResponse.functionOutput);
+}
+
+export async function queryAllAssets(): Promise<unknown> {
+  const connector = await getFabricConnector();
+
+  const queryResponse = await connector.transact({
+    gatewayOptions: getGatewayOptionForUser(
+      config.assetTradeInfo.fabric.submitter.name,
+    ),
+    channelName: config.assetTradeInfo.fabric.channelName,
+    invocationType: FabricContractInvocationType.Call,
+    contractName: config.assetTradeInfo.fabric.chaincodeID,
+    methodName: "GetAllAssets",
+    params: [],
+  });
+  logger.debug("queryResponse:", queryResponse);
+
+  if (!queryResponse.success) {
+    throw new Error(`ReadAsset failed! ${queryResponse.functionOutput}`);
+  }
+
+  return JSON.parse(queryResponse.functionOutput);
 }

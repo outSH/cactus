@@ -25,7 +25,7 @@ import org.openapitools.client.models.WatchBlocksCactusTransactionsEventV1
 import com.squareup.moshi.Json
 
 /**
- * Custom response containing block transactions summary. Compatible with legacy fabric-socketio connector monitoring.
+ * Custom response containing block transactions summary.
  *
  * @param cactusTransactionsEvents List of transactions summary
  */

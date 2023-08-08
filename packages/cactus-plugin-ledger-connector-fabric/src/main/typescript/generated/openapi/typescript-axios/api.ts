@@ -937,7 +937,7 @@ export interface RunTransactionRequest {
      * @type {FabricSigningCredential}
      * @memberof RunTransactionRequest
      */
-    signingCredential: FabricSigningCredential;
+    signingCredential?: FabricSigningCredential;
     /**
      * 
      * @type {string}
@@ -1176,7 +1176,7 @@ export interface WatchBlocksCactusTransactionsEventV1 {
     functionArgs: Array<string>;
 }
 /**
- * Custom response containing block transactions summary. Compatible with legacy fabric-socketio connector monitoring.
+ * Custom response containing block transactions summary.
  * @export
  * @interface WatchBlocksCactusTransactionsResponseV1
  */

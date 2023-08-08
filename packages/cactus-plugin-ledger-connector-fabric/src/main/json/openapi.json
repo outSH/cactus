@@ -416,7 +416,6 @@
             "RunTransactionRequest": {
                 "type": "object",
                 "required": [
-                    "signingCredential",
                     "channelName",
                     "contractName",
                     "invocationType",
@@ -1196,7 +1195,7 @@
             },
             "WatchBlocksCactusTransactionsResponseV1": {
                 "type": "object",
-                "description": "Custom response containing block transactions summary. Compatible with legacy fabric-socketio connector monitoring.",
+                "description": "Custom response containing block transactions summary.",
                 "required": [
                     "cactusTransactionsEvents"
                 ],

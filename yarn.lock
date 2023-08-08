@@ -5889,7 +5889,11 @@ __metadata:
   resolution: "@hyperledger/cactus-example-discounted-asset-trade@workspace:examples/cactus-example-discounted-asset-trade"
   dependencies:
     "@hyperledger/cactus-cmd-socketio-server": 2.0.0-alpha.1
+    "@hyperledger/cactus-common": 2.0.0-alpha.1
+    "@hyperledger/cactus-core": 2.0.0-alpha.1
     "@hyperledger/cactus-core-api": 2.0.0-alpha.1
+    "@hyperledger/cactus-plugin-keychain-memory": 2.0.0-alpha.1
+    "@hyperledger/cactus-plugin-ledger-connector-fabric": 2.0.0-alpha.1
     "@hyperledger/cactus-verifier-client": 2.0.0-alpha.1
     "@types/elliptic": 6.4.14
     "@types/escape-html": 1.0.1
@@ -5905,10 +5909,11 @@ __metadata:
     ethereumjs-common: 1.5.2
     ethereumjs-tx: 2.1.2
     express: 4.16.4
-    fabric-ca-client: 1.4.19
+    fabric-ca-client: 2.2.10
     fabric-client: 1.4.19
     fabric-network: 1.4.19
     http-errors: 1.6.3
+    indy-sdk: 1.16.0-dev-1649
     jsonwebtoken: 9.0.0
     jsrsasign: 10.5.25
     log4js: 6.4.0
@@ -6390,44 +6395,6 @@ __metadata:
     rxjs: 7.8.1
     temp: 0.9.4
     typescript-optional: 2.0.1
-  languageName: unknown
-  linkType: soft
-
-"@hyperledger/cactus-plugin-ledger-connector-fabric-socketio@workspace:packages/cactus-plugin-ledger-connector-fabric-socketio":
-  version: 0.0.0-use.local
-  resolution: "@hyperledger/cactus-plugin-ledger-connector-fabric-socketio@workspace:packages/cactus-plugin-ledger-connector-fabric-socketio"
-  dependencies:
-    "@hyperledger/cactus-api-client": 2.0.0-alpha.1
-    "@hyperledger/cactus-cmd-socketio-server": 2.0.0-alpha.1
-    "@hyperledger/cactus-common": 2.0.0-alpha.1
-    "@hyperledger/cactus-test-tooling": 2.0.0-alpha.1
-    "@types/config": 0.0.41
-    "@types/cookie-parser": 1.4.3
-    "@types/elliptic": 6.4.14
-    "@types/express": 4.17.13
-    "@types/http-errors": 2.0.1
-    "@types/jsrsasign": 10.5.8
-    "@types/lodash": 4.14.195
-    "@types/node": 14.17.32
-    body-parser: 1.17.2
-    cookie-parser: 1.4.6
-    debug: 3.1.0
-    express: 4.17.3
-    fabric-ca-client: 1.4.19
-    fabric-client: 1.4.19
-    fabric-network: 1.4.19
-    fs-extra: 10.0.0
-    grpc: 1.24.11
-    js-yaml: 3.14.1
-    jsonwebtoken: 9.0.0
-    lodash: 4.17.21
-    log4js: 6.4.1
-    morgan: 1.10.0
-    protobufjs: 5.0.3
-    serve-favicon: 2.4.5
-    shelljs: 0.8.5
-    socket.io: 4.5.4
-    ts-node: 9.1.1
   languageName: unknown
   linkType: soft
 
@@ -14381,7 +14348,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"bindings@npm:^1.2.1, bindings@npm:^1.5.0":
+"bindings@npm:^1.2.1, bindings@npm:^1.3.1, bindings@npm:^1.5.0":
   version: 1.5.0
   resolution: "bindings@npm:1.5.0"
   dependencies:
@@ -24643,6 +24610,17 @@ gluegun@latest:
   languageName: node
   linkType: hard
 
+"indy-sdk@npm:1.16.0-dev-1649":
+  version: 1.16.0-dev-1649
+  resolution: "indy-sdk@npm:1.16.0-dev-1649"
+  dependencies:
+    bindings: ^1.3.1
+    nan: ^2.11.1
+    node-gyp: ^8.0.0
+  checksum: 39b8064257e0bab4bfb1c150b7a335e4bfb6586d749e843c143d8f317289afd556f9e375f8cabb6f5f305fe65371bd4bca4fbb9c70bd12c52ee351688d72cc25
+  languageName: node
+  linkType: hard
+
 "infer-owner@npm:^1.0.4":
   version: 1.0.4
   resolution: "infer-owner@npm:1.0.4"
@@ -31404,7 +31382,7 @@ gluegun@latest:
   languageName: node
   linkType: hard
 
-"nan@npm:^2.12.1":
+"nan@npm:^2.11.1, nan@npm:^2.12.1":
   version: 2.17.0
   resolution: "nan@npm:2.17.0"
   dependencies:
@@ -31935,7 +31913,7 @@ gluegun@latest:
   languageName: node
   linkType: hard
 
-"node-gyp@npm:8.x":
+"node-gyp@npm:8.x, node-gyp@npm:^8.0.0":
   version: 8.4.1
   resolution: "node-gyp@npm:8.4.1"
   dependencies:
@@ -40870,27 +40848,6 @@ gluegun@latest:
   languageName: node
   linkType: hard
 
-"ts-node@npm:9.1.1, ts-node@npm:^9":
-  version: 9.1.1
-  resolution: "ts-node@npm:9.1.1"
-  dependencies:
-    arg: ^4.1.0
-    create-require: ^1.1.0
-    diff: ^4.0.1
-    make-error: ^1.1.1
-    source-map-support: ^0.5.17
-    yn: 3.1.1
-  peerDependencies:
-    typescript: ">=2.7"
-  bin:
-    ts-node: dist/bin.js
-    ts-node-script: dist/bin-script.js
-    ts-node-transpile-only: dist/bin-transpile.js
-    ts-script: dist/bin-script-deprecated.js
-  checksum: 356e2647b8b1e6ab00380c0537fa569b63bd9b6f006cc40fd650f81fae1817bd8fecc075300036950d8f45c1d85b95be33cd1e48a1a424a7d86c3dbb42bf60e5
-  languageName: node
-  linkType: hard
-
 "ts-node@npm:^10.0.0":
   version: 10.5.0
   resolution: "ts-node@npm:10.5.0"
@@ -40925,6 +40882,27 @@ gluegun@latest:
     ts-node-transpile-only: dist/bin-transpile.js
     ts-script: dist/bin-script-deprecated.js
   checksum: d51ac8a9b3582ce3705cef8d35f3372e40caa277dbd7c7baeb651961538f13d2f11f22402614348f78d9b10501bd1cb5f05ec4f2ec9a74bd0e288de769c32335
+  languageName: node
+  linkType: hard
+
+"ts-node@npm:^9":
+  version: 9.1.1
+  resolution: "ts-node@npm:9.1.1"
+  dependencies:
+    arg: ^4.1.0
+    create-require: ^1.1.0
+    diff: ^4.0.1
+    make-error: ^1.1.1
+    source-map-support: ^0.5.17
+    yn: 3.1.1
+  peerDependencies:
+    typescript: ">=2.7"
+  bin:
+    ts-node: dist/bin.js
+    ts-node-script: dist/bin-script.js
+    ts-node-transpile-only: dist/bin-transpile.js
+    ts-script: dist/bin-script-deprecated.js
+  checksum: 356e2647b8b1e6ab00380c0537fa569b63bd9b6f006cc40fd650f81fae1817bd8fecc075300036950d8f45c1d85b95be33cd1e48a1a424a7d86c3dbb42bf60e5
   languageName: node
   linkType: hard
 
