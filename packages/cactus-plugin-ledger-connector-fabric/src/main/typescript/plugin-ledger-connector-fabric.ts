@@ -22,6 +22,26 @@ import {
   Wallet,
 } from "fabric-network";
 
+/////////////////
+import {
+  Client,
+  User,
+  // DiscoveryService,
+  // Discoverer,
+  // Committer,
+  // BuildProposalRequest,
+} from "fabric-common";
+
+import elliptic from "elliptic";
+// import crypto from "crypto";
+// import { ECCPrivateKey, KEYUTIL } from "jsrsasign";
+//const elliptic = require("elliptic");
+// const crypto = require("crypto");
+
+const { loadFromConfig } = require("fabric-network/lib/impl/ccp/networkconfig");
+
+///////////////////
+
 import type {
   Server as SocketIoServer,
   Socket as SocketIoSocket,
@@ -1095,6 +1115,8 @@ export class PluginLedgerConnectorFabric
 
     try {
       const gateway = await this.createGateway(req);
+      // this.log.error("GATEWAY client:", gateway["client"]);
+
       // const gateway = await this.createGatewayLegacy(req.signingCredential);
       const network = await gateway.getNetwork(channelName);
       // const channel = network.getChannel();
@@ -1557,5 +1579,130 @@ export class PluginLedgerConnectorFabric
     return {
       decodedBlock: responseData,
     };
+  }
+
+  public async transactSigned(
+    privateKeyPEM: string,
+    cert: string,
+    username: string,
+    pass: string,
+    channelName: string,
+    contractName: string,
+  ): Promise<any> {
+    this.log.warn(
+      "transactSigned()",
+      privateKeyPEM,
+      cert,
+      username,
+      pass,
+      channelName,
+    );
+
+    // todo - types fix
+    const { prvKeyHex } = KEYUTIL.getKey(privateKeyPEM) as any; // convert the pem encoded key to hex encoded private key
+    const EC = elliptic.ec;
+    const ecdsaCurve = (elliptic.curves as any)["p256"];
+    const ecdsa = new EC(ecdsaCurve);
+    const signKey = ecdsa.keyFromPrivate(prvKeyHex, "hex");
+    this.log.warn("signKey", signKey, "prvKeyHex", prvKeyHex);
+
+    // TODO: Just cert?? should work...
+    const user = User.createUser(
+      username,
+      pass,
+      "Org1MSP", // todo -arg?
+      cert,
+      privateKeyPEM,
+    );
+
+    // Creating Client, Identity Context, etc
+    const client = new Client("transactSignedClient");
+
+    this.log.error("loadFromConfig", loadFromConfig);
+    await loadFromConfig(client, this.opts.connectionProfile);
+    this.log.error("INIT CLIENT", client);
+    const idx = client.newIdentityContext(user);
+    this.log.warn("HODOR USER", user);
+    this.log.warn("HODOR IDX", idx);
+
+    // Set discoverers (endorsers must be present already)
+    const channel = client.getChannel(channelName);
+    const discoverers = [];
+    for (const peer of client.getEndorsers()) {
+      const discoverer = channel.client.newDiscoverer(peer.name, peer.mspid);
+      discoverer.setEndpoint(peer.endpoint);
+      discoverers.push(discoverer);
+    }
+
+    // Do the discovery
+    const discoveryService = channel.newDiscoveryService(channel.name);
+    discoveryService.build(idx);
+    await discoveryService.sign(idx);
+    await discoveryService.send({
+      asLocalhost: true,
+      targets: discoverers,
+    });
+    this.log.error("COMPLETE CLIENT", client);
+    this.log.error("COMPLETE channel", channel);
+
+    // Creating Proposal
+    // const endorsement = channel.newEndorsement(contractName);
+    // const proposalBuildRequest: BuildProposalRequest = {
+    //   fcn: "TransferAsset",
+    //   args: ["asset2", "Kavin"],
+    //   generateTransactionId: false,
+    // };
+    // // if (this.transientMap) {
+    // //   request.transientMap = this.transientMap;
+    // // }
+    // endorsement.build(idx, proposalBuildRequest);
+    // await endorsement.sign(idx);
+
+    // const proposalResponses = await endorsement.send({
+    //   targets: channel.getEndorsers(),
+    // });
+    // this.log.warn("ENDORESE RESPONSES:", proposalResponses.responses);
+
+    /////////
+    const endorsement = channel.newEndorsement(contractName);
+    const build_options = { fcn: "TransferAsset", args: ["asset2", "Bar"] };
+    // const proposalBytes = endorsement.build(idx, build_options);
+    // this.log.warn("proposalBytes", proposalBytes);
+
+    // // Calculate Hash for transaction Proposal Bytes
+    // const hash = crypto
+    //   .createHash("sha256")
+    //   .update(proposalBytes)
+    //   .digest("hex");
+    // this.log.warn("hash", hash);
+
+    // // Creating Signature
+    // const sig = ecdsa.sign(Buffer.from(hash, "hex"), signKey, {
+    //   canonical: true,
+    // });
+    // const signature = Buffer.from(sig.toDER());
+    // this.log.warn("signature:", signature);
+
+    // Final - Sending Proposal Request
+    // await endorsement.sign(signature);
+    endorsement.build(idx, build_options);
+    await endorsement.sign(idx);
+    const proposalResponses = await endorsement.send({
+      targets: channel.getEndorsers(),
+    });
+    this.log.warn("ENDORESE RESPONSES:", proposalResponses.responses);
+
+    // Commit the Transaction
+    const commitReq = endorsement.newCommit();
+    this.log.warn("commitReq:", channel.getCommitters());
+    commitReq.build(idx);
+    await commitReq.sign(idx);
+    const res = await commitReq.send({
+      targets: channel.getCommitters(),
+    });
+    this.log.warn("Commit Result: ", res);
+
+    // TODO - events
+
   }
 }
