@@ -23,3 +23,5 @@ export async function createPluginFactory(
 
 export { IVaultConfig, IWebSocketConfig } from "./identity/identity-provider";
 export { IIdentityData } from "./identity/internal/cert-datastore";
+
+export { signProposal } from "./common/sign-utils";

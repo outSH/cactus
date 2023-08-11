@@ -23,20 +23,7 @@ import {
 } from "fabric-network";
 
 /////////////////
-import {
-  Client,
-  User,
-  // DiscoveryService,
-  // Discoverer,
-  // Committer,
-  // BuildProposalRequest,
-} from "fabric-common";
-
-import elliptic from "elliptic";
-// import crypto from "crypto";
-// import { ECCPrivateKey, KEYUTIL } from "jsrsasign";
-//const elliptic = require("elliptic");
-// const crypto = require("crypto");
+import { Client, User } from "fabric-common";
 
 const { loadFromConfig } = require("fabric-network/lib/impl/ccp/networkconfig");
 
@@ -158,6 +145,8 @@ export const JSONstringResponseType = "JSONstring";
  */
 export const K_DEFAULT_DOCKER_BINARY = "docker";
 
+export type SignPayloadCallback = (payload: Buffer) => Promise<Buffer>;
+
 export interface IPluginLedgerConnectorFabricOptions
   extends ICactusPluginOptions {
   logLevel?: LogLevelDesc;
@@ -175,6 +164,7 @@ export interface IPluginLedgerConnectorFabricOptions
   supportedIdentity?: FabricSigningCredentialType[];
   vaultConfig?: IVaultConfig;
   webSocketConfig?: IWebSocketConfig;
+  signCallback?: SignPayloadCallback;
 }
 
 export class PluginLedgerConnectorFabric
@@ -186,7 +176,8 @@ export class PluginLedgerConnectorFabric
       RunTransactionResponse
     >,
     ICactusPlugin,
-    IPluginWebService {
+    IPluginWebService
+{
   public static readonly CLASS_NAME = "PluginLedgerConnectorFabric";
   private readonly instanceId: string;
   private readonly log: Logger;
@@ -203,6 +194,8 @@ export class PluginLedgerConnectorFabric
   public get className(): string {
     return PluginLedgerConnectorFabric.CLASS_NAME;
   }
+
+  public signCallback: SignPayloadCallback | undefined;
 
   constructor(public readonly opts: IPluginLedgerConnectorFabricOptions) {
     const fnTag = `${this.className}#constructor()`;
@@ -245,6 +238,7 @@ export class PluginLedgerConnectorFabric
       webSocketConfig: opts.webSocketConfig,
     });
     this.certStore = new CertDatastore(opts.pluginRegistry);
+    this.signCallback = opts.signCallback;
   }
 
   public getOpenApiSpec(): unknown {
@@ -278,13 +272,12 @@ export class PluginLedgerConnectorFabric
     return;
   }
 
-  public async getConsensusAlgorithmFamily(): Promise<
-    ConsensusAlgorithmFamily
-  > {
+  public async getConsensusAlgorithmFamily(): Promise<ConsensusAlgorithmFamily> {
     return ConsensusAlgorithmFamily.Authority;
   }
   public async hasTransactionFinality(): Promise<boolean> {
-    const currentConsensusAlgorithmFamily = await this.getConsensusAlgorithmFamily();
+    const currentConsensusAlgorithmFamily =
+      await this.getConsensusAlgorithmFamily();
 
     return consensusHasTransactionFinality(currentConsensusAlgorithmFamily);
   }
@@ -1138,14 +1131,15 @@ export class PluginLedgerConnectorFabric
             const { endorsingPeers } = req;
             const channel = network.getChannel();
 
-            const allChannelEndorsers = (channel.getEndorsers() as unknown) as Array<
-              Endorser & { options: { pem: string } }
-            >;
+            const allChannelEndorsers =
+              channel.getEndorsers() as unknown as Array<
+                Endorser & { options: { pem: string } }
+              >;
 
             const endorsers = allChannelEndorsers
               .map((endorser) => {
                 const certificate = Certificate.fromPEM(
-                  (endorser.options.pem as unknown) as Buffer,
+                  endorser.options.pem as unknown as Buffer,
                 );
                 return { certificate, endorser };
               })
@@ -1582,48 +1576,50 @@ export class PluginLedgerConnectorFabric
   }
 
   public async transactSigned(
-    privateKeyPEM: string,
     cert: string,
-    username: string,
-    pass: string,
     channelName: string,
     contractName: string,
+    methodName: string,
+    methodArgs: any[],
   ): Promise<any> {
-    this.log.warn(
-      "transactSigned()",
-      privateKeyPEM,
-      cert,
-      username,
-      pass,
-      channelName,
-    );
+    this.log.info("transactSigned() started");
 
-    // todo - types fix
-    const { prvKeyHex } = KEYUTIL.getKey(privateKeyPEM) as any; // convert the pem encoded key to hex encoded private key
-    const EC = elliptic.ec;
-    const ecdsaCurve = (elliptic.curves as any)["p256"];
-    const ecdsa = new EC(ecdsaCurve);
-    const signKey = ecdsa.keyFromPrivate(prvKeyHex, "hex");
-    this.log.warn("signKey", signKey, "prvKeyHex", prvKeyHex);
+    if (!this.signCallback) {
+      throw new Error(
+        "No signing callback was set for this connector - abort!",
+      );
+    }
 
-    // TODO: Just cert?? should work...
-    const user = User.createUser(
-      username,
-      pass,
+    ////////////////////
+    // USER IDX
+    // no priv key or credentials
+    ////////////////////
+
+    const userPlain = User.createUser(
+      "",
+      "",
       "Org1MSP", // todo -arg?
       cert,
-      privateKeyPEM,
     );
 
-    // Creating Client, Identity Context, etc
-    const client = new Client("transactSignedClient");
+    ////////////////////
+    // SETUP CLIENT
+    ////////////////////
 
-    this.log.error("loadFromConfig", loadFromConfig);
+    const client = new Client("transactSignedClient");
     await loadFromConfig(client, this.opts.connectionProfile);
-    this.log.error("INIT CLIENT", client);
-    const idx = client.newIdentityContext(user);
-    this.log.warn("HODOR USER", user);
-    this.log.warn("HODOR IDX", idx);
+
+    const idxPlain = client.newIdentityContext(userPlain);
+
+    // PEER DISCOVERY
+    // const discoveryUser = User.createUser(
+    //   username, // TODO - no username / password
+    //   pass,
+    //   "Org1MSP",
+    //   cert,
+    //   privateKeyPEM,
+    // );
+    // const discoveryIdx = client.newIdentityContext(discoveryUser);
 
     // Set discoverers (endorsers must be present already)
     const channel = client.getChannel(channelName);
@@ -1636,73 +1632,54 @@ export class PluginLedgerConnectorFabric
 
     // Do the discovery
     const discoveryService = channel.newDiscoveryService(channel.name);
-    discoveryService.build(idx);
-    await discoveryService.sign(idx);
+    const discoveryBytes = discoveryService.build(idxPlain);
+    const discsignature = await this.signCallback(discoveryBytes);
+    await discoveryService.sign(discsignature);
     await discoveryService.send({
       asLocalhost: true,
       targets: discoverers,
     });
-    this.log.error("COMPLETE CLIENT", client);
-    this.log.error("COMPLETE channel", channel);
+    this.log.warn("COMPLETE CLIENT", client);
+    this.log.warn("COMPLETE CHANNEL", channel);
 
-    // Creating Proposal
-    // const endorsement = channel.newEndorsement(contractName);
-    // const proposalBuildRequest: BuildProposalRequest = {
-    //   fcn: "TransferAsset",
-    //   args: ["asset2", "Kavin"],
-    //   generateTransactionId: false,
-    // };
-    // // if (this.transientMap) {
-    // //   request.transientMap = this.transientMap;
-    // // }
-    // endorsement.build(idx, proposalBuildRequest);
-    // await endorsement.sign(idx);
+    ////////////////////
+    // ENDORSEMENT
+    ////////////////////
 
-    // const proposalResponses = await endorsement.send({
-    //   targets: channel.getEndorsers(),
-    // });
-    // this.log.warn("ENDORESE RESPONSES:", proposalResponses.responses);
-
-    /////////
     const endorsement = channel.newEndorsement(contractName);
-    const build_options = { fcn: "TransferAsset", args: ["asset2", "Bar"] };
-    // const proposalBytes = endorsement.build(idx, build_options);
-    // this.log.warn("proposalBytes", proposalBytes);
-
-    // // Calculate Hash for transaction Proposal Bytes
-    // const hash = crypto
-    //   .createHash("sha256")
-    //   .update(proposalBytes)
-    //   .digest("hex");
-    // this.log.warn("hash", hash);
-
-    // // Creating Signature
-    // const sig = ecdsa.sign(Buffer.from(hash, "hex"), signKey, {
-    //   canonical: true,
-    // });
-    // const signature = Buffer.from(sig.toDER());
-    // this.log.warn("signature:", signature);
+    const build_options = { fcn: methodName, args: methodArgs };
+    const proposalBytes = endorsement.build(idxPlain, build_options);
+    const signature = await this.signCallback(proposalBytes); // todo - with callback
 
     // Final - Sending Proposal Request
-    // await endorsement.sign(signature);
-    endorsement.build(idx, build_options);
-    await endorsement.sign(idx);
+    await endorsement.sign(signature);
     const proposalResponses = await endorsement.send({
       targets: channel.getEndorsers(),
     });
+
+    // endorsement.build(idx, build_options);
+    // await endorsement.sign(idx);
+
     this.log.warn("ENDORESE RESPONSES:", proposalResponses.responses);
 
-    // Commit the Transaction
+    ////////////////////
+    // COMMIT
+    ////////////////////
+
     const commitReq = endorsement.newCommit();
-    this.log.warn("commitReq:", channel.getCommitters());
-    commitReq.build(idx);
-    await commitReq.sign(idx);
+    const commitProposalBytes = commitReq.build(idxPlain);
+    const signatureCommit = await this.signCallback(commitProposalBytes);
+    this.log.warn("signatureCommit:", signatureCommit);
+
+    // Final - Sending Proposal Request
+    await commitReq.sign(signatureCommit);
+
+    // commitReq.build(idx);
+    // await commitReq.sign(idx);
+
     const res = await commitReq.send({
       targets: channel.getCommitters(),
     });
     this.log.warn("Commit Result: ", res);
-
-    // TODO - events
-
   }
 }

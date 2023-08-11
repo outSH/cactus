@@ -57,10 +57,9 @@ import {
   DefaultEventHandlerStrategy,
   GatewayOptions,
   FabricContractInvocationType,
-  // FabricSigningCredential,
   RunTransactionRequest,
   FabricApiClient,
-  // WatchBlocksListenerTypeV1,
+  signProposal,
 } from "../../../../main/typescript/public-api";
 
 // Logger setup
@@ -160,6 +159,8 @@ describe("Offline transaction signing tests", () => {
         strategy: DefaultEventHandlerStrategy.NetworkScopeAnyfortx,
         commitTimeout: 300,
       },
+      signCallback: async (payload) =>
+        signProposal(adminIdentity.credentials.privateKey, payload),
     });
 
     // Run http server
@@ -299,13 +300,14 @@ describe("Offline transaction signing tests", () => {
 
     // TRANSACT
     await fabricConnectorPlugin.transactSigned(
-      adminIdentity.credentials.privateKey,
       adminIdentity.credentials.certificate,
-      "admin",
-      "adminpw",
       ledgerChannelName,
       ledgerContractName,
+      "TransferAsset",
+      ["asset2", "BarC"],
     );
+
+    await new Promise((resolve) => setTimeout(resolve, 3000));
 
     // CHECK
     const res = await apiClient.runTransactionV1({
