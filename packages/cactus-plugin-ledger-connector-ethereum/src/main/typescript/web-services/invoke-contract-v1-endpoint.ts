@@ -6,6 +6,7 @@ import {
   LogLevelDesc,
   LoggerProvider,
   IAsyncProvider,
+  safeStringifyException,
 } from "@hyperledger/cactus-common";
 import {
   IEndpointAuthzOptions,
@@ -17,7 +18,6 @@ import { registerWebServiceEndpoint } from "@hyperledger/cactus-core";
 import { PluginLedgerConnectorEthereum } from "../plugin-ledger-connector-ethereum";
 
 import OAS from "../../json/openapi.json";
-import { InvokeContractV1Request } from "../generated/openapi/typescript-axios/api";
 
 export interface IInvokeContractEndpointOptions {
   logLevel?: LogLevelDesc;
@@ -50,11 +50,11 @@ export class InvokeContractEndpoint implements IWebServiceEndpoint {
   }
 
   public getPath(): string {
-    return this.oasPath.post["x-hyperledger-cactus"].http.path;
+    return this.oasPath.post["x-hyperledger-cacti"].http.path;
   }
 
   public getVerbLowerCase(): string {
-    return this.oasPath.post["x-hyperledger-cactus"].http.verbLowerCase;
+    return this.oasPath.post["x-hyperledger-cacti"].http.verbLowerCase;
   }
 
   public getOperationId(): string {
@@ -85,17 +85,13 @@ export class InvokeContractEndpoint implements IWebServiceEndpoint {
   public async handleRequest(req: Request, res: Response): Promise<void> {
     const reqTag = `${this.getVerbLowerCase()} - ${this.getPath()}`;
     this.log.debug(reqTag);
-    const reqBody: InvokeContractV1Request = req.body;
     try {
-      const resBody = await this.options.connector.getContractInfoKeychain(
-        reqBody,
-      );
-      res.json(resBody);
+      res.json(await this.options.connector.invokeContract(req.body));
     } catch (ex) {
       this.log.error(`Crash while serving ${reqTag}`, ex);
       res.status(500).json({
         message: "Internal Server Error",
-        error: ex?.stack || ex?.message,
+        error: safeStringifyException(ex),
       });
     }
   }
