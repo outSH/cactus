@@ -1,9 +1,10 @@
 {
   "name": "@hyperledger/cactus-plugin-ledger-connector-ethereum",
   "version": "2.0.0-alpha.1",
-  "description": "Allows Cactus nodes to connect to a Ethereum ledger.",
+  "description": "Allows Cacti nodes to connect to a Ethereum ledger.",
   "keywords": [
     "Hyperledger",
+    "Cacti",
     "Cactus",
     "Integration",
     "Blockchain",
@@ -19,9 +20,9 @@
   },
   "license": "Apache-2.0",
   "author": {
-    "name": "Hyperledger Cactus Contributors",
-    "email": "cactus@lists.hyperledger.org",
-    "url": "https://www.hyperledger.org/use/cactus"
+    "name": "Hyperledger Cacti Contributors",
+    "email": "cacti@lists.hyperledger.org",
+    "url": "https://www.hyperledger.org/use/cacti"
   },
   "contributors": [
     {

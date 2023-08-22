@@ -40,14 +40,15 @@ import HelloWorldWithArgContractJson from "../../solidity/hello-world-with-arg-c
 import {
   EthContractInvocationType,
   PluginLedgerConnectorEthereum,
-  Web3SigningCredentialCactusKeychainRef,
+  Web3SigningCredentialCactiKeychainRef,
   Web3SigningCredentialType,
   DefaultApi as EthereumApi,
-  DeployContractSolidityBytecodeV1Request,
   RunTransactionRequest,
   InvokeContractV1Request,
+  DeployContractV1Request,
+  ContractKeychainDefinition,
 } from "../../../main/typescript/public-api";
-import { K_CACTUS_ETHEREUM_TOTAL_TX_COUNT } from "../../../main/typescript/prometheus-exporter/metrics";
+import { K_CACTI_ETHEREUM_TOTAL_TX_COUNT } from "../../../main/typescript/prometheus-exporter/metrics";
 
 const containerImageName = "ghcr.io/outsh/cactus_geth_all_in_one";
 const containerImageVersion = "test-v01";
@@ -167,9 +168,11 @@ describe("Ethereum contract deploy and invoke using keychain tests", () => {
   //////////////////////////////////
 
   test("deploys contract using keychain", async () => {
-    const deployOut = await apiClient.deployContractSolBytecodeV1({
-      contractName: HelloWorldContractJson.contractName,
-      keychainId: keychainPlugin.getKeychainId(),
+    const deployOut = await apiClient.deployContract({
+      contract: {
+        contractName: HelloWorldContractJson.contractName,
+        keychainId: keychainPlugin.getKeychainId(),
+      },
       web3SigningCredential: {
         ethAccount: WHALE_ACCOUNT_ADDRESS,
         secret: "",
@@ -185,10 +188,12 @@ describe("Ethereum contract deploy and invoke using keychain tests", () => {
       .contractAddress as string;
     expect(typeof contractAddress).toBe("string");
     const invokeOut = await apiClient.invokeContractV1({
-      contractName: HelloWorldContractJson.contractName,
+      contract: {
+        contractName: HelloWorldContractJson.contractName,
+        keychainId: keychainPlugin.getKeychainId(),
+      },
       invocationType: EthContractInvocationType.Call,
       methodName: "sayHello",
-      keychainId: keychainPlugin.getKeychainId(),
       params: [],
       web3SigningCredential: {
         ethAccount: WHALE_ACCOUNT_ADDRESS,
@@ -203,9 +208,11 @@ describe("Ethereum contract deploy and invoke using keychain tests", () => {
   });
 
   test("deploys contract using keychain with constructorArgs", async () => {
-    const deployOut = await apiClient.deployContractSolBytecodeV1({
-      contractName: HelloWorldWithArgContractJson.contractName,
-      keychainId: keychainPlugin.getKeychainId(),
+    const deployOut = await apiClient.deployContract({
+      contract: {
+        contractName: HelloWorldWithArgContractJson.contractName,
+        keychainId: keychainPlugin.getKeychainId(),
+      },
       web3SigningCredential: {
         ethAccount: WHALE_ACCOUNT_ADDRESS,
         secret: "",
@@ -219,29 +226,31 @@ describe("Ethereum contract deploy and invoke using keychain tests", () => {
     expect(deployOut.data.transactionReceipt.contractAddress).toBeTruthy();
   });
 
-  test("deployContractSolBytecodeV1 without contractName should fail", async () => {
+  test("deployContract without contractName should fail", async () => {
     try {
-      await apiClient.deployContractSolBytecodeV1({
-        keychainId: keychainPlugin.getKeychainId(),
+      await apiClient.deployContract({
+        contract: {
+          keychainId: keychainPlugin.getKeychainId(),
+        } as ContractKeychainDefinition,
         web3SigningCredential: {
           ethAccount: WHALE_ACCOUNT_ADDRESS,
           secret: "",
           type: Web3SigningCredentialType.GethKeychainPassword,
         },
-      } as DeployContractSolidityBytecodeV1Request);
-      fail(
-        "Expected deployContractSolBytecodeV1 call to fail but it succeeded.",
-      );
+      });
+      fail("Expected deployContract call to fail but it succeeded.");
     } catch (error) {
-      console.log("deployContractSolBytecodeV1 failed as expected");
+      console.log("deployContract failed as expected");
     }
   });
 
-  test("deployContractSolBytecodeV1 with additional parameters should fail", async () => {
+  test("deployContract with additional parameters should fail", async () => {
     try {
-      await apiClient.deployContractSolBytecodeV1({
-        contractName: HelloWorldContractJson.contractName,
-        keychainId: keychainPlugin.getKeychainId(),
+      await apiClient.deployContract({
+        contract: {
+          contractName: HelloWorldContractJson.contractName,
+          keychainId: keychainPlugin.getKeychainId(),
+        },
         web3SigningCredential: {
           ethAccount: WHALE_ACCOUNT_ADDRESS,
           secret: "",
@@ -249,12 +258,10 @@ describe("Ethereum contract deploy and invoke using keychain tests", () => {
         },
         gas: 1000000,
         fake: 4,
-      } as DeployContractSolidityBytecodeV1Request);
-      fail(
-        "Expected deployContractSolBytecodeV1 call to fail but it succeeded.",
-      );
+      } as DeployContractV1Request);
+      fail("Expected deployContract call to fail but it succeeded.");
     } catch (error) {
-      console.log("deployContractSolBytecodeV1 failed as expected");
+      console.log("deployContract failed as expected");
     }
   });
 
@@ -263,48 +270,51 @@ describe("Ethereum contract deploy and invoke using keychain tests", () => {
   //////////////////////////////////
 
   test("invoke Web3SigningCredentialType.GETHKEYCHAINPASSWORD", async () => {
-    const nonce = await web3.eth.getTransactionCount(WHALE_ACCOUNT_ADDRESS);
     const newName = `DrCactus${uuidV4()}`;
     const setNameOut = await apiClient.invokeContractV1({
-      contractName: HelloWorldContractJson.contractName,
+      contract: {
+        contractName: HelloWorldContractJson.contractName,
+        keychainId: keychainPlugin.getKeychainId(),
+      },
       invocationType: EthContractInvocationType.Send,
       methodName: "setName",
-      keychainId: keychainPlugin.getKeychainId(),
       params: [newName],
       web3SigningCredential: {
         ethAccount: WHALE_ACCOUNT_ADDRESS,
         secret: "",
         type: Web3SigningCredentialType.GethKeychainPassword,
       },
-      nonce: nonce.toString(),
     });
     expect(setNameOut).toBeTruthy();
     expect(setNameOut.data).toBeTruthy();
 
     try {
       await apiClient.invokeContractV1({
-        contractName: HelloWorldContractJson.contractName,
+        contract: {
+          contractName: HelloWorldContractJson.contractName,
+          keychainId: keychainPlugin.getKeychainId(),
+        },
         invocationType: EthContractInvocationType.Send,
-        methodName: "setName",
-        keychainId: keychainPlugin.getKeychainId(),
+        methodName: "foo",
         params: [newName],
         web3SigningCredential: {
           ethAccount: WHALE_ACCOUNT_ADDRESS,
           secret: "",
           type: Web3SigningCredentialType.GethKeychainPassword,
         },
-        nonce: nonce.toString(),
       });
       fail("Expected invokeContractV1 call to fail but it succeeded.");
     } catch (error) {
-      expect(error).not.toEqual("Nonce too low");
+      expect(error).toBeTruthy();
     }
 
     const getNameOut = await apiClient.invokeContractV1({
-      contractName: HelloWorldContractJson.contractName,
+      contract: {
+        contractName: HelloWorldContractJson.contractName,
+        keychainId: keychainPlugin.getKeychainId(),
+      },
       invocationType: EthContractInvocationType.Send,
       methodName: "getName",
-      keychainId: keychainPlugin.getKeychainId(),
       params: [],
       web3SigningCredential: {
         ethAccount: WHALE_ACCOUNT_ADDRESS,
@@ -317,10 +327,12 @@ describe("Ethereum contract deploy and invoke using keychain tests", () => {
     expect(getNameOut.data.success).toBeTruthy();
 
     const invokeGetNameOut = await apiClient.invokeContractV1({
-      contractName: HelloWorldContractJson.contractName,
+      contract: {
+        contractName: HelloWorldContractJson.contractName,
+        keychainId: keychainPlugin.getKeychainId(),
+      },
       invocationType: EthContractInvocationType.Call,
       methodName: "getName",
-      keychainId: keychainPlugin.getKeychainId(),
       params: [],
       web3SigningCredential: {
         ethAccount: WHALE_ACCOUNT_ADDRESS,
@@ -371,23 +383,22 @@ describe("Ethereum contract deploy and invoke using keychain tests", () => {
           type: Web3SigningCredentialType.None,
         },
       } as RunTransactionRequest);
-      fail(
-        "Expected deployContractSolBytecodeV1 call to fail but it succeeded.",
-      );
+      fail("Expected runTransactionV1 call to fail but it succeeded.");
     } catch (error) {
-      console.log("deployContractSolBytecodeV1 failed as expected");
+      console.log("runTransactionV1 failed as expected");
     }
   });
 
   test("invoke Web3SigningCredentialType.PrivateKeyHex", async () => {
     const priorityFee = web3.utils.toWei(2, "gwei");
-    const nonce = await web3.eth.getTransactionCount(testEthAccount.address);
     const newName = `DrCactus${uuidV4()}`;
     const setNameOut = await apiClient.invokeContractV1({
-      contractName: HelloWorldContractJson.contractName,
+      contract: {
+        contractName: HelloWorldContractJson.contractName,
+        keychainId: keychainPlugin.getKeychainId(),
+      },
       invocationType: EthContractInvocationType.Send,
       methodName: "setName",
-      keychainId: keychainPlugin.getKeychainId(),
       params: [newName],
       gasConfig: {
         maxPriorityFeePerGas: priorityFee,
@@ -397,17 +408,18 @@ describe("Ethereum contract deploy and invoke using keychain tests", () => {
         secret: testEthAccount.privateKey,
         type: Web3SigningCredentialType.PrivateKeyHex,
       },
-      nonce: nonce.toString(),
     });
     expect(setNameOut).toBeTruthy();
     expect(setNameOut.data).toBeTruthy();
 
     try {
       await apiClient.invokeContractV1({
-        contractName: HelloWorldContractJson.contractName,
+        contract: {
+          contractName: HelloWorldContractJson.contractName,
+          keychainId: keychainPlugin.getKeychainId(),
+        },
         invocationType: EthContractInvocationType.Send,
-        methodName: "setName",
-        keychainId: keychainPlugin.getKeychainId(),
+        methodName: "foo",
         params: [newName],
         gasConfig: {
           maxPriorityFeePerGas: priorityFee,
@@ -417,18 +429,19 @@ describe("Ethereum contract deploy and invoke using keychain tests", () => {
           secret: testEthAccount.privateKey,
           type: Web3SigningCredentialType.PrivateKeyHex,
         },
-        nonce: nonce.toString(),
       });
       fail("Expected invokeContractV1 call to fail but it succeeded.");
     } catch (error) {
-      expect(error).not.toEqual("Nonce too low");
+      expect(error).toBeTruthy();
     }
 
     const invokeGetNameOut = await apiClient.invokeContractV1({
-      contractName: HelloWorldContractJson.contractName,
+      contract: {
+        contractName: HelloWorldContractJson.contractName,
+        keychainId: keychainPlugin.getKeychainId(),
+      },
       invocationType: EthContractInvocationType.Call,
       methodName: "getName",
-      keychainId: keychainPlugin.getKeychainId(),
       params: [],
       web3SigningCredential: {
         ethAccount: testEthAccount.address,
@@ -442,40 +455,41 @@ describe("Ethereum contract deploy and invoke using keychain tests", () => {
     expect(invokeGetNameOut.data.callOutput).toBe(newName);
   });
 
-  test("invoke Web3SigningCredentialType.CactusKeychainRef", async () => {
+  test("invoke Web3SigningCredentialType.CactiKeychainRef", async () => {
     const newName = `DrCactus${uuidV4()}`;
-    const nonce = await web3.eth.getTransactionCount(testEthAccount.address);
     const priorityFee = web3.utils.toWei(2, "gwei");
 
-    const web3SigningCredential: Web3SigningCredentialCactusKeychainRef = {
+    const web3SigningCredential: Web3SigningCredentialCactiKeychainRef = {
       ethAccount: testEthAccount.address,
       keychainEntryKey,
       keychainId: keychainPlugin.getKeychainId(),
-      type: Web3SigningCredentialType.CactusKeychainRef,
+      type: Web3SigningCredentialType.CactiKeychainRef,
     };
 
-    // @todo - using too large nonce freezes the test! Fix that
     const setNameOut = await apiClient.invokeContractV1({
-      contractName: HelloWorldContractJson.contractName,
+      contract: {
+        contractName: HelloWorldContractJson.contractName,
+        keychainId: keychainPlugin.getKeychainId(),
+      },
       invocationType: EthContractInvocationType.Send,
       methodName: "setName",
-      keychainId: keychainPlugin.getKeychainId(),
       params: [newName],
       gasConfig: {
         maxPriorityFeePerGas: priorityFee,
       },
       web3SigningCredential,
-      nonce: nonce.toString(),
     });
     expect(setNameOut).toBeTruthy();
     expect(setNameOut.data).toBeTruthy();
 
     try {
       await apiClient.invokeContractV1({
-        contractName: HelloWorldContractJson.contractName,
+        contract: {
+          contractName: HelloWorldContractJson.contractName,
+          keychainId: keychainPlugin.getKeychainId(),
+        },
         invocationType: EthContractInvocationType.Send,
-        methodName: "setName",
-        keychainId: keychainPlugin.getKeychainId(),
+        methodName: "foo",
         params: [newName],
         gasConfig: {
           maxPriorityFeePerGas: priorityFee,
@@ -485,18 +499,19 @@ describe("Ethereum contract deploy and invoke using keychain tests", () => {
           secret: "",
           type: Web3SigningCredentialType.GethKeychainPassword,
         },
-        nonce: nonce.toString(),
       });
       fail("Expected invokeContractV1 call to fail but it succeeded.");
     } catch (error) {
-      expect(error).not.toEqual("Nonce too low");
+      expect(error).toBeTruthy();
     }
 
     const invokeGetNameOut = await apiClient.invokeContractV1({
-      contractName: HelloWorldContractJson.contractName,
+      contract: {
+        contractName: HelloWorldContractJson.contractName,
+        keychainId: keychainPlugin.getKeychainId(),
+      },
       invocationType: EthContractInvocationType.Call,
       methodName: "getName",
-      keychainId: keychainPlugin.getKeychainId(),
       params: [],
       web3SigningCredential,
     });
@@ -509,9 +524,11 @@ describe("Ethereum contract deploy and invoke using keychain tests", () => {
   test("invokeContractV1 without methodName should fail", async () => {
     try {
       await apiClient.invokeContractV1({
-        contractName: HelloWorldContractJson.contractName,
+        contract: {
+          contractName: HelloWorldContractJson.contractName,
+          keychainId: keychainPlugin.getKeychainId(),
+        },
         invocationType: EthContractInvocationType.Send,
-        keychainId: keychainPlugin.getKeychainId(),
         params: [`DrCactus${uuidV4()}`],
         web3SigningCredential: {
           ethAccount: WHALE_ACCOUNT_ADDRESS,
@@ -519,11 +536,9 @@ describe("Ethereum contract deploy and invoke using keychain tests", () => {
           type: Web3SigningCredentialType.GethKeychainPassword,
         },
       } as InvokeContractV1Request);
-      fail(
-        "Expected deployContractSolBytecodeV1 call to fail but it succeeded.",
-      );
+      fail("Expected invokeContractV1 call to fail but it succeeded.");
     } catch (error) {
-      console.log("deployContractSolBytecodeV1 failed as expected");
+      console.log("invokeContractV1 failed as expected");
     }
   });
 
@@ -532,14 +547,14 @@ describe("Ethereum contract deploy and invoke using keychain tests", () => {
     const res = await apiClient.getPrometheusMetricsV1();
     const promMetricsOutput =
       "# HELP " +
-      K_CACTUS_ETHEREUM_TOTAL_TX_COUNT +
+      K_CACTI_ETHEREUM_TOTAL_TX_COUNT +
       " Total transactions executed\n" +
       "# TYPE " +
-      K_CACTUS_ETHEREUM_TOTAL_TX_COUNT +
+      K_CACTI_ETHEREUM_TOTAL_TX_COUNT +
       " gauge\n" +
-      K_CACTUS_ETHEREUM_TOTAL_TX_COUNT +
+      K_CACTI_ETHEREUM_TOTAL_TX_COUNT +
       '{type="' +
-      K_CACTUS_ETHEREUM_TOTAL_TX_COUNT +
+      K_CACTI_ETHEREUM_TOTAL_TX_COUNT +
       '"} 3';
     expect(res);
     expect(res.data);

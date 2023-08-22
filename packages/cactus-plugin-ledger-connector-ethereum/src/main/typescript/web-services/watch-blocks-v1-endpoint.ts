@@ -6,6 +6,7 @@ import {
   LogLevelDesc,
   LoggerProvider,
   Checks,
+  safeStringifyException,
 } from "@hyperledger/cactus-common";
 import {
   WatchBlocksV1Options,
@@ -106,7 +107,7 @@ export class WatchBlocksV1Endpoint {
 
     newBlocksSubscription.on("error", (error) => {
       console.log("Error when subscribing to New block header: ", error);
-      socket.emit(WatchBlocksV1.Error, error.message);
+      socket.emit(WatchBlocksV1.Error, safeStringifyException(error));
       newBlocksSubscription.unsubscribe();
     });
 
