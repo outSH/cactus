@@ -50,6 +50,7 @@ src/main/kotlin/org/openapitools/client/models/GetBlockResponseEncodedV1.kt
 src/main/kotlin/org/openapitools/client/models/GetBlockResponseV1.kt
 src/main/kotlin/org/openapitools/client/models/GetTransactionReceiptResponse.kt
 src/main/kotlin/org/openapitools/client/models/InlineResponse501.kt
+src/main/kotlin/org/openapitools/client/models/RunOfflineSignTransactionRequest.kt
 src/main/kotlin/org/openapitools/client/models/RunTransactionRequest.kt
 src/main/kotlin/org/openapitools/client/models/RunTransactionResponse.kt
 src/main/kotlin/org/openapitools/client/models/SSHExecCommandResponse.kt

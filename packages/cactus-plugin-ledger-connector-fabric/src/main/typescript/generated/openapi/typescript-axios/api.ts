@@ -911,6 +911,85 @@ export interface InlineResponse501 {
 /**
  * 
  * @export
+ * @interface RunOfflineSignTransactionRequest
+ */
+export interface RunOfflineSignTransactionRequest {
+    /**
+     * An array of MSP IDs to set as the list of endorsing peers for the transaction.
+     * @type {Array<string>}
+     * @memberof RunOfflineSignTransactionRequest
+     */
+    endorsingPeers?: Array<string>;
+    /**
+     * 
+     * @type {object}
+     * @memberof RunOfflineSignTransactionRequest
+     */
+    transientData?: object | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof RunOfflineSignTransactionRequest
+     */
+    signerCertificate: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof RunOfflineSignTransactionRequest
+     */
+    signerMspID: string;
+    /**
+     * Can be used to uniquely identify and authorize signing request
+     * @type {any}
+     * @memberof RunOfflineSignTransactionRequest
+     */
+    uniqueTransactionData?: any;
+    /**
+     * 
+     * @type {string}
+     * @memberof RunOfflineSignTransactionRequest
+     */
+    channelName: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof RunOfflineSignTransactionRequest
+     */
+    contractName: string;
+    /**
+     * 
+     * @type {FabricContractInvocationType}
+     * @memberof RunOfflineSignTransactionRequest
+     */
+    invocationType: FabricContractInvocationType;
+    /**
+     * 
+     * @type {string}
+     * @memberof RunOfflineSignTransactionRequest
+     */
+    methodName: string;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof RunOfflineSignTransactionRequest
+     */
+    params: Array<string>;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof RunOfflineSignTransactionRequest
+     */
+    endorsingParties?: Array<string>;
+    /**
+     * 
+     * @type {string}
+     * @memberof RunOfflineSignTransactionRequest
+     */
+    responseType?: string;
+}
+/**
+ * 
+ * @export
  * @interface RunTransactionRequest
  */
 export interface RunTransactionRequest {

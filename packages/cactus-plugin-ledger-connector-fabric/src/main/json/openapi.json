@@ -514,6 +514,91 @@
                     }
                 }
             },
+            "RunOfflineSignTransactionRequest": {
+                "type": "object",
+                "required": [
+                    "signerCertificate",
+                    "signerMspID",
+                    "channelName",
+                    "contractName",
+                    "invocationType",
+                    "methodName",
+                    "params"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                    "endorsingPeers": {
+                        "description": "An array of MSP IDs to set as the list of endorsing peers for the transaction.",
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 4096,
+                            "nullable": false
+                        }
+                    },
+                    "transientData": {
+                        "type": "object",
+                        "nullable": true
+                    },
+                    "signerCertificate": {
+                        "type": "string",
+                        "nullable": false
+                    },
+                    "signerMspID": {
+                        "type": "string",
+                        "nullable": false
+                    },
+                    "uniqueTransactionData": {
+                        "description": "Can be used to uniquely identify and authorize signing request",
+                        "nullable": false
+                    },
+                    "channelName": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 100,
+                        "nullable": false
+                    },
+                    "contractName": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 100,
+                        "nullable": false
+                    },
+                    "invocationType": {
+                        "$ref": "#/components/schemas/FabricContractInvocationType",
+                        "nullable": false,
+                        "description": "Indicates if it is a CALL or a SEND type of invocation where only SEND ends up creating an actual transaction on the ledger."
+                    },
+                    "methodName": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 100,
+                        "nullable": false
+                    },
+                    "params": {
+                        "type": "array",
+                        "nullable": false,
+                        "default": [],
+                        "items": {
+                            "type": "string",
+                            "nullable": true
+                        }
+                    },
+                    "endorsingParties": {
+                        "type": "array",
+                        "nullable": false,
+                        "default": [],
+                        "items": {
+                            "type": "string",
+                            "nullable": true
+                        }
+                    },
+                    "responseType":{
+                        "type": "string"
+                    }
+                }
+            },
             "GetTransactionReceiptResponse": {
                 "type": "object",
                 "properties": {

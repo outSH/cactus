@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { v4 as uuidv4 } from "uuid";
 
 import { Certificate } from "@fidm/x509";
 import { Express } from "express";
@@ -23,7 +24,7 @@ import {
 } from "fabric-network";
 
 /////////////////
-import { Client, User } from "fabric-common";
+import { Channel, Client, IdentityContext, User } from "fabric-common";
 
 const { loadFromConfig } = require("fabric-network/lib/impl/ccp/networkconfig");
 
@@ -91,6 +92,7 @@ import {
   GetBlockResponseV1,
   WatchBlocksV1,
   WatchBlocksOptionsV1,
+  RunOfflineSignTransactionRequest,
 } from "./generated/openapi/typescript-axios/index";
 
 import {
@@ -145,7 +147,10 @@ export const JSONstringResponseType = "JSONstring";
  */
 export const K_DEFAULT_DOCKER_BINARY = "docker";
 
-export type SignPayloadCallback = (payload: Buffer) => Promise<Buffer>;
+export type SignPayloadCallback = (
+  payload: Buffer,
+  txData: unknown,
+) => Promise<Buffer>;
 
 export interface IPluginLedgerConnectorFabricOptions
   extends ICactusPluginOptions {
@@ -176,8 +181,7 @@ export class PluginLedgerConnectorFabric
       RunTransactionResponse
     >,
     ICactusPlugin,
-    IPluginWebService
-{
+    IPluginWebService {
   public static readonly CLASS_NAME = "PluginLedgerConnectorFabric";
   private readonly instanceId: string;
   private readonly log: Logger;
@@ -272,12 +276,13 @@ export class PluginLedgerConnectorFabric
     return;
   }
 
-  public async getConsensusAlgorithmFamily(): Promise<ConsensusAlgorithmFamily> {
+  public async getConsensusAlgorithmFamily(): Promise<
+    ConsensusAlgorithmFamily
+  > {
     return ConsensusAlgorithmFamily.Authority;
   }
   public async hasTransactionFinality(): Promise<boolean> {
-    const currentConsensusAlgorithmFamily =
-      await this.getConsensusAlgorithmFamily();
+    const currentConsensusAlgorithmFamily = await this.getConsensusAlgorithmFamily();
 
     return consensusHasTransactionFinality(currentConsensusAlgorithmFamily);
   }
@@ -1131,15 +1136,14 @@ export class PluginLedgerConnectorFabric
             const { endorsingPeers } = req;
             const channel = network.getChannel();
 
-            const allChannelEndorsers =
-              channel.getEndorsers() as unknown as Array<
-                Endorser & { options: { pem: string } }
-              >;
+            const allChannelEndorsers = (channel.getEndorsers() as unknown) as Array<
+              Endorser & { options: { pem: string } }
+            >;
 
             const endorsers = allChannelEndorsers
               .map((endorser) => {
                 const certificate = Certificate.fromPEM(
-                  endorser.options.pem as unknown as Buffer,
+                  (endorser.options.pem as unknown) as Buffer,
                 );
                 return { certificate, endorser };
               })
@@ -1575,111 +1579,153 @@ export class PluginLedgerConnectorFabric
     };
   }
 
-  public async transactSigned(
-    cert: string,
+  /**
+   * Get plain Fabric Client, Channel and IdentityContext without a signer attached (like in gateway).
+   * These low-level entities can be used to manually sign and send requests.
+   * Node discovery will be done if configured in connector, so signCallback may be used in the process.
+   *
+   * @param channelName channel name to connect to
+   * @param signerCertificate signing user certificate
+   * @param signerMspID signing user mspid
+   * @param uniqueTransactionData unique transaction data to be passed to sign callback.
+   * @returns `Client`, `Channel` and `IdentityContext`
+   */
+  private async getFabricClientWithoutSigner(
     channelName: string,
-    contractName: string,
-    methodName: string,
-    methodArgs: any[],
-  ): Promise<any> {
-    this.log.info("transactSigned() started");
+    signerCertificate: string,
+    signerMspID: string,
+    uniqueTransactionData?: unknown,
+  ): Promise<{
+    client: Client;
+    channel: Channel;
+    userIdCtx: IdentityContext;
+  }> {
+    this.log.debug(`getFabricChannelWithoutSigner() channel ${channelName}`);
+    // Setup client without a signer
+    const clientId = `fcClient-${uuidv4()}`;
+    this.log.debug("Create Fabric Client without a signer with ID", clientId);
+    const client = new Client(clientId);
+    await loadFromConfig(client, this.opts.connectionProfile);
 
+    // Create user
+    const user = User.createUser("", "", signerMspID, signerCertificate);
+    const userIdCtx = client.newIdentityContext(user);
+
+    const channel = client.getChannel(channelName);
+
+    // Discover fabric nodes
+    if ((this.opts.discoveryOptions?.enabled ?? true) && this.signCallback) {
+      const discoverers = [];
+      for (const peer of client.getEndorsers()) {
+        const discoverer = channel.client.newDiscoverer(peer.name, peer.mspid);
+        discoverer.setEndpoint(peer.endpoint);
+        discoverers.push(discoverer);
+      }
+
+      const discoveryService = channel.newDiscoveryService(channel.name);
+      const discoveryRequest = discoveryService.build(userIdCtx);
+      const signature = await this.signCallback(
+        discoveryRequest,
+        uniqueTransactionData,
+      );
+      await discoveryService.sign(signature);
+      await discoveryService.send({
+        asLocalhost: this.opts.discoveryOptions?.asLocalhost ?? true,
+        targets: discoverers,
+      });
+    }
+
+    this.log.info(
+      `Created channel for ${channelName} with ${
+        channel.getMspids().length
+      } mspids, ${channel.getCommitters().length} commiters, ${
+        channel.getEndorsers().length
+      } endorsers`,
+    );
+
+    return {
+      client,
+      channel,
+      userIdCtx,
+    };
+  }
+
+  public async transactOfflineSign(
+    req: RunOfflineSignTransactionRequest,
+  ): Promise<RunTransactionResponse> {
+    this.log.info(
+      `transactOfflineSign() ${req.methodName}@${req.contractName} on channel ${req.channelName}`,
+    );
     if (!this.signCallback) {
       throw new Error(
         "No signing callback was set for this connector - abort!",
       );
     }
 
-    ////////////////////
-    // USER IDX
-    // no priv key or credentials
-    ////////////////////
-
-    const userPlain = User.createUser(
-      "",
-      "",
-      "Org1MSP", // todo -arg?
-      cert,
+    // Conenct Client and Channel, discover nodes
+    const { channel, userIdCtx } = await this.getFabricClientWithoutSigner(
+      req.channelName,
+      req.signerCertificate,
+      req.signerMspID,
+      req.uniqueTransactionData,
     );
 
-    ////////////////////
-    // SETUP CLIENT
-    ////////////////////
+    ////////////
+    // Endorse
 
-    const client = new Client("transactSignedClient");
-    await loadFromConfig(client, this.opts.connectionProfile);
-
-    const idxPlain = client.newIdentityContext(userPlain);
-
-    // PEER DISCOVERY
-    // const discoveryUser = User.createUser(
-    //   username, // TODO - no username / password
-    //   pass,
-    //   "Org1MSP",
-    //   cert,
-    //   privateKeyPEM,
-    // );
-    // const discoveryIdx = client.newIdentityContext(discoveryUser);
-
-    // Set discoverers (endorsers must be present already)
-    const channel = client.getChannel(channelName);
-    const discoverers = [];
-    for (const peer of client.getEndorsers()) {
-      const discoverer = channel.client.newDiscoverer(peer.name, peer.mspid);
-      discoverer.setEndpoint(peer.endpoint);
-      discoverers.push(discoverer);
-    }
-
-    // Do the discovery
-    const discoveryService = channel.newDiscoveryService(channel.name);
-    const discoveryBytes = discoveryService.build(idxPlain);
-    const discsignature = await this.signCallback(discoveryBytes);
-    await discoveryService.sign(discsignature);
-    await discoveryService.send({
-      asLocalhost: true,
-      targets: discoverers,
-    });
-    this.log.warn("COMPLETE CLIENT", client);
-    this.log.warn("COMPLETE CHANNEL", channel);
-
-    ////////////////////
-    // ENDORSEMENT
-    ////////////////////
-
-    const endorsement = channel.newEndorsement(contractName);
-    const build_options = { fcn: methodName, args: methodArgs };
-    const proposalBytes = endorsement.build(idxPlain, build_options);
-    const signature = await this.signCallback(proposalBytes); // todo - with callback
-
-    // Final - Sending Proposal Request
-    await endorsement.sign(signature);
-    const proposalResponses = await endorsement.send({
+    const endorsement = channel.newEndorsement(req.contractName);
+    const build_options = { fcn: req.methodName, args: req.params };
+    const endorsementRequest = endorsement.build(userIdCtx, build_options);
+    const endorsementSignature = await this.signCallback(
+      endorsementRequest,
+      req.uniqueTransactionData,
+    );
+    await endorsement.sign(endorsementSignature);
+    const endorsementResponse = await endorsement.send({
       targets: channel.getEndorsers(),
     });
 
-    // endorsement.build(idx, build_options);
-    // await endorsement.sign(idx);
+    if (
+      !endorsementResponse.responses ||
+      endorsementResponse.responses.length === 0
+    ) {
+      throw new Error("No endorsement responses from peers! Abort");
+    }
 
-    this.log.warn("ENDORESE RESPONSES:", proposalResponses.responses);
+    for (const response of endorsementResponse.responses) {
+      const endorsementStatus = `${response.connection.name}: ${
+        response.response.status
+      } message ${response.response.message}, endorsement: ${Boolean(
+        response.endorsement,
+      )}`;
 
-    ////////////////////
-    // COMMIT
-    ////////////////////
+      if (response.response.status !== 200 || !response.endorsement) {
+        this.log.warn(`Endorsement from peer ERROR: ${endorsementStatus}`);
+      } else {
+        this.log.debug(`Endorsement from peer OK: ${endorsementStatus}`);
+      }
+    }
 
-    const commitReq = endorsement.newCommit();
-    const commitProposalBytes = commitReq.build(idxPlain);
-    const signatureCommit = await this.signCallback(commitProposalBytes);
-    this.log.warn("signatureCommit:", signatureCommit);
+    ////////////
+    // Commit
 
-    // Final - Sending Proposal Request
-    await commitReq.sign(signatureCommit);
-
-    // commitReq.build(idx);
-    // await commitReq.sign(idx);
-
-    const res = await commitReq.send({
+    const commit = endorsement.newCommit();
+    const commitRequest = commit.build(userIdCtx);
+    const commitSignature = await this.signCallback(
+      commitRequest,
+      req.uniqueTransactionData,
+    );
+    await commit.sign(commitSignature);
+    const commitResponse = await commit.send({
       targets: channel.getCommitters(),
     });
-    this.log.warn("Commit Result: ", res);
+    this.log.debug("Commit response:", commitResponse);
+    this.prometheusExporter.addCurrentTransaction();
+
+    return {
+      functionOutput: commitResponse,
+      success: commitResponse.status === "SUCCESS",
+      transactionId: "TEST-TODO", // TODO, gen TxId
+    };
   }
 }

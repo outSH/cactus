@@ -159,8 +159,10 @@ describe("Offline transaction signing tests", () => {
         strategy: DefaultEventHandlerStrategy.NetworkScopeAnyfortx,
         commitTimeout: 300,
       },
-      signCallback: async (payload) =>
-        signProposal(adminIdentity.credentials.privateKey, payload),
+      signCallback: async (payload, txData) => {
+        log.error("signCallback called for tx:", txData);
+        return signProposal(adminIdentity.credentials.privateKey, payload);
+      },
     });
 
     // Run http server
@@ -299,13 +301,17 @@ describe("Offline transaction signing tests", () => {
     // });
 
     // TRANSACT
-    await fabricConnectorPlugin.transactSigned(
-      adminIdentity.credentials.certificate,
-      ledgerChannelName,
-      ledgerContractName,
-      "TransferAsset",
-      ["asset2", "BarC"],
-    );
+    const ress = await fabricConnectorPlugin.transactOfflineSign({
+      invocationType: FabricContractInvocationType.Send,
+      signerCertificate: adminIdentity.credentials.certificate,
+      signerMspID: "Org1MSP",
+      channelName: ledgerChannelName,
+      contractName: ledgerContractName,
+      methodName: "TransferAsset",
+      params: ["asset2", "BarC"],
+      uniqueTransactionData: "testTxId",
+    });
+    log.error("TX OFFLINE RESPONSE:", ress);
 
     await new Promise((resolve) => setTimeout(resolve, 3000));
 

@@ -76,6 +76,7 @@ Class | Method | HTTP request | Description
  - [org.openapitools.client.models.GetBlockResponseV1](docs/GetBlockResponseV1.md)
  - [org.openapitools.client.models.GetTransactionReceiptResponse](docs/GetTransactionReceiptResponse.md)
  - [org.openapitools.client.models.InlineResponse501](docs/InlineResponse501.md)
+ - [org.openapitools.client.models.RunOfflineSignTransactionRequest](docs/RunOfflineSignTransactionRequest.md)
  - [org.openapitools.client.models.RunTransactionRequest](docs/RunTransactionRequest.md)
  - [org.openapitools.client.models.RunTransactionResponse](docs/RunTransactionResponse.md)
  - [org.openapitools.client.models.SSHExecCommandResponse](docs/SSHExecCommandResponse.md)
