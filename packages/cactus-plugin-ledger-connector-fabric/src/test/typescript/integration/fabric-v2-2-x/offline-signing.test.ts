@@ -13,6 +13,7 @@ const fabricEnvVersion = "2.2.0";
 const fabricEnvCAVersion = "1.4.9";
 const ledgerChannelName = "mychannel";
 const ledgerContractName = "copyAssetTrade";
+const ledgerPrivateContractName = "privateAssetTrade";
 
 // For development on local sawtooth network
 // 1. leaveLedgerRunning = true, useRunningLedger = false to run ledger and leave it running after test finishes.
@@ -185,7 +186,7 @@ describe("Offline transaction signing tests", () => {
     const apiConfig = new Configuration({ basePath: apiHost });
     apiClient = new FabricApiClient(apiConfig);
 
-    // Deploy contract
+    // Deploy contract asset-transfer-basic
     if (!useRunningLedger) {
       const cmd = [
         "./network.sh",
@@ -221,6 +222,37 @@ describe("Offline transaction signing tests", () => {
       expect(resinit.data).toBeTruthy();
       expect(resinit.status).toEqual(200);
       log.error("INIT TX:", resinit.data);
+    }
+
+    // Deploy contract asset-transfer-private-data
+    if (!useRunningLedger) {
+      const cmd = [
+        "./network.sh",
+        "deployCC",
+        "-ccn",
+        ledgerPrivateContractName,
+        "-ccp",
+        "../asset-transfer-private-data/chaincode-go/",
+        "-ccl",
+        "go",
+        "-ccep",
+        "OR('Org1MSP.peer','Org2MSP.peer')",
+        "-cccg",
+        "../asset-transfer-private-data/chaincode-go/collections_config.json",
+      ];
+      const container = ledger.getContainer();
+      const timeout = 180000; // 3 minutes
+      const cwd = "/fabric-samples/test-network/";
+      const out = await Containers.exec(
+        container,
+        cmd,
+        timeout,
+        sutLogLevel,
+        cwd,
+      );
+      expect(out).toBeTruthy();
+
+      // TODO - read to confirm it worked?
     }
   });
 
@@ -283,22 +315,17 @@ describe("Offline transaction signing tests", () => {
   });
 
   test("Test offline sign ", async () => {
-    // MONITOR
-    // const watchObservable = apiClient.watchBlocksV1({
-    //   channelName: ledgerChannelName,
-    //   gatewayOptions,
-    //   type: WatchBlocksListenerTypeV1.Full,
-    // });
-
-    // const subscription = watchObservable.subscribe({
-    //   next(event: any) {
-    //     log.error("!!!!! event:", JSON.stringify(event));
-    //   },
-    //   error(err: any) {
-    //     log.error("watchBlocksV1() error:", err);
-    //     subscription.unsubscribe();
-    //   },
-    // });
+    // QUERY
+    const resquery = await fabricConnectorPlugin.transactOfflineSign({
+      signerCertificate: adminIdentity.credentials.certificate,
+      signerMspID: "Org1MSP",
+      channelName: ledgerChannelName,
+      contractName: ledgerContractName,
+      invocationType: FabricContractInvocationType.Call,
+      methodName: "GetAllAssets",
+      params: [],
+    });
+    log.error("QUERY RESPONSE:", resquery);
 
     // TRANSACT
     const ress = await fabricConnectorPlugin.transactOfflineSign({
@@ -312,21 +339,47 @@ describe("Offline transaction signing tests", () => {
       uniqueTransactionData: "testTxId",
     });
     log.error("TX OFFLINE RESPONSE:", ress);
+  });
 
-    await new Promise((resolve) => setTimeout(resolve, 3000));
+  test.only("Test offline sign private tx", async () => {
+    // TRANSACT
+    const assetID = uuidv4();
+    log.error("CREATE ASSETID:", assetID);
+    const transientAssetData = {
+      asset_properties: {
+        objectType: "asset",
+        assetID,
+        color: "gray",
+        size: 3,
+        appraisedValue: 500,
+      },
+    };
 
-    // CHECK
-    const res = await apiClient.runTransactionV1({
-      gatewayOptions,
+    const ress = await fabricConnectorPlugin.transactOfflineSign({
+      invocationType: FabricContractInvocationType.Sendprivate,
+      signerCertificate: adminIdentity.credentials.certificate,
+      signerMspID: "Org1MSP",
       channelName: ledgerChannelName,
-      contractName: ledgerContractName,
-      invocationType: FabricContractInvocationType.Call,
-      methodName: "GetAllAssets",
+      contractName: ledgerPrivateContractName,
+      methodName: "CreateAsset",
       params: [],
-    } as RunTransactionRequest);
-    expect(res).toBeTruthy();
-    expect(res.data).toBeTruthy();
-    expect(res.status).toEqual(200);
-    log.error("ASSETS:", res.data);
+      uniqueTransactionData: "testTxId",
+      transientData: transientAssetData,
+    });
+    log.error("TX PRIV OFFLINE RESPONSE:", ress);
+
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+
+    // QUERY
+    const resquery = await fabricConnectorPlugin.transactOfflineSign({
+      signerCertificate: adminIdentity.credentials.certificate,
+      signerMspID: "Org1MSP",
+      channelName: ledgerChannelName,
+      contractName: ledgerPrivateContractName,
+      invocationType: FabricContractInvocationType.Call,
+      methodName: "ReadAsset",
+      params: [assetID],
+    });
+    log.error("QUERY PRIV RESPONSE:", resquery);
   });
 });

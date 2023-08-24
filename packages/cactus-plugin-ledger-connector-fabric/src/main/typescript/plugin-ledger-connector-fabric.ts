@@ -24,7 +24,13 @@ import {
 } from "fabric-network";
 
 /////////////////
-import { Channel, Client, IdentityContext, User } from "fabric-common";
+import {
+  BuildProposalRequest,
+  Channel,
+  Client,
+  IdentityContext,
+  User,
+} from "fabric-common";
 
 const { loadFromConfig } = require("fabric-network/lib/impl/ccp/networkconfig");
 
@@ -1669,63 +1675,152 @@ export class PluginLedgerConnectorFabric
       req.signerMspID,
       req.uniqueTransactionData,
     );
+    const nextTransactionId = userIdCtx.calculateTransactionId().transactionId;
 
-    ////////////
-    // Endorse
+    // TODO - common responseType logic with regular transact() method.
 
-    const endorsement = channel.newEndorsement(req.contractName);
-    const build_options = { fcn: req.methodName, args: req.params };
-    const endorsementRequest = endorsement.build(userIdCtx, build_options);
-    const endorsementSignature = await this.signCallback(
-      endorsementRequest,
-      req.uniqueTransactionData,
-    );
-    await endorsement.sign(endorsementSignature);
-    const endorsementResponse = await endorsement.send({
-      targets: channel.getEndorsers(),
-    });
+    switch (req.invocationType) {
+      case FabricContractInvocationType.Call: {
+        const query = channel.newQuery(req.contractName);
+        const build_options = { fcn: req.methodName, args: req.params };
+        const queryRequest = query.build(userIdCtx, build_options);
+        const signature = await this.signCallback(
+          queryRequest,
+          req.uniqueTransactionData,
+        );
+        query.sign(signature);
+        const queryResponse = await query.send({
+          targets: channel.getEndorsers(),
+        });
 
-    if (
-      !endorsementResponse.responses ||
-      endorsementResponse.responses.length === 0
-    ) {
-      throw new Error("No endorsement responses from peers! Abort");
-    }
+        // Parse query results
+        // Strategy: first endorsed response is returned
+        for (const res of queryResponse.responses) {
+          if (res.response.status === 200 && res.endorsement) {
+            return {
+              functionOutput: asBuffer(res.response.payload).toString("utf-8"),
+              success: true,
+              transactionId: "",
+            };
+          }
+        }
 
-    for (const response of endorsementResponse.responses) {
-      const endorsementStatus = `${response.connection.name}: ${
-        response.response.status
-      } message ${response.response.message}, endorsement: ${Boolean(
-        response.endorsement,
-      )}`;
+        return {
+          functionOutput: JSON.stringify(queryResponse.errors),
+          success: false,
+          transactionId: "",
+        };
+      }
+      case FabricContractInvocationType.Send:
+      case FabricContractInvocationType.Sendprivate: {
+        // Private transactions needs transient data set
+        if (
+          req.invocationType === FabricContractInvocationType.Sendprivate &&
+          !req.transientData
+        ) {
+          throw new Error(
+            "Missing transient data in a private transaction mode",
+          );
+        }
 
-      if (response.response.status !== 200 || !response.endorsement) {
-        this.log.warn(`Endorsement from peer ERROR: ${endorsementStatus}`);
-      } else {
-        this.log.debug(`Endorsement from peer OK: ${endorsementStatus}`);
+        const endorsement = channel.newEndorsement(req.contractName);
+
+        const buildOptions: BuildProposalRequest = {
+          fcn: req.methodName,
+          args: req.params,
+        };
+        if (req.transientData) {
+          buildOptions.transientMap = this.toTransientMap(req.transientData);
+        }
+
+        const endorsementRequest = endorsement.build(userIdCtx, buildOptions);
+        const endorsementSignature = await this.signCallback(
+          endorsementRequest,
+          req.uniqueTransactionData,
+        );
+        await endorsement.sign(endorsementSignature);
+        const endorsementResponse = await endorsement.send({
+          targets: channel.getEndorsers(),
+        });
+
+        if (
+          !endorsementResponse.responses ||
+          endorsementResponse.responses.length === 0
+        ) {
+          throw new Error("No endorsement responses from peers! Abort");
+        }
+
+        // We will try to commit if at least one endorsment passed
+        let funResponse: Buffer | undefined;
+
+        for (const response of endorsementResponse.responses) {
+          const endorsementStatus = `${response.connection.name}: ${
+            response.response.status
+          } message ${response.response.message}, endorsement: ${Boolean(
+            response.endorsement,
+          )}`;
+
+          if (response.response.status !== 200 || !response.endorsement) {
+            this.log.warn(`Endorsement from peer ERROR: ${endorsementStatus}`);
+          } else {
+            this.log.debug(`Endorsement from peer OK: ${endorsementStatus}`);
+            funResponse = asBuffer(response.payload);
+          }
+        }
+
+        if (!funResponse) {
+          throw new Error("No valid endorsements received!"); // TODO error handling in this function.
+        }
+
+        const commit = endorsement.newCommit();
+        const commitRequest = commit.build(userIdCtx);
+        const commitSignature = await this.signCallback(
+          commitRequest,
+          req.uniqueTransactionData,
+        );
+        await commit.sign(commitSignature);
+        const commitResponse = await commit.send({
+          targets: channel.getCommitters(),
+        });
+        this.log.debug("Commit response:", commitResponse);
+        this.prometheusExporter.addCurrentTransaction();
+
+        return {
+          functionOutput: funResponse.toString("utf-8"),
+          success: commitResponse.status === "SUCCESS",
+          transactionId: nextTransactionId,
+        };
+      }
+      default: {
+        throw new Error(
+          `transactOfflineSign() Unknown invocation type: ${req.invocationType}`,
+        );
       }
     }
-
-    ////////////
-    // Commit
-
-    const commit = endorsement.newCommit();
-    const commitRequest = commit.build(userIdCtx);
-    const commitSignature = await this.signCallback(
-      commitRequest,
-      req.uniqueTransactionData,
-    );
-    await commit.sign(commitSignature);
-    const commitResponse = await commit.send({
-      targets: channel.getCommitters(),
-    });
-    this.log.debug("Commit response:", commitResponse);
-    this.prometheusExporter.addCurrentTransaction();
-
-    return {
-      functionOutput: commitResponse,
-      success: commitResponse.status === "SUCCESS",
-      transactionId: "TEST-TODO", // TODO, gen TxId
-    };
   }
+
+  // TODO - use in transact()
+  toTransientMap(transientData?: unknown): TransientMap {
+    const transientMap = transientData as TransientMap;
+
+    try {
+      //Obtains and parses each component of transient data
+      for (const key in transientMap) {
+        transientMap[key] = Buffer.from(JSON.stringify(transientMap[key]));
+      }
+    } catch (ex) {
+      this.log.error(`Building transient map crashed: `, ex);
+      throw new Error(`Unable to build the transient map: ${ex.message}`);
+    }
+
+    return transientMap;
+  }
+}
+
+export function asBuffer(bytes: Uint8Array | null | undefined): Buffer {
+  if (!bytes) {
+    return Buffer.alloc(0);
+  }
+
+  return Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength); // Create a Buffer view to avoid copying
 }
