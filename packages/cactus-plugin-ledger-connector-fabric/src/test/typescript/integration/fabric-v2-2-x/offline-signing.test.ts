@@ -32,6 +32,7 @@ import { v4 as uuidv4 } from "uuid";
 import bodyParser from "body-parser";
 import express from "express";
 import { DiscoveryOptions, X509Identity } from "fabric-network";
+import { Server as SocketIoServer } from "socket.io";
 
 import {
   Containers,
@@ -47,7 +48,7 @@ import {
   Servers,
 } from "@hyperledger/cactus-common";
 
-import { Configuration } from "@hyperledger/cactus-core-api";
+import { Configuration, Constants } from "@hyperledger/cactus-core-api";
 
 import { PluginRegistry } from "@hyperledger/cactus-core";
 
@@ -61,6 +62,7 @@ import {
   RunTransactionRequest,
   FabricApiClient,
   signProposal,
+  WatchBlocksListenerTypeV1,
 } from "../../../../main/typescript/public-api";
 
 // Logger setup
@@ -78,7 +80,7 @@ describe("Offline transaction signing tests", () => {
   let fabricConnectorPlugin: PluginLedgerConnectorFabric;
   let connectorServer: http.Server;
   let apiClient: FabricApiClient;
-
+  let socketioServer: SocketIoServer;
   let adminIdentity: X509Identity;
 
   //////////////////////////////////
@@ -178,9 +180,14 @@ describe("Offline transaction signing tests", () => {
     const addressInfo = (await Servers.listen(listenOptions)) as AddressInfo;
     const apiHost = `http://${addressInfo.address}:${addressInfo.port}`;
 
+    // Run socketio server
+    socketioServer = new SocketIoServer(connectorServer, {
+      path: Constants.SocketIoConnectionPathV1,
+    });
+
     // Register services
     await fabricConnectorPlugin.getOrCreateWebServices();
-    await fabricConnectorPlugin.registerWebServices(expressApp);
+    await fabricConnectorPlugin.registerWebServices(expressApp, socketioServer);
 
     // Create ApiClient
     const apiConfig = new Configuration({ basePath: apiHost });
@@ -262,6 +269,13 @@ describe("Offline transaction signing tests", () => {
     if (fabricConnectorPlugin) {
       log.info("Close ApiClient connections...");
       fabricConnectorPlugin.shutdown();
+    }
+
+    if (socketioServer) {
+      log.info("Stop the SocketIO server connector...");
+      await new Promise<void>((resolve) =>
+        socketioServer.close(() => resolve()),
+      );
     }
 
     if (connectorServer) {
@@ -383,5 +397,22 @@ describe("Offline transaction signing tests", () => {
       endorsingOrgs: ["Org1MSP"],
     });
     log.error("QUERY PRIV RESPONSE:", resquery);
+  });
+
+  test.only("Test monitoring", async () => {
+    const watchObservable = apiClient.watchBlocksOfflineSignV1({
+      type: WatchBlocksListenerTypeV1.CactusTransactions,
+      startBlock: "0", // TODO - without
+      channelName: ledgerChannelName,
+      signerCertificate: adminIdentity.credentials.certificate,
+      signerMspID: "Org1MSP",
+      uniqueTransactionData: "testTxId",
+    });
+
+    watchObservable.subscribe((block) => {
+      log.error("BLOCK RESPONSE:", block);
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 9999));
   });
 });

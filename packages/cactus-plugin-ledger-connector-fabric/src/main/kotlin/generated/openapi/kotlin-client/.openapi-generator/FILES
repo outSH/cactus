@@ -65,6 +65,7 @@ src/main/kotlin/org/openapitools/client/models/WatchBlocksCactusTransactionsResp
 src/main/kotlin/org/openapitools/client/models/WatchBlocksFilteredResponseV1.kt
 src/main/kotlin/org/openapitools/client/models/WatchBlocksFullResponseV1.kt
 src/main/kotlin/org/openapitools/client/models/WatchBlocksListenerTypeV1.kt
+src/main/kotlin/org/openapitools/client/models/WatchBlocksOfflineSignOptionsV1.kt
 src/main/kotlin/org/openapitools/client/models/WatchBlocksOptionsV1.kt
 src/main/kotlin/org/openapitools/client/models/WatchBlocksPrivateResponseV1.kt
 src/main/kotlin/org/openapitools/client/models/WatchBlocksResponseV1.kt

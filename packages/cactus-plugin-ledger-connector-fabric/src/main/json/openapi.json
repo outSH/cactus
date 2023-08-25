@@ -1196,6 +1196,7 @@
                 "description": "Websocket requests for monitoring new blocks.",
                 "enum": [
                     "org.hyperledger.cactus.api.async.hlfabric.WatchBlocksV1.Subscribe",
+                    "org.hyperledger.cactus.api.async.hlfabric.WatchBlocksV1.SubscribeOfflineSign",
                     "org.hyperledger.cactus.api.async.hlfabric.WatchBlocksV1.Next",
                     "org.hyperledger.cactus.api.async.hlfabric.WatchBlocksV1.Unsubscribe",
                     "org.hyperledger.cactus.api.async.hlfabric.WatchBlocksV1.Error",
@@ -1203,6 +1204,7 @@
                 ],
                 "x-enum-varnames": [
                     "Subscribe",
+                    "SubscribeOfflineSign",
                     "Next",
                     "Unsubscribe",
                     "Error",
@@ -1256,6 +1258,48 @@
                         "description": "From which block start monitoring. Defaults to latest.",
                         "minLength": 1,
                         "maxLength": 100,
+                        "nullable": false
+                    }
+                }
+            },
+            "WatchBlocksOfflineSignOptionsV1": {
+                "type": "object",
+                "description": "Options passed when subscribing to block monitoring with offline signing.",
+                "required": [
+                    "type",
+                    "channelName",
+                    "signerCertificate",
+                    "signerMspID"
+                ],
+                "properties": {
+                    "type": {
+                        "$ref": "#/components/schemas/WatchBlocksListenerTypeV1",
+                        "description": "Type of response block to return.",
+                        "nullable": false
+                    },
+                    "startBlock": {
+                        "type": "string",
+                        "description": "From which block start monitoring. Defaults to latest.",
+                        "minLength": 1,
+                        "maxLength": 100,
+                        "nullable": false
+                    },
+                    "channelName": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 100,
+                        "nullable": false
+                    },
+                    "signerCertificate": {
+                        "type": "string",
+                        "nullable": false
+                    },
+                    "signerMspID": {
+                        "type": "string",
+                        "nullable": false
+                    },
+                    "uniqueTransactionData": {
+                        "description": "Can be used to uniquely identify and authorize signing request",
                         "nullable": false
                     }
                 }

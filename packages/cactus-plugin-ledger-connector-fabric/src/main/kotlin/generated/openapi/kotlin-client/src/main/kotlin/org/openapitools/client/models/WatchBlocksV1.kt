@@ -26,13 +26,16 @@ import com.squareup.moshi.Json
 /**
  * Websocket requests for monitoring new blocks.
  *
- * Values: Subscribe,Next,Unsubscribe,Error,Complete
+ * Values: Subscribe,SubscribeOfflineSign,Next,Unsubscribe,Error,Complete
  */
 
 enum class WatchBlocksV1(val value: kotlin.String) {
 
     @Json(name = "org.hyperledger.cactus.api.async.hlfabric.WatchBlocksV1.Subscribe")
     Subscribe("org.hyperledger.cactus.api.async.hlfabric.WatchBlocksV1.Subscribe"),
+
+    @Json(name = "org.hyperledger.cactus.api.async.hlfabric.WatchBlocksV1.SubscribeOfflineSign")
+    SubscribeOfflineSign("org.hyperledger.cactus.api.async.hlfabric.WatchBlocksV1.SubscribeOfflineSign"),
 
     @Json(name = "org.hyperledger.cactus.api.async.hlfabric.WatchBlocksV1.Next")
     Next("org.hyperledger.cactus.api.async.hlfabric.WatchBlocksV1.Next"),

@@ -100,6 +100,7 @@ import {
   WatchBlocksOptionsV1,
   RunOfflineSignTransactionRequest,
   RunTransactionResponseType,
+  WatchBlocksOfflineSignOptionsV1,
 } from "./generated/openapi/typescript-axios/index";
 
 import {
@@ -844,10 +845,59 @@ export class PluginLedgerConnectorFabric
         const monitor = new WatchBlocksV1Endpoint({
           socket,
           logLevel: this.opts.logLevel,
-          gateway: await this.createGatewayWithOptions(options.gatewayOptions),
         });
         this.runningWatchBlocksMonitors.add(monitor);
-        await monitor.subscribe(options);
+        await monitor.subscribe(
+          options,
+          await this.createGatewayWithOptions(options.gatewayOptions),
+        );
+        this.log.debug(
+          "Running monitors count:",
+          this.runningWatchBlocksMonitors.size,
+        );
+
+        socket.on("disconnect", () => {
+          this.runningWatchBlocksMonitors.delete(monitor);
+          this.log.debug(
+            "Running monitors count:",
+            this.runningWatchBlocksMonitors.size,
+          );
+        });
+      },
+    );
+
+    socket.on(
+      WatchBlocksV1.SubscribeOfflineSign,
+      async (options: WatchBlocksOfflineSignOptionsV1) => {
+        if (!this.signCallback) {
+          socket.emit(WatchBlocksV1.Error, {
+            code: 500,
+            errorMessage:
+              "WatchBlocksOfflineSignOptionsV1 called but signCallback is missing!",
+          });
+          return;
+        }
+
+        // Start monitoring
+        const monitor = new WatchBlocksV1Endpoint({
+          socket,
+          logLevel: this.opts.logLevel,
+        });
+        this.runningWatchBlocksMonitors.add(monitor);
+
+        const { channel, userIdCtx } = await this.getFabricClientWithoutSigner(
+          options.channelName,
+          options.signerCertificate,
+          options.signerMspID,
+          options.uniqueTransactionData,
+        );
+
+        await monitor.subscribeOfflineSign(
+          options,
+          channel,
+          userIdCtx,
+          this.signCallback.bind(this),
+        );
         this.log.debug(
           "Running monitors count:",
           this.runningWatchBlocksMonitors.size,

@@ -91,6 +91,7 @@ Class | Method | HTTP request | Description
  - [org.openapitools.client.models.WatchBlocksFilteredResponseV1](docs/WatchBlocksFilteredResponseV1.md)
  - [org.openapitools.client.models.WatchBlocksFullResponseV1](docs/WatchBlocksFullResponseV1.md)
  - [org.openapitools.client.models.WatchBlocksListenerTypeV1](docs/WatchBlocksListenerTypeV1.md)
+ - [org.openapitools.client.models.WatchBlocksOfflineSignOptionsV1](docs/WatchBlocksOfflineSignOptionsV1.md)
  - [org.openapitools.client.models.WatchBlocksOptionsV1](docs/WatchBlocksOptionsV1.md)
  - [org.openapitools.client.models.WatchBlocksPrivateResponseV1](docs/WatchBlocksPrivateResponseV1.md)
  - [org.openapitools.client.models.WatchBlocksResponseV1](docs/WatchBlocksResponseV1.md)

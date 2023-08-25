@@ -14,6 +14,7 @@ import {
   WatchBlocksV1,
   WatchBlocksOptionsV1,
   WatchBlocksResponseV1,
+  WatchBlocksOfflineSignOptionsV1,
 } from "../generated/openapi/typescript-axios";
 import { Configuration } from "../generated/openapi/typescript-axios/configuration";
 
@@ -104,6 +105,57 @@ export class FabricApiClient
       );
       this.monitorSubjects.set(socket.id, subject);
       socket.emit(WatchBlocksV1.Subscribe, monitorOptions);
+    });
+
+    socket.connect();
+
+    return subject.pipe(
+      finalize(() => {
+        this.log.info(
+          `FINALIZE client ${socket.id} - unsubscribing from the stream...`,
+        );
+        socket.emit(WatchBlocksV1.Unsubscribe);
+        socket.disconnect();
+        this.monitorSubjects.delete(socket.id);
+      }),
+    );
+  }
+
+  /**
+   * Watch for new blocks on Fabric ledger. Type of response must be configured in monitorOptions.
+   * Works with offline signing functions, no need to supply identity - requests are signing in a callback.
+   *
+   * @param monitorOptions Monitoring configuration.
+   *
+   * @returns Observable that will receive new blocks once they appear.
+   */
+  public watchBlocksOfflineSignV1(
+    monitorOptions: WatchBlocksOfflineSignOptionsV1,
+  ): Observable<WatchBlocksResponseV1> {
+    const socket = io(this.wsApiHost, { path: this.wsApiPath });
+    const subject = new ReplaySubject<WatchBlocksResponseV1>(0);
+
+    socket.on(WatchBlocksV1.Next, (data: WatchBlocksResponseV1) => {
+      this.log.debug("Received WatchBlocksV1.Next");
+      subject.next(data);
+    });
+
+    socket.on(WatchBlocksV1.Error, (ex: string) => {
+      this.log.error("Received WatchBlocksV1.Error:", ex);
+      subject.error(ex);
+    });
+
+    socket.on(WatchBlocksV1.Complete, () => {
+      this.log.debug("Received WatchBlocksV1.Complete");
+      subject.complete();
+    });
+
+    socket.on("connect", () => {
+      this.log.info(
+        `Connected client '${socket.id}', sending WatchBlocksV1.Subscribe...`,
+      );
+      this.monitorSubjects.set(socket.id, subject);
+      socket.emit(WatchBlocksV1.SubscribeOfflineSign, monitorOptions);
     });
 
     socket.connect();

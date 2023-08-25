@@ -1318,6 +1318,49 @@ export enum WatchBlocksListenerTypeV1 {
 }
 
 /**
+ * Options passed when subscribing to block monitoring with offline signing.
+ * @export
+ * @interface WatchBlocksOfflineSignOptionsV1
+ */
+export interface WatchBlocksOfflineSignOptionsV1 {
+    /**
+     * 
+     * @type {WatchBlocksListenerTypeV1}
+     * @memberof WatchBlocksOfflineSignOptionsV1
+     */
+    type: WatchBlocksListenerTypeV1;
+    /**
+     * From which block start monitoring. Defaults to latest.
+     * @type {string}
+     * @memberof WatchBlocksOfflineSignOptionsV1
+     */
+    startBlock?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof WatchBlocksOfflineSignOptionsV1
+     */
+    channelName: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof WatchBlocksOfflineSignOptionsV1
+     */
+    signerCertificate: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof WatchBlocksOfflineSignOptionsV1
+     */
+    signerMspID: string;
+    /**
+     * Can be used to uniquely identify and authorize signing request
+     * @type {any}
+     * @memberof WatchBlocksOfflineSignOptionsV1
+     */
+    uniqueTransactionData?: any;
+}
+/**
  * Options passed when subscribing to block monitoring.
  * @export
  * @interface WatchBlocksOptionsV1
@@ -1376,6 +1419,7 @@ export type WatchBlocksResponseV1 = WatchBlocksCactusErrorResponseV1 | WatchBloc
 
 export enum WatchBlocksV1 {
     Subscribe = 'org.hyperledger.cactus.api.async.hlfabric.WatchBlocksV1.Subscribe',
+    SubscribeOfflineSign = 'org.hyperledger.cactus.api.async.hlfabric.WatchBlocksV1.SubscribeOfflineSign',
     Next = 'org.hyperledger.cactus.api.async.hlfabric.WatchBlocksV1.Next',
     Unsubscribe = 'org.hyperledger.cactus.api.async.hlfabric.WatchBlocksV1.Unsubscribe',
     Error = 'org.hyperledger.cactus.api.async.hlfabric.WatchBlocksV1.Error',
