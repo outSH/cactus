@@ -413,6 +413,18 @@
                     }
                 }
             },
+            "RunTransactionResponseType": {
+                "type": "string",
+                "description": "Response format from transaction / query execution",
+                "enum": [
+                    "org.hyperledger.cacti.api.hlfabric.RunTransactionResponseType.JSON",
+                    "org.hyperledger.cacti.api.hlfabric.RunTransactionResponseType.UTF8"
+                ],
+                "x-enum-varnames": [
+                    "JSON",
+                    "UTF8"
+                ]
+            },
             "RunTransactionRequest": {
                 "type": "object",
                 "required": [
@@ -425,7 +437,17 @@
                 "additionalProperties": false,
                 "properties": {
                     "endorsingPeers": {
-                        "description": "An array of MSP IDs to set as the list of endorsing peers for the transaction.",
+                        "description": "An array of endorsing peers (name or url) for the transaction.",
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 4096,
+                            "nullable": false
+                        }
+                    },
+                    "endorsingOrgs": {
+                        "description": "An array of endorsing organizations (by mspID or issuer org name on certificate) for the transaction.",
                         "type": "array",
                         "items": {
                             "type": "string",
@@ -478,17 +500,10 @@
                             "nullable": true
                         }
                     },
-                    "endorsingParties": {
-                        "type": "array",
-                        "nullable": false,
-                        "default": [],
-                        "items": {
-                            "type": "string",
-                            "nullable": true
-                        }
-                    },
                     "responseType":{
-                        "type": "string"
+                        "$ref": "#/components/schemas/RunTransactionResponseType",
+                        "default": "UTF8",
+                        "nullable": false
                     }
                 }
             },
@@ -528,7 +543,17 @@
                 "additionalProperties": false,
                 "properties": {
                     "endorsingPeers": {
-                        "description": "An array of MSP IDs to set as the list of endorsing peers for the transaction.",
+                        "description": "An array of endorsing peers (name or url) for the transaction.",
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 4096,
+                            "nullable": false
+                        }
+                    },
+                    "endorsingOrgs": {
+                        "description": "An array of endorsing organizations (by mspID or issuer org name on certificate) for the transaction.",
                         "type": "array",
                         "items": {
                             "type": "string",
@@ -585,17 +610,10 @@
                             "nullable": true
                         }
                     },
-                    "endorsingParties": {
-                        "type": "array",
-                        "nullable": false,
-                        "default": [],
-                        "items": {
-                            "type": "string",
-                            "nullable": true
-                        }
-                    },
                     "responseType":{
-                        "type": "string"
+                        "$ref": "#/components/schemas/RunTransactionResponseType",
+                        "default": "UTF8",
+                        "nullable": false
                     }
                 }
             },

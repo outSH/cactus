@@ -99,6 +99,7 @@ import {
   WatchBlocksV1,
   WatchBlocksOptionsV1,
   RunOfflineSignTransactionRequest,
+  RunTransactionResponseType,
 } from "./generated/openapi/typescript-axios/index";
 
 import {
@@ -145,7 +146,6 @@ import { querySystemChainCode } from "./common/query-system-chain-code";
  * found in the https://github.com/hyperledger/fabric-samples repository.
  */
 export const K_DEFAULT_CLI_CONTAINER_GO_PATH = "/opt/gopath/";
-export const JSONstringResponseType = "JSONstring";
 
 /**
  * The command that will be used to issue docker commands while controlling
@@ -1113,60 +1113,35 @@ export class PluginLedgerConnectorFabric
       methodName: fnName,
       params,
       transientData,
-      endorsingParties,
       responseType: responseType,
     } = req;
 
     try {
       const gateway = await this.createGateway(req);
-      // this.log.error("GATEWAY client:", gateway["client"]);
-
-      // const gateway = await this.createGatewayLegacy(req.signingCredential);
       const network = await gateway.getNetwork(channelName);
-      // const channel = network.getChannel();
-      // const endorsers = channel.getEndorsers();
       const contract = network.getContract(contractName);
+      const channel = network.getChannel();
+      const endorsingTargets = this.filterEndorsers(
+        channel.getEndorsers(),
+        req.endorsingPeers,
+        req.endorsingOrgs,
+      );
 
       let out: Buffer;
       let success: boolean;
       let transactionId = "";
       switch (invocationType) {
         case FabricContractInvocationType.Call: {
-          out = await contract.evaluateTransaction(fnName, ...params);
+          out = await contract
+            .createTransaction(fnName)
+            .setEndorsingPeers(endorsingTargets)
+            .evaluate(...params);
           success = true;
           break;
         }
         case FabricContractInvocationType.Send: {
           const tx = contract.createTransaction(fnName);
-          if (req.endorsingPeers) {
-            const { endorsingPeers } = req;
-            const channel = network.getChannel();
-
-            const allChannelEndorsers = (channel.getEndorsers() as unknown) as Array<
-              Endorser & { options: { pem: string } }
-            >;
-
-            const endorsers = allChannelEndorsers
-              .map((endorser) => {
-                const certificate = Certificate.fromPEM(
-                  (endorser.options.pem as unknown) as Buffer,
-                );
-                return { certificate, endorser };
-              })
-              .filter(
-                ({ endorser, certificate }) =>
-                  endorsingPeers.includes(endorser.mspid) ||
-                  endorsingPeers.includes(certificate.issuer.organizationName),
-              )
-              .map((it) => it.endorser);
-
-            this.log.debug(
-              "%o endorsers: %o",
-              endorsers.length,
-              endorsers.map((it) => `${it.mspid}:${it.name}`),
-            );
-            tx.setEndorsingPeers(endorsers);
-          }
+          tx.setEndorsingPeers(endorsingTargets);
           out = await tx.submit(...params);
           transactionId = tx.getTransactionId();
           success = true;
@@ -1179,30 +1154,9 @@ export class PluginLedgerConnectorFabric
             throw new Error(`${fnTag} ${message}`);
           }
 
-          const transientMap: TransientMap = transientData as TransientMap;
-
-          try {
-            //Obtains and parses each component of transient data
-            for (const key in transientMap) {
-              transientMap[key] = Buffer.from(
-                JSON.stringify(transientMap[key]),
-              );
-            }
-          } catch (ex) {
-            this.log.error(`Building transient map crashed: `, ex);
-            throw new Error(
-              `${fnTag} Unable to build the transient map: ${ex.message}`,
-            );
-          }
-
+          const transientMap = this.toTransientMap(req.transientData);
           const transactionProposal = await contract.createTransaction(fnName);
-
-          if (endorsingParties) {
-            endorsingParties.forEach((org) => {
-              transactionProposal.setEndorsingOrganizations(org);
-            });
-          }
-
+          transactionProposal.setEndorsingPeers(endorsingTargets);
           out = await transactionProposal.setTransient(transientMap).submit();
           success = true;
           break;
@@ -1212,18 +1166,12 @@ export class PluginLedgerConnectorFabric
           throw new Error(`${fnTag} unknown ${message}`);
         }
       }
-      let outResp = "";
-
-      switch (responseType) {
-        case JSONstringResponseType:
-          outResp = JSON.stringify(out);
-          break;
-        default:
-          outResp = out.toString("utf-8");
-      }
 
       const res: RunTransactionResponse = {
-        functionOutput: outResp,
+        functionOutput: this.convertToTransactionResponseType(
+          out,
+          responseType,
+        ),
         success,
         transactionId: transactionId,
       };
@@ -1237,6 +1185,57 @@ export class PluginLedgerConnectorFabric
       throw new Error(`${fnTag} Unable to run transaction: ${ex.message}`);
     }
   }
+
+  private convertToTransactionResponseType(
+    data: Buffer,
+    responseType?: RunTransactionResponseType,
+  ) {
+    switch (responseType) {
+      case RunTransactionResponseType.JSON:
+        return JSON.stringify(data);
+      case RunTransactionResponseType.UTF8:
+      default:
+        return data.toString("utf-8");
+    }
+  }
+
+  private filterEndorsingPeers(
+    endorsingPeers: string[],
+    allEndorsers: Endorser[],
+  ) {
+    return allEndorsers.filter((e) => {
+      const looseEndpoint = e.endpoint as any;
+      return (
+        endorsingPeers.includes(e.name) ||
+        endorsingPeers.includes(looseEndpoint.url) ||
+        endorsingPeers.includes(looseEndpoint.addr)
+      );
+    });
+  }
+
+  private filterEndorsingOrgs(
+    endorsingOrgs: string[],
+    allEndorsers: Endorser[],
+  ) {
+    const allEndorsersLoose = (allEndorsers as unknown) as Array<
+      Endorser & { options: { pem: string } }
+    >;
+
+    return allEndorsersLoose
+      .map((endorser) => {
+        const certificate = Certificate.fromPEM(
+          (endorser.options.pem as unknown) as Buffer,
+        );
+        return { certificate, endorser };
+      })
+      .filter(
+        ({ endorser, certificate }) =>
+          endorsingOrgs.includes(endorser.mspid) ||
+          endorsingOrgs.includes(certificate.issuer.organizationName),
+      )
+      .map((it) => it.endorser);
+  }
+
   public async getTransactionReceiptByTxID(
     req: RunTransactionRequest,
   ): Promise<GetTransactionReceiptResponse> {
@@ -1677,7 +1676,11 @@ export class PluginLedgerConnectorFabric
     );
     const nextTransactionId = userIdCtx.calculateTransactionId().transactionId;
 
-    // TODO - common responseType logic with regular transact() method.
+    const endorsingTargets = this.filterEndorsers(
+      channel.getEndorsers(),
+      req.endorsingPeers,
+      req.endorsingOrgs,
+    );
 
     switch (req.invocationType) {
       case FabricContractInvocationType.Call: {
@@ -1690,7 +1693,7 @@ export class PluginLedgerConnectorFabric
         );
         query.sign(signature);
         const queryResponse = await query.send({
-          targets: channel.getEndorsers(),
+          targets: endorsingTargets,
         });
 
         // Parse query results
@@ -1698,7 +1701,9 @@ export class PluginLedgerConnectorFabric
         for (const res of queryResponse.responses) {
           if (res.response.status === 200 && res.endorsement) {
             return {
-              functionOutput: asBuffer(res.response.payload).toString("utf-8"),
+              functionOutput: this.convertToTransactionResponseType(
+                asBuffer(res.response.payload),
+              ),
               success: true,
               transactionId: "",
             };
@@ -1706,7 +1711,9 @@ export class PluginLedgerConnectorFabric
         }
 
         return {
-          functionOutput: JSON.stringify(queryResponse.errors),
+          functionOutput: `Query failed, errors: ${JSON.stringify(
+            queryResponse.errors,
+          )}`,
           success: false,
           transactionId: "",
         };
@@ -1740,7 +1747,7 @@ export class PluginLedgerConnectorFabric
         );
         await endorsement.sign(endorsementSignature);
         const endorsementResponse = await endorsement.send({
-          targets: channel.getEndorsers(),
+          targets: endorsingTargets,
         });
 
         if (
@@ -1786,7 +1793,7 @@ export class PluginLedgerConnectorFabric
         this.prometheusExporter.addCurrentTransaction();
 
         return {
-          functionOutput: funResponse.toString("utf-8"),
+          functionOutput: this.convertToTransactionResponseType(funResponse),
           success: commitResponse.status === "SUCCESS",
           transactionId: nextTransactionId,
         };
@@ -1799,8 +1806,34 @@ export class PluginLedgerConnectorFabric
     }
   }
 
-  // TODO - use in transact()
-  toTransientMap(transientData?: unknown): TransientMap {
+  private filterEndorsers(
+    allEndorsers: Endorser[],
+    endorsingPeers?: string[],
+    endorsingOrgs?: string[],
+  ) {
+    const toEndorserNames = (e: Endorser[]) => e.map((v) => v.name);
+    this.log.error("Endorsing targets:", toEndorserNames(allEndorsers));
+
+    if (endorsingPeers) {
+      allEndorsers = this.filterEndorsingPeers(endorsingPeers, allEndorsers);
+      this.log.error(
+        "Endorsing targets after peer filtering:",
+        toEndorserNames(allEndorsers),
+      );
+    }
+
+    if (endorsingOrgs) {
+      allEndorsers = this.filterEndorsingOrgs(endorsingOrgs, allEndorsers);
+      this.log.error(
+        "Endorsing targets after org filtering:",
+        toEndorserNames(allEndorsers),
+      );
+    }
+
+    return allEndorsers;
+  }
+
+  private toTransientMap(transientData?: unknown): TransientMap {
     const transientMap = transientData as TransientMap;
 
     try {

@@ -79,6 +79,7 @@ Class | Method | HTTP request | Description
  - [org.openapitools.client.models.RunOfflineSignTransactionRequest](docs/RunOfflineSignTransactionRequest.md)
  - [org.openapitools.client.models.RunTransactionRequest](docs/RunTransactionRequest.md)
  - [org.openapitools.client.models.RunTransactionResponse](docs/RunTransactionResponse.md)
+ - [org.openapitools.client.models.RunTransactionResponseType](docs/RunTransactionResponseType.md)
  - [org.openapitools.client.models.SSHExecCommandResponse](docs/SSHExecCommandResponse.md)
  - [org.openapitools.client.models.TransactReceiptBlockMetaData](docs/TransactReceiptBlockMetaData.md)
  - [org.openapitools.client.models.TransactReceiptTransactionCreator](docs/TransactReceiptTransactionCreator.md)

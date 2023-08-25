@@ -915,11 +915,17 @@ export interface InlineResponse501 {
  */
 export interface RunOfflineSignTransactionRequest {
     /**
-     * An array of MSP IDs to set as the list of endorsing peers for the transaction.
+     * An array of endorsing peers (name or url) for the transaction.
      * @type {Array<string>}
      * @memberof RunOfflineSignTransactionRequest
      */
     endorsingPeers?: Array<string>;
+    /**
+     * An array of endorsing organizations (by mspID or issuer org name on certificate) for the transaction.
+     * @type {Array<string>}
+     * @memberof RunOfflineSignTransactionRequest
+     */
+    endorsingOrgs?: Array<string>;
     /**
      * 
      * @type {object}
@@ -976,16 +982,10 @@ export interface RunOfflineSignTransactionRequest {
     params: Array<string>;
     /**
      * 
-     * @type {Array<string>}
+     * @type {RunTransactionResponseType}
      * @memberof RunOfflineSignTransactionRequest
      */
-    endorsingParties?: Array<string>;
-    /**
-     * 
-     * @type {string}
-     * @memberof RunOfflineSignTransactionRequest
-     */
-    responseType?: string;
+    responseType?: RunTransactionResponseType;
 }
 /**
  * 
@@ -994,11 +994,17 @@ export interface RunOfflineSignTransactionRequest {
  */
 export interface RunTransactionRequest {
     /**
-     * An array of MSP IDs to set as the list of endorsing peers for the transaction.
+     * An array of endorsing peers (name or url) for the transaction.
      * @type {Array<string>}
      * @memberof RunTransactionRequest
      */
     endorsingPeers?: Array<string>;
+    /**
+     * An array of endorsing organizations (by mspID or issuer org name on certificate) for the transaction.
+     * @type {Array<string>}
+     * @memberof RunTransactionRequest
+     */
+    endorsingOrgs?: Array<string>;
     /**
      * 
      * @type {object}
@@ -1049,16 +1055,10 @@ export interface RunTransactionRequest {
     params: Array<string>;
     /**
      * 
-     * @type {Array<string>}
+     * @type {RunTransactionResponseType}
      * @memberof RunTransactionRequest
      */
-    endorsingParties?: Array<string>;
-    /**
-     * 
-     * @type {string}
-     * @memberof RunTransactionRequest
-     */
-    responseType?: string;
+    responseType?: RunTransactionResponseType;
 }
 /**
  * 
@@ -1085,6 +1085,17 @@ export interface RunTransactionResponse {
      */
     transactionId: string;
 }
+/**
+ * Response format from transaction / query execution
+ * @export
+ * @enum {string}
+ */
+
+export enum RunTransactionResponseType {
+    JSON = 'org.hyperledger.cacti.api.hlfabric.RunTransactionResponseType.JSON',
+    UTF8 = 'org.hyperledger.cacti.api.hlfabric.RunTransactionResponseType.UTF8'
+}
+
 /**
  * 
  * @export

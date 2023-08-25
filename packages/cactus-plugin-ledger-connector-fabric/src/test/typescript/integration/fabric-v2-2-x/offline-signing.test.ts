@@ -285,7 +285,7 @@ describe("Offline transaction signing tests", () => {
   // Tests
   //////////////////////////////////
 
-  test.skip("contract sainity check ", async () => {
+  test("contract sainity check ", async () => {
     const res2 = await apiClient.runTransactionV1({
       gatewayOptions,
       channelName: ledgerChannelName,
@@ -341,7 +341,7 @@ describe("Offline transaction signing tests", () => {
     log.error("TX OFFLINE RESPONSE:", ress);
   });
 
-  test.only("Test offline sign private tx", async () => {
+  test("Test offline sign private tx", async () => {
     // TRANSACT
     const assetID = uuidv4();
     log.error("CREATE ASSETID:", assetID);
@@ -365,6 +365,7 @@ describe("Offline transaction signing tests", () => {
       params: [],
       uniqueTransactionData: "testTxId",
       transientData: transientAssetData,
+      endorsingOrgs: ["Org1MSP"],
     });
     log.error("TX PRIV OFFLINE RESPONSE:", ress);
 
@@ -379,6 +380,7 @@ describe("Offline transaction signing tests", () => {
       invocationType: FabricContractInvocationType.Call,
       methodName: "ReadAsset",
       params: [assetID],
+      endorsingOrgs: ["Org1MSP"],
     });
     log.error("QUERY PRIV RESPONSE:", resquery);
   });
