@@ -39,8 +39,9 @@ const config: any = ConfigUtil.getConfig();
 
 import { getLogger } from "log4js";
 import {
+  createSigningToken,
   getFabricApiClient,
-  getGatewayOptionForUser,
+  getSignerIdentity,
 } from "./fabric-connector";
 const moduleName = "BusinessLogicAssetTrade";
 const logger = getLogger(`${moduleName}`);
@@ -423,10 +424,12 @@ export class BusinessLogicAssetTrade extends BusinessLogicBase {
 
     // Start monitoring
     const fabricApiClient = getFabricApiClient();
-    const watchObservable = fabricApiClient.watchBlocksV1({
+    const watchObservable = fabricApiClient.watchBlocksOfflineSignV1({
       channelName: config.assetTradeInfo.fabric.channelName,
-      gatewayOptions: getGatewayOptionForUser("admin"),
       type: WatchBlocksListenerTypeV1.CactusTransactions,
+      signerCertificate: getSignerIdentity().credentials.certificate,
+      signerMspID: getSignerIdentity().mspId,
+      uniqueTransactionData: createSigningToken("watchBlock"),
     });
     const watchSub = watchObservable.subscribe({
       next: (event: WatchBlocksResponseV1) => {
