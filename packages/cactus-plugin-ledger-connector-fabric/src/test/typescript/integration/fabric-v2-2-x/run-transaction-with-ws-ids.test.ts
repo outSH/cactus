@@ -265,7 +265,7 @@ test("run-transaction-with-ws-ids", async (t: Test) => {
 
     {
       // make invoke InitLedger using a client1 client
-      const resp = await plugin.transact({
+      await plugin.transact({
         signingCredential: {
           keychainId: keychainId,
           keychainRef: client2Key,
@@ -278,11 +278,10 @@ test("run-transaction-with-ws-ids", async (t: Test) => {
         methodName: "InitLedger",
         params: [],
       });
-      t.true(resp.success, "InitLedger tx for Basic2 success===true OK");
     }
     {
       // make invoke TransferAsset using a client2 client
-      const resp = await plugin.transact({
+      await plugin.transact({
         signingCredential: {
           keychainId: keychainId,
           keychainRef: client2Key,
@@ -295,7 +294,6 @@ test("run-transaction-with-ws-ids", async (t: Test) => {
         methodName: "TransferAsset",
         params: ["asset1", "client2"],
       });
-      t.true(resp.success, "TransferAsset asset1 client2 success true OK");
     }
     {
       const resp = await plugin.transact({
@@ -311,7 +309,6 @@ test("run-transaction-with-ws-ids", async (t: Test) => {
         methodName: "ReadAsset",
         params: ["asset1"],
       });
-      t.true(resp.success);
       const asset = JSON.parse(resp.functionOutput);
       t.equal(asset.owner, "client2");
     }

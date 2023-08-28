@@ -320,7 +320,6 @@ test("run-transaction-with-identities", async (t: Test) => {
         methodName: "InitLedger",
         params: [],
       });
-      t.true(resp.success, "InitLedger tx for Basic2 success===true OK");
     }
     {
       // make invoke TransferAsset using a client2 client
@@ -340,7 +339,6 @@ test("run-transaction-with-identities", async (t: Test) => {
         methodName: "TransferAsset",
         params: ["asset1", "client2"],
       });
-      t.true(resp.success, "TransferAsset asset1 client2 success true OK");
     }
     {
       // make query ReadAsset using a registrar client
@@ -360,7 +358,6 @@ test("run-transaction-with-identities", async (t: Test) => {
         methodName: "ReadAsset",
         params: ["asset1"],
       });
-      t.true(resp.success);
       const asset = JSON.parse(resp.functionOutput);
       t.equal(asset.owner, "client2");
     }

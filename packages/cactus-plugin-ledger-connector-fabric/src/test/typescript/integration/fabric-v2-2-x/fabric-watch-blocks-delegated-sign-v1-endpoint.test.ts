@@ -1,5 +1,5 @@
 /**
- * Functional test of WatchBlocksV1Endpoint on connector-fabric (packages/cactus-plugin-ledger-connector-fabric)
+ * Functional test of watchBlocksDelegatedSignV1 on connector-fabric (packages/cactus-plugin-ledger-connector-fabric)
  * Assumes sample CC was already deployed on the test ledger.
  *
  * @note - this test sometimes hangs infinitely when used with fabric-node-sdk 2.3.0,
@@ -29,7 +29,7 @@ import { v4 as uuidv4 } from "uuid";
 import bodyParser from "body-parser";
 import express from "express";
 import { Server as SocketIoServer } from "socket.io";
-import { DiscoveryOptions } from "fabric-network";
+import { DiscoveryOptions, X509Identity } from "fabric-network";
 
 import {
   FabricTestLedgerV1,
@@ -58,24 +58,26 @@ import {
   FabricApiClient,
   WatchBlocksListenerTypeV1,
   WatchBlocksResponseV1,
+  signProposal,
 } from "../../../../main/typescript/public-api";
 
 // Logger setup
 const log: Logger = LoggerProvider.getOrCreate({
-  label: "fabric-watch-blocks-v1-endpoint.test",
+  label: "fabric-watch-blocks-delegated-sign-v1-endpoint.test",
   level: testLogLevel,
 });
 
 /**
  * Main test suite
  */
-describe("watchBlocksV1 of fabric connector tests", () => {
+describe("watchBlocksDelegatedSignV1 of fabric connector tests", () => {
   let ledger: FabricTestLedgerV1;
   let signingCredential: FabricSigningCredential;
   let fabricConnectorPlugin: PluginLedgerConnectorFabric;
   let connectorServer: http.Server;
   let socketioServer: SocketIoServer;
   let apiClient: FabricApiClient;
+  let adminIdentity: X509Identity;
 
   //////////////////////////////////
   // Environment Setup
@@ -109,6 +111,7 @@ describe("watchBlocksV1 of fabric connector tests", () => {
 
     // Enroll admin and user
     const enrollAdminOut = await ledger.enrollAdmin();
+    adminIdentity = enrollAdminOut[0];
     const adminWallet = enrollAdminOut[1];
     const [userIdentity] = await ledger.enrollUser(adminWallet);
 
@@ -143,6 +146,10 @@ describe("watchBlocksV1 of fabric connector tests", () => {
       eventHandlerOptions: {
         strategy: DefaultEventHandlerStrategy.NetworkScopeAnyfortx,
         commitTimeout: 300,
+      },
+      signCallback: async (payload, txData) => {
+        log.debug("signCallback called with txData (token):", txData);
+        return signProposal(adminIdentity.credentials.privateKey, payload);
       },
     });
 
@@ -234,14 +241,10 @@ describe("watchBlocksV1 of fabric connector tests", () => {
   ) {
     // Start monitoring
     const monitorPromise = new Promise<void>((resolve, reject) => {
-      const watchObservable = apiClient.watchBlocksV1({
+      const watchObservable = apiClient.watchBlocksDelegatedSignV1({
         channelName: ledgerChannelName,
-        gatewayOptions: {
-          identity: signingCredential.keychainRef,
-          wallet: {
-            keychain: signingCredential,
-          },
-        },
+        signerCertificate: adminIdentity.credentials.certificate,
+        signerMspID: adminIdentity.mspId,
         type,
       });
 
@@ -253,13 +256,13 @@ describe("watchBlocksV1 of fabric connector tests", () => {
             subscription.unsubscribe();
             resolve();
           } catch (err) {
-            log.error("watchBlocksV1() event check error:", err);
+            log.error("watchBlocksDelegatedSignV1() event check error:", err);
             subscription.unsubscribe();
             reject(err);
           }
         },
         error(err) {
-          log.error("watchBlocksV1() error:", err);
+          log.error("watchBlocksDelegatedSignV1() error:", err);
           subscription.unsubscribe();
           reject(err);
         },
