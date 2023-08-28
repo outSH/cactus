@@ -1763,6 +1763,13 @@ export class PluginLedgerConnectorFabric
         return {
           functionOutput: `Query failed, errors: ${JSON.stringify(
             queryResponse.errors,
+          )}, responses: ${JSON.stringify(
+            queryResponse.responses.map((r) => {
+              return {
+                status: r.response.status,
+                message: r.response.message,
+              };
+            }),
           )}`,
           success: false,
           transactionId: "",

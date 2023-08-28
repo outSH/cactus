@@ -21,6 +21,7 @@ assetTradeInfo:
     hostname: localhost
     connUserName: appUser
     contractName: basic
+    tokenSecret: secret123
     peers:
       - name: peer0.org1.example.com
         requests: grpc://localhost:7051

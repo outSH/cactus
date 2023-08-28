@@ -1,9 +1,10 @@
 import { ConfigUtil } from "@hyperledger/cactus-cmd-socketio-server";
 import {
   PluginLedgerConnectorFabric,
-  DefaultEventHandlerStrategy,
-  GetBlockResponseDecodedV1,
   FabricApiClient,
+  signProposal,
+  FabricContractInvocationType,
+  RunTransactionResponse,
 } from "@hyperledger/cactus-plugin-ledger-connector-fabric";
 import { PluginRegistry } from "@hyperledger/cactus-core";
 import { PluginKeychainMemory } from "@hyperledger/cactus-plugin-keychain-memory";
@@ -14,9 +15,10 @@ import http from "http";
 import fs from "fs";
 import express from "express";
 import bodyParser from "body-parser";
+import jwt from "jsonwebtoken";
 import { AddressInfo } from "net";
 import { v4 as uuidv4 } from "uuid";
-import { Wallets } from "fabric-network";
+import { Identity, Wallets } from "fabric-network";
 import { getLogger } from "log4js";
 import { Server as SocketIoServer } from "socket.io";
 
@@ -29,7 +31,15 @@ const keychainId = uuidv4();
 
 // Single Fabric connector instance
 let fabricConnectorPlugin: PluginLedgerConnectorFabric | undefined = undefined;
+let signerIdentity: FabricIdentity | undefined = undefined;
 let fabricApiClient: FabricApiClient | undefined = undefined;
+
+export type FabricIdentity = Identity & {
+  credentials: {
+    certificate: string;
+    privateKey: string;
+  };
+};
 
 // Prepare connection profile
 // Fabric ledger should be running and it's config available in /etc/cactus/connector-fabric
@@ -104,35 +114,44 @@ const connectionProfile = {
 };
 logger.debug("Use connection profile:", connectionProfile);
 
-/**
- * Export all users in wallet into Map that can be used by keychain plugin.
- */
-async function exportWalletToKeychain() {
+export function createSigningToken(txId: string) {
+  return jwt.sign(
+    {
+      data: txId,
+    },
+    config.assetTradeInfo.fabric.tokenSecret,
+    { expiresIn: "1h" },
+  );
+}
+
+export function isValidSigningToken(token: string) {
+  try {
+    return jwt.verify(token, config.assetTradeInfo.fabric.tokenSecret);
+  } catch (err) {
+    logger.error("Invalid signing JWT token:", err);
+    return undefined;
+  }
+}
+
+export async function getUserIdentity(user: string): Promise<FabricIdentity> {
   const wallet = await Wallets.newFileSystemWallet(
     "/etc/cactus/connector-fabric/wallet",
   ); // TODO - from var
 
-  const userList = await wallet.list();
-  const keychainMap = new Map();
-
-  for (const user of userList) {
-    const walletEntry = await wallet.get(user);
-    if (walletEntry && walletEntry.type === "X.509") {
-      keychainMap.set(user, JSON.stringify(walletEntry));
-    } else {
-      logger.error(
-        `Could not add identiy for user ${user}. Wallet identity: ${walletEntry}`,
-      );
-    }
+  const walletEntry = await wallet.get(user);
+  if (walletEntry && walletEntry.type === "X.509") {
+    return walletEntry as FabricIdentity;
+  } else {
+    throw new Error(
+      `Could not add identiy for user ${user}. Wallet identity: ${walletEntry}`,
+    );
   }
-
-  return keychainMap;
 }
 
 /**
  * Create new fabric connector instance
  */
-async function createFabricConnector() {
+async function createFabricConnector(signerIdentity: FabricIdentity) {
   if (fabricConnectorPlugin) {
     fabricConnectorPlugin.shutdown();
     fabricConnectorPlugin = undefined;
@@ -143,7 +162,7 @@ async function createFabricConnector() {
     instanceId: uuidv4(),
     keychainId,
     logLevel: config.logLevel,
-    backend: await exportWalletToKeychain(),
+    backend: new Map(),
   });
 
   fabricConnectorPlugin = new PluginLedgerConnectorFabric({
@@ -155,12 +174,17 @@ async function createFabricConnector() {
     logLevel: config.logLevel,
     connectionProfile,
     discoveryOptions: {
-      enabled: false,
-      asLocalhost: false,
+      enabled: true,
+      asLocalhost: true,
     },
-    eventHandlerOptions: {
-      strategy: DefaultEventHandlerStrategy.NetworkScopeAnyfortx,
-      commitTimeout: 300,
+    signCallback: async (payload, txData) => {
+      const tokenData = isValidSigningToken(txData as string);
+      if (tokenData) {
+        logger.info("OK signing request for", tokenData);
+        return signProposal(signerIdentity.credentials.privateKey, payload);
+      } else {
+        throw new Error("Invalid TX token!");
+      }
     },
   });
 
@@ -192,51 +216,27 @@ async function createFabricConnector() {
   fabricApiClient = new FabricApiClient(apiConfig);
 }
 
-type GatewayOptions = {
-  identity: string;
-  wallet: {
-    keychain: {
-      keychainId: string;
-      keychainRef: string;
-    };
-  };
-};
-
-/**
- * Get gateway options that can be used for sending requests by connector.
- */
-export function getGatewayOptionForUser(name: string): GatewayOptions {
-  const signingCredential = {
-    keychainId,
-    keychainRef: name,
-  };
-
-  return {
-    identity: signingCredential.keychainRef,
-    wallet: {
-      keychain: signingCredential,
-    },
-  };
-}
-
 /**
  * Get first block data (number 0). Can be used to test fabric connection.
  */
-async function getFirstBlock() {
+async function getFirstBlock(): Promise<RunTransactionResponse> {
   if (!fabricConnectorPlugin) {
     throw new Error("getFirstBlock() called before initFabricConnector()!");
   }
 
-  const block = await fabricConnectorPlugin.getBlock({
-    channelName: "mychannel",
-    gatewayOptions: getGatewayOptionForUser("admin"),
-    query: {
-      blockNumber: "0",
-    },
-    skipDecode: false,
+  const queryResponse = await fabricConnectorPlugin.transactOfflineSign({
+    signerCertificate: getSignerIdentity().credentials.certificate,
+    signerMspID: getSignerIdentity().mspId,
+    channelName: config.assetTradeInfo.fabric.channelName,
+    invocationType: FabricContractInvocationType.Call,
+    contractName: "qscc",
+    methodName: "GetBlockByNumber",
+    params: [config.assetTradeInfo.fabric.channelName, "1"],
+    uniqueTransactionData: createSigningToken("getFirstBlock"),
+    endorsingPeers: ["peer0.org1.example.com"],
   });
 
-  return block as GetBlockResponseDecodedV1;
+  return queryResponse;
 }
 
 /**
@@ -244,18 +244,19 @@ async function getFirstBlock() {
  */
 export async function initFabricConnector(): Promise<void> {
   if (!fabricConnectorPlugin) {
-    await createFabricConnector();
+    const user = config.assetTradeInfo.fabric.submitter.name;
+    signerIdentity = await getUserIdentity(user);
+    logger.info(
+      "Using signing identity for",
+      user,
+      "MspID",
+      signerIdentity.mspId,
+    );
+    await createFabricConnector(signerIdentity);
 
-    const firstBlock = await getFirstBlock();
-    const firstBlockNumber = firstBlock.decodedBlock.header.number;
-    if (
-      !firstBlockNumber ||
-      firstBlockNumber.low !== 0 ||
-      firstBlockNumber.high !== 0
-    ) {
-      throw new Error(
-        `Invalid block number of the first block: ${firstBlockNumber}`,
-      );
+    const firstBlockResponse = await getFirstBlock();
+    if (!firstBlockResponse.success || !firstBlockResponse.functionOutput) {
+      throw new Error(`Invalid getFirstBlock response: ${firstBlockResponse}`);
     }
 
     logger.info("initFabricConnector() done.");
@@ -287,6 +288,14 @@ export async function getFabricConnector(): Promise<
 export function getFabricApiClient(): FabricApiClient {
   if (fabricApiClient) {
     return fabricApiClient;
+  } else {
+    throw new Error("Fabric connector not initialized yet!");
+  }
+}
+
+export function getSignerIdentity(): FabricIdentity {
+  if (signerIdentity) {
+    return signerIdentity;
   } else {
     throw new Error("Fabric connector not initialized yet!");
   }
