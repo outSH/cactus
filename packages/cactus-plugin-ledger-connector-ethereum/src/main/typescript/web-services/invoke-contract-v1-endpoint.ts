@@ -18,6 +18,8 @@ import { registerWebServiceEndpoint } from "@hyperledger/cactus-core";
 import { PluginLedgerConnectorEthereum } from "../plugin-ledger-connector-ethereum";
 
 import OAS from "../../json/openapi.json";
+import { ERR_INVALID_RESPONSE } from "web3";
+import { isWeb3Error } from "../public-api";
 
 export interface IInvokeContractEndpointOptions {
   logLevel?: LogLevelDesc;
@@ -43,7 +45,7 @@ export class InvokeContractEndpoint implements IWebServiceEndpoint {
     this.log = LoggerProvider.getOrCreate({ level, label });
   }
 
-  public get oasPath(): typeof OAS.paths["/api/v1/plugins/@hyperledger/cactus-plugin-ledger-connector-ethereum/invoke-contract"] {
+  public get oasPath(): (typeof OAS.paths)["/api/v1/plugins/@hyperledger/cactus-plugin-ledger-connector-ethereum/invoke-contract"] {
     return OAS.paths[
       "/api/v1/plugins/@hyperledger/cactus-plugin-ledger-connector-ethereum/invoke-contract"
     ];
@@ -89,6 +91,16 @@ export class InvokeContractEndpoint implements IWebServiceEndpoint {
       res.json(await this.options.connector.invokeContract(req.body));
     } catch (ex) {
       this.log.error(`Crash while serving ${reqTag}`, ex);
+
+      // Return errors responses from ethereum node as user errors
+      if (isWeb3Error(ex) && ex.code === ERR_INVALID_RESPONSE) {
+        res.status(400).json({
+          message: "Invalid Response Error",
+          error: safeStringifyException(ex),
+        });
+        return;
+      }
+
       res.status(500).json({
         message: "Internal Server Error",
         error: safeStringifyException(ex),

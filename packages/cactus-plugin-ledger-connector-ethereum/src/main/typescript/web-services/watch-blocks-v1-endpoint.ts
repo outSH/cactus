@@ -58,7 +58,7 @@ export class WatchBlocksV1Endpoint {
 
   public async subscribe(): Promise<void> {
     const { socket, log, web3, isGetBlockData } = this;
-    log.debug(`${WatchBlocksV1.Subscribe} => ${socket.id}`);
+    log.info(`${WatchBlocksV1.Subscribe} => ${socket.id}`);
 
     const newBlocksSubscription = await web3.eth.subscribe(
       "newBlockHeaders",
@@ -84,12 +84,13 @@ export class WatchBlocksV1Endpoint {
           blockData: {
             ...web3BlockData,
             // Return with full tx objects is not detected, must manually force correct type
-            transactions: (web3BlockData.transactions as unknown) as Web3Transaction[],
+            transactions:
+              web3BlockData.transactions as unknown as Web3Transaction[],
           },
         };
       } else {
         // Force fix type of sha3Uncles
-        let sha3Uncles: string = (blockHeader.sha3Uncles as unknown) as string;
+        let sha3Uncles: string = blockHeader.sha3Uncles as unknown as string;
         if (Array.isArray(blockHeader.sha3Uncles)) {
           sha3Uncles = blockHeader.sha3Uncles.toString();
         }
@@ -114,7 +115,7 @@ export class WatchBlocksV1Endpoint {
     log.debug("Subscribing to Web3 new block headers event...");
 
     socket.on("disconnect", async (reason: string) => {
-      log.debug("WebSocket:disconnect reason=%o", reason);
+      log.info("WebSocket:disconnect reason=%o", reason);
       await newBlocksSubscription.unsubscribe();
       log.debug("Web3 unsubscribe done.");
     });

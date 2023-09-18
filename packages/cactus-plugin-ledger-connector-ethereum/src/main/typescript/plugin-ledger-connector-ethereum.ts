@@ -4,7 +4,13 @@ import type {
 } from "socket.io";
 
 import { Express } from "express";
-import Web3, { Transaction, TransactionReceiptBase } from "web3";
+import Web3, {
+  ContractAbi,
+  HttpProvider,
+  Transaction,
+  TransactionReceiptBase,
+  WebSocketProvider,
+} from "web3";
 import { Contract, PayableMethodObject } from "web3-eth-contract";
 
 import OAS from "../json/openapi.json";
@@ -87,10 +93,27 @@ type RunContractDeploymentInput = {
   value?: string;
 };
 
+export type HttpProviderOptions = ConstructorParameters<typeof HttpProvider>[1];
+export type WsProviderSocketOptions = ConstructorParameters<
+  typeof WebSocketProvider
+>[1];
+export type WsProviderReconnectOptions = ConstructorParameters<
+  typeof WebSocketProvider
+>[2];
+
+const defaultWsProviderReconnectOptions: WsProviderReconnectOptions = {
+  delay: 500,
+  autoReconnect: true,
+  maxAttempts: 20,
+};
+
 export interface IPluginLedgerConnectorEthereumOptions
   extends ICactusPluginOptions {
-  rpcApiHttpHost: string;
+  rpcApiHttpHost?: string;
+  rpcApiHttpOptions?: HttpProviderOptions;
   rpcApiWsHost?: string;
+  rpcApiWsSocketOptions?: WsProviderSocketOptions;
+  rpcApiWsReconnectOptions?: WsProviderReconnectOptions;
   logLevel?: LogLevelDesc;
   prometheusExporter?: PrometheusExporter;
   pluginRegistry: PluginRegistry;
@@ -105,7 +128,8 @@ export class PluginLedgerConnectorEthereum
       RunTransactionResponse
     >,
     ICactusPlugin,
-    IPluginWebService {
+    IPluginWebService
+{
   private readonly pluginRegistry: PluginRegistry;
   public prometheusExporter: PrometheusExporter;
   private readonly instanceId: string;
@@ -118,17 +142,44 @@ export class PluginLedgerConnectorEthereum
     return PluginLedgerConnectorEthereum.CLASS_NAME;
   }
 
-  private getWeb3Provider() {
-    if (!this.options.rpcApiWsHost) {
-      return new Web3.providers.HttpProvider(this.options.rpcApiHttpHost);
+  private getWeb3WsProvider() {
+    if (this.options.rpcApiWsHost) {
+      return new WebSocketProvider(
+        this.options.rpcApiWsHost,
+        this.options.rpcApiWsSocketOptions,
+        this.options.rpcApiWsReconnectOptions,
+      );
+    } else {
+      throw new Error(
+        "Can't instantiate WebSocketProvider without a valid rpcApiWsHost!",
+      );
     }
-    return new Web3.providers.WebsocketProvider(this.options.rpcApiWsHost);
+  }
+
+  private getWeb3Provider() {
+    if (this.options.rpcApiHttpHost) {
+      this.log.debug(
+        "Using Web3 HttpProvider because rpcApiHttpHost was provided",
+      );
+      return new HttpProvider(
+        this.options.rpcApiHttpHost,
+        this.options.rpcApiHttpOptions,
+      );
+    } else if (this.options.rpcApiWsHost) {
+      this.log.debug(
+        "Using Web3 WebSocketProvider because rpcApiHttpHost is missing but rpcApiWsHost was provided",
+      );
+      return this.getWeb3WsProvider();
+    } else {
+      throw new Error(
+        "Missing web3js RPC Api host (either HTTP or WS is required)",
+      );
+    }
   }
 
   constructor(public readonly options: IPluginLedgerConnectorEthereumOptions) {
     const fnTag = `${this.className}#constructor()`;
     Checks.truthy(options, `${fnTag} arg options`);
-    Checks.truthy(options.rpcApiHttpHost, `${fnTag} options.rpcApiHttpHost`);
     Checks.truthy(options.instanceId, `${fnTag} options.instanceId`);
     Checks.truthy(options.pluginRegistry, `${fnTag} options.pluginRegistry`);
 
@@ -146,6 +197,10 @@ export class PluginLedgerConnectorEthereum
       this.prometheusExporter,
       `${fnTag} options.prometheusExporter`,
     );
+
+    if (!this.options.rpcApiWsReconnectOptions) {
+      this.options.rpcApiWsReconnectOptions = defaultWsProviderReconnectOptions;
+    }
 
     this.prometheusExporter.startMetricsCollection();
   }
@@ -188,23 +243,40 @@ export class PluginLedgerConnectorEthereum
     app: Express,
     wsApi: SocketIoServer,
   ): Promise<IWebServiceEndpoint[]> {
-    const { web3 } = this;
     const { logLevel } = this.options;
     const webServices = await this.getOrCreateWebServices();
     await Promise.all(webServices.map((ws) => ws.registerExpress(app)));
 
-    wsApi.on("connection", (socket: SocketIoSocket) => {
-      this.log.debug(`New Socket connected. ID=${socket.id}`);
+    if (this.options.rpcApiWsHost) {
+      const web3 = new Web3(this.getWeb3WsProvider());
+      this.log.debug(`WebSocketProvider created for socketio endpoints`);
+      wsApi.on("connection", (socket: SocketIoSocket) => {
+        this.log.info(`New Socket connected. ID=${socket.id}`);
 
-      socket.on(WatchBlocksV1.Subscribe, (options?: WatchBlocksV1Options) => {
-        new WatchBlocksV1Endpoint({
-          web3,
-          socket,
-          logLevel,
-          options,
-        }).subscribe();
+        socket.on(WatchBlocksV1.Subscribe, (options?: WatchBlocksV1Options) => {
+          new WatchBlocksV1Endpoint({
+            web3,
+            socket,
+            logLevel,
+            options,
+          }).subscribe();
+        });
       });
-    });
+    } else {
+      this.log.info(
+        `WebSocketProvider was NOT created for socketio endpoints! Socket.IO will not be handled!`,
+      );
+      wsApi.on("connection", (socket: SocketIoSocket) => {
+        this.log.info(
+          "Socket connected but no async endpoint is supported - disconnecting...",
+        );
+        socket.emit(
+          WatchBlocksV1.Error,
+          "Missing rpcApiWsHost - can't listen for new blocks on HTTP provider",
+        );
+        socket.disconnect();
+      });
+    }
 
     return webServices;
   }
@@ -264,14 +336,13 @@ export class PluginLedgerConnectorEthereum
     return `@hyperledger/cactus-plugin-ledger-connector-ethereum`;
   }
 
-  public async getConsensusAlgorithmFamily(): Promise<
-    ConsensusAlgorithmFamily
-  > {
+  public async getConsensusAlgorithmFamily(): Promise<ConsensusAlgorithmFamily> {
     return ConsensusAlgorithmFamily.Stake;
   }
 
   public async hasTransactionFinality(): Promise<boolean> {
-    const currentConsensusAlgorithmFamily = await this.getConsensusAlgorithmFamily();
+    const currentConsensusAlgorithmFamily =
+      await this.getConsensusAlgorithmFamily();
 
     return consensusHasTransactionFinality(currentConsensusAlgorithmFamily);
   }
@@ -386,7 +457,7 @@ export class PluginLedgerConnectorEthereum
   }
 
   /**
-   *  Invoke contract method using contract instance stored in a kechain plugin.
+   *  Invoke contract method using contract instance stored in a keychain plugin.
    *
    * @param req contract method and transaction definition
    * @param contract contract keychain reference
@@ -466,7 +537,7 @@ export class PluginLedgerConnectorEthereum
 
     const contractInstance = new this.web3.eth.Contract(abi, contractAddress);
     const isSafeToCall = await this.isSafeToCallContractMethod(
-      contractInstance,
+      contractInstance as unknown as Contract<ContractAbi>,
       req.methodName,
     );
     if (!isSafeToCall) {
@@ -593,7 +664,7 @@ export class PluginLedgerConnectorEthereum
    * Throws if timeout expires.
    *
    * @param txHash sent transaction hash
-   * @param timeoutMs timeout in miliseconds
+   * @param timeoutMs timeout in milliseconds
    * @returns transaction receipt.
    */
   public async pollForTxReceipt(
@@ -637,9 +708,8 @@ export class PluginLedgerConnectorEthereum
   ): Promise<RunTransactionResponse> {
     const fnTag = `${this.className}#transactGethKeychain()`;
     const { transactionConfig, web3SigningCredential } = txIn;
-    const {
-      secret,
-    } = web3SigningCredential as Web3SigningCredentialGethKeychainPassword;
+    const { secret } =
+      web3SigningCredential as Web3SigningCredentialGethKeychainPassword;
 
     try {
       const txHash = await this.web3.eth.personal.sendTransaction(
@@ -672,9 +742,8 @@ export class PluginLedgerConnectorEthereum
   ): Promise<RunTransactionResponse> {
     const fnTag = `${this.className}#transactPrivateKey()`;
     const { transactionConfig, web3SigningCredential } = req;
-    const {
-      secret,
-    } = web3SigningCredential as Web3SigningCredentialPrivateKeyHex;
+    const { secret } =
+      web3SigningCredential as Web3SigningCredentialPrivateKeyHex;
 
     const signedTx = await this.web3.eth.accounts.signTransaction(
       await this.getTransactionFromTxConfig(transactionConfig),
@@ -702,11 +771,8 @@ export class PluginLedgerConnectorEthereum
   ): Promise<RunTransactionResponse> {
     const fnTag = `${this.className}#transactCactiKeychainRef()`;
     const { transactionConfig, web3SigningCredential } = req;
-    const {
-      ethAccount,
-      keychainEntryKey,
-      keychainId,
-    } = web3SigningCredential as Web3SigningCredentialCactiKeychainRef;
+    const { ethAccount, keychainEntryKey, keychainId } =
+      web3SigningCredential as Web3SigningCredentialCactiKeychainRef;
 
     // locate the keychain plugin that has access to the keychain backend
     // denoted by the keychainID from the request.
@@ -771,7 +837,7 @@ export class PluginLedgerConnectorEthereum
         tx.maxPriorityFeePerGas.toString(),
       );
       this.log.info(
-        `Estimated maxFeePerGas of ${tx.maxFeePerGas} becuase maxPriorityFeePerGas was provided.`,
+        `Estimated maxFeePerGas of ${tx.maxFeePerGas} because maxPriorityFeePerGas was provided.`,
       );
     }
 
@@ -979,7 +1045,7 @@ export class PluginLedgerConnectorEthereum
     const contract = new this.web3.eth.Contract(args.abi, args.address);
 
     const isSafeToCall = await this.isSafeToCallContractMethod(
-      contract,
+      contract as unknown as Contract<ContractAbi>,
       args.contractMethod,
     );
     if (!isSafeToCall) {

@@ -9,8 +9,8 @@ This plugin provides `Cactus` a way to interact with Ethereum networks. Using th
 ## Summary
 
 - [Getting Started](#getting-started)
-- [Runing the tests](#running-the-tests)
 - [Usage](#usage)
+- [Runing the tests](#running-the-tests)
 - [Prometheus Exporter](#prometheus-exporter)
 - [Contributing](#contributing)
 - [License](#license)
@@ -155,6 +155,42 @@ To check that all has been installed correctly and that the pugin has no errors 
 ```sh
 npx jest cactus-plugin-ledger-connector-ethereum
 ```
+
+### Stess test
+- We use artillery for stress testing.
+- Test can run all at once with Jest script, or you can use CLI for manual setup (e.g. on separate machines or containers).
+
+#### Jest test
+- This is useful for basic smoke test
+- Don't use for bechmarking due to possible jest framework interference and issues of running both client and server in single process.
+
+```sh
+npx jest cactus-plugin-ledger-connector-ethereum/src/test/typescript/benchmark/geth-artillery-benchmark
+```
+
+#### CLI (manual) setup
+- Recommended
+
+``` sh
+# Start the test environment
+node ./packages/cactus-plugin-ledger-connector-ethereum/dist/lib/test/typescript/benchmark/cli/run-benchmark-environment.js
+# Wait until `> artillery run ./.manual-geth-artillery-config.yaml` is printed
+
+# Review artillery config - change scenarios weights or load configuration, adjust target if running on separate machine etc...
+vim ./.manual-geth-artillery-config.yaml # config is created in cwd() when starting the environment
+
+# Run artillery
+artillery run ./.manual-geth-artillery-config.yaml
+```
+
+#### Files
+- `./src/test/typescript/benchmark/geth-artillery-benchmark.test.ts` jest test for basic stress test
+- `./src/test/typescript/benchmark/setup`
+  - `geth-benchmark-env.ts` contains helper file for setting up an environment used by both CLI and jest test.
+  - `geth-benchmark-config.yaml` template artillery configuration. You can modify test load and scenarios there.
+  - `artillery-helper-functions.js` request handlers used by artillery to correcty process some response codes.
+- `./src/test/typescript/benchmark/cli`
+  - `run-benchmark-environment.ts` CLI for starting test environment and patching template artillery config
 
 ### Building/running the container image locally
 

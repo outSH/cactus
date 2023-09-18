@@ -49,7 +49,8 @@ export type EthereumRequestInputArgs = {
 
 export class EthereumApiClient
   extends DefaultApi
-  implements ISocketApiClient<WatchBlocksV1Progress> {
+  implements ISocketApiClient<WatchBlocksV1Progress>
+{
   public static readonly CLASS_NAME = "EthereumApiClient";
 
   private readonly log: Logger;
