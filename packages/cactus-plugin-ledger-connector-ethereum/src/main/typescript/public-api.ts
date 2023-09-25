@@ -3,6 +3,7 @@ export * from "./generated/openapi/typescript-axios";
 export {
   PluginLedgerConnectorEthereum,
   IPluginLedgerConnectorEthereumOptions,
+  PluginLedgerConnectorEthereumFork,
 } from "./plugin-ledger-connector-ethereum";
 
 export * from "./types/model-type-guards";

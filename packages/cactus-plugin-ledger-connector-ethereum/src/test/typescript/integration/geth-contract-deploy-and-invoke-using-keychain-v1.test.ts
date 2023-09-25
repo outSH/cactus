@@ -39,7 +39,7 @@ import HelloWorldContractJson from "../../solidity/hello-world-contract/HelloWor
 import HelloWorldWithArgContractJson from "../../solidity/hello-world-with-arg-contract/HelloWorldWithArg.json";
 import {
   EthContractInvocationType,
-  PluginLedgerConnectorEthereum,
+  PluginLedgerConnectorEthereumFork,
   Web3SigningCredentialCactiKeychainRef,
   Web3SigningCredentialType,
   DefaultApi as EthereumApi,
@@ -65,7 +65,7 @@ describe("Ethereum contract deploy and invoke using keychain tests", () => {
     apiConfig,
     ledger: GethTestLedger,
     apiClient: EthereumApi,
-    connector: PluginLedgerConnectorEthereum,
+    connector: PluginLedgerConnectorEthereumFork,
     rpcApiHttpHost: string,
     keychainPlugin: PluginKeychainMemory;
   const expressApp = express();
@@ -121,7 +121,7 @@ describe("Ethereum contract deploy and invoke using keychain tests", () => {
       HelloWorldWithArgContractJson.contractName,
       JSON.stringify(HelloWorldWithArgContractJson),
     );
-    connector = new PluginLedgerConnectorEthereum({
+    connector = new PluginLedgerConnectorEthereumFork({
       instanceId: uuidV4(),
       rpcApiHttpHost,
       logLevel: testLogLevel,

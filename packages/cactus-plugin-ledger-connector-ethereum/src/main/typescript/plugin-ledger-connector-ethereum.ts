@@ -136,10 +136,9 @@ export class PluginLedgerConnectorEthereum
   private readonly log: Logger;
   private readonly web3: Web3;
   private endpoints: IWebServiceEndpoint[] | undefined;
-  public static readonly CLASS_NAME = "PluginLedgerConnectorEthereum";
 
   public get className(): string {
-    return PluginLedgerConnectorEthereum.CLASS_NAME;
+    return "PluginLedgerConnectorEthereum";
   }
 
   private getWeb3WsProvider() {
@@ -1060,5 +1059,31 @@ export class PluginLedgerConnectorEthereum
     return methodRef(...contractMethodArgs)[args.invocationType](
       args.invocationParams,
     );
+  }
+}
+
+export class PluginLedgerConnectorEthereumFork extends PluginLedgerConnectorEthereum {
+  public get className(): string {
+    return "PluginLedgerConnectorEthereumFork";
+  }
+
+  constructor(options: IPluginLedgerConnectorEthereumOptions) {
+    super(options);
+    console.log("PluginLedgerConnectorEthereumFork INITIALIZED!");
+  }
+
+  public getOpenApiSpec(): unknown {
+    return [OAS, "anotherOAS"];
+  }
+
+  public async getOrCreateWebServices(): Promise<IWebServiceEndpoint[]> {
+    console.log(
+      "################################# PluginLedgerConnectorEthereumFork@getOrCreateWebServices",
+    );
+    return super.getOrCreateWebServices();
+  }
+
+  public getPackageName(): string {
+    return `@hyperledger/cactus-plugin-ledger-connector-ethereum-fork`;
   }
 }
