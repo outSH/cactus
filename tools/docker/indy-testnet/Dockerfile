@@ -1,53 +1,15 @@
 # Runs indy pool for testing purpose
-# Original source - https://github.com/hyperledger/indy-sdk/blob/master/ci/indy-pool.dockerfile
+# Original source - https://github.com/hyperledger/indy-vdr/blob/main/ci/indy-pool.dockerfile
 # Changes marked with `EDIT`
 
-FROM ubuntu:16.04
+# EDIT - use stable indy release
+FROM ghcr.io/hyperledger/indy-node-container/indy_node:1.12.6-ubuntu18-main
+RUN pip3 install "supervisor~=4.2"
 
-ARG uid=1000
-
-# Install environment
-RUN apt-get update -y && apt-get install -y \
-	git \
-	wget \
-	python3.5 \
-	python3-pip \
-	python-setuptools \
-	python3-nacl \
-	apt-transport-https \
-	ca-certificates \
-	supervisor
-
-RUN pip3 install -U \
-	pip==9.0.3 \
-	setuptools
-
-RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys CE7709D068DB5E88 || \
-	apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys CE7709D068DB5E88
-ARG indy_stream=master
-RUN echo "deb https://repo.sovrin.org/deb xenial $indy_stream" >> /etc/apt/sources.list
-
-RUN useradd -ms /bin/bash -u $uid indy
-
-ARG indy_plenum_ver=1.12.1~dev989
-ARG indy_node_ver=1.12.1~dev1172
-ARG python3_indy_crypto_ver=0.4.5
-ARG indy_crypto_ver=0.4.5
-ARG python3_pyzmq_ver=18.1.0
-ARG python3_orderedset_ver=2.0
-ARG python3_psutil_ver=5.4.3
-ARG python3_pympler_ver=0.5
-
-RUN apt-get update -y && apt-get install -y \
-        python3-pyzmq=${python3_pyzmq_ver} \
-        indy-plenum=${indy_plenum_ver} \
-        indy-node=${indy_node_ver} \
-        python3-indy-crypto=${python3_indy_crypto_ver} \
-        libindy-crypto=${indy_crypto_ver} \
-        python3-orderedset=${python3_orderedset_ver} \
-        python3-psutil=${python3_psutil_ver} \
-        python3-pympler=${python3_pympler_ver} \
-        vim
+# EDIT - change UID to simplify host dir mount
+ARG UID=1000
+RUN usermod -u $UID indy
+ENV UID=$UID
 
 RUN echo "[supervisord]\n\
 logfile = /tmp/supervisord.log\n\
@@ -89,16 +51,38 @@ command=start_indy_node Node4 0.0.0.0 9707 0.0.0.0 9708\n\
 directory=/home/indy\n\
 stdout_logfile=/tmp/node4.log\n\
 stderr_logfile=/tmp/node4.log\n"\
->> /etc/supervisord.conf
+    >> /etc/supervisord.conf
+
+RUN mkdir -p \
+    /etc/indy \
+    /var/lib/indy/backup \
+    /var/lib/indy/plugins \
+    /var/lib/indy/sandbox \
+    /var/log/indy \
+    && chown -R indy:root /etc/indy /var/lib/indy /var/log/indy
+
+# EDIT - Setup healthcheck
+COPY ./healthcheck.sh /bin/healthcheck
+RUN chmod +x /bin/healthcheck
+HEALTHCHECK --interval=5s --timeout=10s --start-period=45s --retries=60 CMD /bin/healthcheck
 
 USER indy
 
-RUN awk '{if (index($1, "NETWORK_NAME") != 0) {print("NETWORK_NAME = \"sandbox\"")} else print($0)}' /etc/indy/indy_config.py> /tmp/indy_config.py
-RUN mv /tmp/indy_config.py /etc/indy/indy_config.py
+RUN echo "LEDGER_DIR = '/var/lib/indy'\n\
+LOG_DIR = '/var/log/indy'\n\
+KEYS_DIR = '/var/lib/indy'\n\
+GENESIS_DIR = '/var/lib/indy'\n\
+BACKUP_DIR = '/var/lib/indy/backup'\n\
+PLUGINS_DIR = '/var/lib/indy/plugins'\n\
+NODE_INFO_DIR = '/var/lib/indy'\n\
+NETWORK_NAME = 'sandbox'\n"\
+    >> /etc/indy/indy_config.py
 
-# EDIT - Use different default pool IP
-ARG pool_ip=172.16.0.2
+ARG pool_ip=127.0.0.1
+
+# EDIT - Store pool ip in environment variable
 ENV POOL_IP=$pool_ip
+
 EXPOSE 9701 9702 9703 9704 9705 9706 9707 9708
 
 # EDIT - Use different entry script- generate indy pool just once
