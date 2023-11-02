@@ -65,6 +65,7 @@ import { connectAgents } from "../lib/connections";
 import { issueCredential } from "../lib/credentials";
 import { checkCredentialProof } from "../lib/proofs";
 
+// https://github.com/SamVerschueren/listr ??
 async function runTest() {
   const aliceAgent = await createAliceAgent();
   console.log("BOB FINISHED");

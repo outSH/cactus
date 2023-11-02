@@ -219,6 +219,7 @@ export async function createAliceAgent() {
   const agent = await setupAgent(ALICE_AGENT_NAME, ALICE_AGENT_PORT);
   setupCredentialListener(agent);
   setupProofListener(agent);
+  // TOdo - connect listener with logs
   return agent;
 }
 

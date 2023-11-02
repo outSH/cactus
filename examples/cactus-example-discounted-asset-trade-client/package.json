@@ -50,6 +50,7 @@
     "@hyperledger/anoncreds-nodejs": "^0.2.0-dev.4",
     "@hyperledger/aries-askar-nodejs": "^0.2.0-dev.1",
     "@hyperledger/indy-vdr-nodejs": "^0.2.0-dev.3",
+    "inquirer": "^8.2.6",
     "loglevel": "^1.8.1"
   },
   "devDependencies": {
@@ -65,8 +66,7 @@
     "@types/indy-sdk": "^1.16.26",
     "@types/inquirer": "^8.2.6",
     "clear": "^0.1.0",
-    "figlet": "^1.5.2",
-    "ts-node": "^10.4.0"
+    "figlet": "^1.5.2"
   },
   "engines": {
     "node": ">=18",

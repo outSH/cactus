@@ -223,3 +223,22 @@ export async function issueCredential(
     credentialId: indyCredentialExchangeRecord.id,
   };
 }
+
+export async function getAgentCredentials(agent: Agent) {
+  const validCredentials = await agent.credentials.findAllByQuery({
+    state: CredentialState.Done,
+  });
+  log.debug("Valid credentials count:", validCredentials.length);
+
+  return validCredentials.map((c) => {
+    return {
+      id: c.id,
+      schemaId: c.metadata.data["_anoncreds/credential"].schemaId,
+      credentialDefinitionId:
+        c.metadata.data["_anoncreds/credential"].credentialDefinitionId,
+      connectionId: c.connectionId,
+      credentials: c.credentials,
+      credentialAttributes: c.credentialAttributes,
+    };
+  });
+}

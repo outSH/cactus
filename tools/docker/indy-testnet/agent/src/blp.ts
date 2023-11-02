@@ -378,6 +378,24 @@ const registerCredentialDefinition = async (
   return credentialDefinitionResult;
 };
 
+const waitForConnectionReady = async (
+  agent: Agent,
+  outOfBandRecordId: string,
+) => {
+  let connection: ConnectionRecord | undefined;
+  do {
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    connection = (
+      await agent.connections.findAllByOutOfBandId(outOfBandRecordId)
+    ).pop();
+
+    if (!connection) {
+      throw Error("No connection!");
+    }
+  } while (connection && !connection.isReady);
+};
+
 const run = async () => {
   console.log("Initializing BLP agent...");
   const blpAgent = await initializeBLPAgent();
@@ -386,11 +404,11 @@ const run = async () => {
   let outOfBandRecordId = "8c334af4-ba40-496b-abbf-d61cd4b2ddf3";
   try {
     const invitationUrl =
-      "https://example.org?oob=eyJAdHlwZSI6Imh0dHBzOi8vZGlkY29tbS5vcmcvb3V0LW9mLWJhbmQvMS4xL2ludml0YXRpb24iLCJAaWQiOiJiZWYwYjA1Ny1iYjZlLTQzMDctYjY2ZS0yZDM0YWYzNWQ5MTAiLCJsYWJlbCI6ImRlbW8tYWdlbnQtYm9iIiwiYWNjZXB0IjpbImRpZGNvbW0vYWlwMSIsImRpZGNvbW0vYWlwMjtlbnY9cmZjMTkiXSwiaGFuZHNoYWtlX3Byb3RvY29scyI6WyJodHRwczovL2RpZGNvbW0ub3JnL2RpZGV4Y2hhbmdlLzEuMCIsImh0dHBzOi8vZGlkY29tbS5vcmcvY29ubmVjdGlvbnMvMS4wIl0sInNlcnZpY2VzIjpbeyJpZCI6IiNpbmxpbmUtMCIsInNlcnZpY2VFbmRwb2ludCI6Imh0dHA6Ly9sb2NhbGhvc3Q6MzAwMyIsInR5cGUiOiJkaWQtY29tbXVuaWNhdGlvbiIsInJlY2lwaWVudEtleXMiOlsiZGlkOmtleTp6Nk1rcTZ2WEdrN0JyQ1RuOUhUNnVqeUt0M2lHMjdWb3daTXBoMzdLWjR4Y1lVOTQiXSwicm91dGluZ0tleXMiOltdfV19";
+      "https://example.org?oob=eyJAdHlwZSI6Imh0dHBzOi8vZGlkY29tbS5vcmcvb3V0LW9mLWJhbmQvMS4xL2ludml0YXRpb24iLCJAaWQiOiJiNjUxYjhiMC1hOGZhLTQwNmItOTg2Yi1jMTRjMDAzZTNjNDEiLCJsYWJlbCI6ImFsaWNlQ2FjdGlBZ2VudCIsImFjY2VwdCI6WyJkaWRjb21tL2FpcDEiLCJkaWRjb21tL2FpcDI7ZW52PXJmYzE5Il0sImhhbmRzaGFrZV9wcm90b2NvbHMiOlsiaHR0cHM6Ly9kaWRjb21tLm9yZy9kaWRleGNoYW5nZS8xLjAiLCJodHRwczovL2RpZGNvbW0ub3JnL2Nvbm5lY3Rpb25zLzEuMCJdLCJzZXJ2aWNlcyI6W3siaWQiOiIjaW5saW5lLTAiLCJzZXJ2aWNlRW5kcG9pbnQiOiJodHRwOi8vbG9jYWxob3N0OjMwMDMiLCJ0eXBlIjoiZGlkLWNvbW11bmljYXRpb24iLCJyZWNpcGllbnRLZXlzIjpbImRpZDprZXk6ejZNa3NQMmJaZHhjVGtlTVhFYThNRmhrWnVpdXpRdFllZEtlNldlaktuNTF4cmdrIl0sInJvdXRpbmdLZXlzIjpbXX1dfQ";
     console.log("Accepting the invitation from alice in BLP...");
-
     const oob = await receiveInvitation(blpAgent, invitationUrl);
     outOfBandRecordId = oob.id;
+    await waitForConnectionReady(blpAgent, outOfBandRecordId);
   } catch (error) {
     console.log("Connection alrady on");
   }
@@ -420,11 +438,12 @@ const run = async () => {
   );
 
   // Send proof
+  console.log("Request proof");
   const credentialDefinitionId =
-    "did:indy:bcovrin:test:Th7MpTaRZVRYnPiabds81Y/anoncreds/v0/CLAIM_DEF/63/default"; // TODO - get??
+    "did:indy:bcovrin:test:Th7MpTaRZVRYnPiabds81Y/anoncreds/v0/CLAIM_DEF/95/default"; // TODO - get??
   const proofAttribute = {
     name: {
-      name: "name",
+      name: "employee_status",
       restrictions: [
         {
           cred_def_id: credentialDefinitionId,
