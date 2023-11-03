@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 /**
  * Client App for interacting with discounted asset trade application.
  * Make sure example app is running before starting this client!
@@ -16,7 +18,7 @@ import {
 } from "../public-api";
 
 // Logger setup
-const logLevel = process.env.LOG_LEVEL ?? "DEBUG";
+const logLevel = process.env.LOG_LEVEL ?? "INFO";
 log.setDefaultLevel(logLevel as log.LogLevelDesc);
 console.log("Running with log level", logLevel);
 

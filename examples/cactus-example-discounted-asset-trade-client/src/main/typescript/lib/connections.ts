@@ -1,67 +1,32 @@
-import { AskarModule } from "@aries-framework/askar";
-import {
-  Agent,
-  InitConfig,
-  ConnectionEventTypes,
-  ConnectionStateChangedEvent,
-  WsOutboundTransport,
-  HttpOutboundTransport,
-  DidExchangeState,
-  OutOfBandRecord,
-  ConnectionsModule,
-  DidsModule,
-  TypedArrayEncoder,
-  KeyType,
-  CredentialsModule,
-  V2CredentialProtocol,
-  CredentialStateChangedEvent,
-  CredentialEventTypes,
-  CredentialState,
-  ConnectionRecord,
-  ProofEventTypes,
-  ProofStateChangedEvent,
-  ProofState,
-  ProofsModule,
-  AutoAcceptProof,
-  V2ProofProtocol,
-  AutoAcceptCredential,
-} from "@aries-framework/core";
-import { agentDependencies, HttpInboundTransport } from "@aries-framework/node";
-import { ariesAskar } from "@hyperledger/aries-askar-nodejs";
-import {
-  IndyVdrAnonCredsRegistry,
-  IndyVdrIndyDidRegistrar,
-  IndyVdrIndyDidResolver,
-  IndyVdrModule,
-} from "@aries-framework/indy-vdr";
-import { indyVdr } from "@hyperledger/indy-vdr-nodejs";
-import {
-  AnonCredsCredentialFormatService,
-  AnonCredsModule,
-  AnonCredsProofFormatService,
-  LegacyIndyCredentialFormatService,
-  LegacyIndyProofFormatService,
-  V1CredentialProtocol,
-  V1ProofProtocol,
-} from "@aries-framework/anoncreds";
-import { AnonCredsRsModule } from "@aries-framework/anoncreds-rs";
-import { anoncreds } from "@hyperledger/anoncreds-nodejs";
-import { readFileSync } from "fs";
-import {
-  IndySdkAnonCredsRegistry,
-  IndySdkModule,
-  IndySdkSovDidResolver,
-} from "@aries-framework/indy-sdk";
-import * as indySdk from "indy-sdk";
-
-//////////////////////////////////
+/**
+ * Functions used for connecting aries agents together.
+ */
 
 import * as log from "loglevel";
+import {
+  Agent,
+  ConnectionEventTypes,
+  ConnectionStateChangedEvent,
+  DidExchangeState,
+  OutOfBandRecord,
+  ConnectionRecord,
+} from "@aries-framework/core";
 
+// Constants
 const WAIT_FOR_CLIENT_ACCEPT_TIMEOUT = 60 * 1000;
-const WAIT_FOR_CONNECTION_READY_TIMEOUT = 500;
+const WAIT_FOR_CONNECTION_READY_POLL_INTERVAL = 500;
 
-export async function createNewConnectionInvitation(agent: Agent) {
+/**
+ * Create connection invitation from an `agent`.
+ *
+ * @param agent Aries agent
+ *
+ * @returns invitationUrl and outOfBandRecord
+ */
+export async function createNewConnectionInvitation(agent: Agent): Promise<{
+  invitationUrl: string;
+  outOfBandRecord: OutOfBandRecord;
+}> {
   const outOfBandRecord = await agent.oob.createInvitation();
 
   return {
@@ -72,14 +37,36 @@ export async function createNewConnectionInvitation(agent: Agent) {
   };
 }
 
-export async function acceptInvitation(agent: Agent, invitationUrl: string) {
+/**
+ * Accept connection invitation using it's URL.
+ *
+ * @param agent Aries agent
+ * @param invitationUrl connection invitation
+ *
+ * @returns `OutOfBandRecord`
+ */
+export async function acceptInvitation(
+  agent: Agent,
+  invitationUrl: string,
+): Promise<OutOfBandRecord> {
   const { outOfBandRecord } =
     await agent.oob.receiveInvitationFromUrl(invitationUrl);
 
   return outOfBandRecord;
 }
 
-export async function waitForConnection(agent: Agent, outOfBandId: string) {
+/**
+ * Wait until connection invite is accepted and connection is established.
+ * This functions comes from AFJ repository.
+ *
+ * @param agent Aries agent
+ * @param outOfBandId connection outOfBandId to wait for
+ * @returns new `ConnectionRecord`
+ */
+export async function waitForConnection(
+  agent: Agent,
+  outOfBandId: string,
+): Promise<ConnectionRecord> {
   if (!outOfBandId) {
     throw new Error("Missing outOfBandId in waitForConnection");
   }
@@ -120,10 +107,19 @@ export async function waitForConnection(agent: Agent, outOfBandId: string) {
   return agent.connections.returnWhenIsConnected(connectionRecord.id);
 }
 
+/**
+ * Search for already established connection with agent by it's label.
+ * @warn don't trust the label, use this method only for development.
+ *
+ * @param agent Aries agent
+ * @param peerAgentLabel Aries agent label we already conencted to
+ *
+ * @returns `ConnectionRecord` or undefined if connection is missing
+ */
 export async function getConnectionWithPeerAgent(
   agent: Agent,
   peerAgentLabel: string,
-) {
+): Promise<ConnectionRecord | undefined> {
   const completedConnections = await agent.connections.findAllByQuery({
     state: DidExchangeState.Completed,
   });
@@ -138,6 +134,13 @@ export async function getConnectionWithPeerAgent(
     .pop();
 }
 
+/**
+ * Connect two agents to each other.
+ *
+ * @param firstAgent Aries agent
+ * @param secondAgent Aries agent
+ * @returns [firstAgentConnectionRecord, secondAgentConnectionRecord]
+ */
 export async function connectAgents(
   firstAgent: Agent,
   secondAgent: Agent,
@@ -193,18 +196,33 @@ export async function connectAgents(
   throw new Error("Could not connect the agents!");
 }
 
+/**
+ * Block until given connection is operational.
+ *
+ * @param agent Aries agent
+ * @param outOfBandRecordId connection outOfBandRecordId
+ * @param timeout operation timeout (will throw exception if timeout exceeded)
+ */
 export async function waitForConnectionReady(
   agent: Agent,
   outOfBandRecordId: string,
-) {
+  timeout = WAIT_FOR_CLIENT_ACCEPT_TIMEOUT,
+): Promise<void> {
   let connection: ConnectionRecord | undefined;
+  let counter = Math.ceil(timeout / WAIT_FOR_CONNECTION_READY_POLL_INTERVAL);
+
   do {
+    counter--;
     await new Promise((resolve) =>
-      setTimeout(resolve, WAIT_FOR_CONNECTION_READY_TIMEOUT),
+      setTimeout(resolve, WAIT_FOR_CONNECTION_READY_POLL_INTERVAL),
     );
 
     connection = (
       await agent.connections.findAllByOutOfBandId(outOfBandRecordId)
     ).pop();
-  } while (!connection || !connection.isReady);
+  } while (counter > 0 && (!connection || !connection.isReady));
+
+  if (counter <= 0) {
+    throw new Error("waitForConnectionReady() timeout reached!");
+  }
 }

@@ -40,11 +40,17 @@
   "module": "dist/lib/main/typescript/index.js",
   "types": "dist/lib/main/typescript/index.d.ts",
   "bin": {
-    "cacti-ethereum-connector-status": "dist/lib/scripts/get-ethereum-connector-status.js"
+    "setup-credentials": "dist/lib/main/typescript/scripts/setup-credentials.js",
+    "run-discounted-asset-trade-client": "dist/lib/main/typescript/scripts/run-discounted-asset-trade-client.js"
   },
   "files": [
     "dist/*"
   ],
+  "scripts": {
+    "build": "tsc",
+    "setup-credentials": "node dist/lib/main/typescript/scripts/setup-credentials.js",
+    "run-discounted-asset-trade-client": "node dist/lib/main/typescript/scripts/run-discounted-asset-trade-client.js"
+  },
   "dependencies": {
     "@hyperledger/anoncreds-nodejs": "^0.2.0-dev.4",
     "@hyperledger/aries-askar-nodejs": "^0.2.0-dev.1",

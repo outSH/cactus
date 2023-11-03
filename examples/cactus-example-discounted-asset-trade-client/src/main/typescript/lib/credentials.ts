@@ -1,63 +1,20 @@
-import { AskarModule } from "@aries-framework/askar";
-import {
-  Agent,
-  InitConfig,
-  ConnectionEventTypes,
-  ConnectionStateChangedEvent,
-  WsOutboundTransport,
-  HttpOutboundTransport,
-  DidExchangeState,
-  OutOfBandRecord,
-  ConnectionsModule,
-  DidsModule,
-  TypedArrayEncoder,
-  KeyType,
-  CredentialsModule,
-  V2CredentialProtocol,
-  CredentialStateChangedEvent,
-  CredentialEventTypes,
-  CredentialState,
-  ConnectionRecord,
-  ProofEventTypes,
-  ProofStateChangedEvent,
-  ProofState,
-  ProofsModule,
-  AutoAcceptProof,
-  V2ProofProtocol,
-  AutoAcceptCredential,
-} from "@aries-framework/core";
-import { agentDependencies, HttpInboundTransport } from "@aries-framework/node";
-import { ariesAskar } from "@hyperledger/aries-askar-nodejs";
-import {
-  IndyVdrAnonCredsRegistry,
-  IndyVdrIndyDidRegistrar,
-  IndyVdrIndyDidResolver,
-  IndyVdrModule,
-} from "@aries-framework/indy-vdr";
-import { indyVdr } from "@hyperledger/indy-vdr-nodejs";
-import {
-  AnonCredsCredentialFormatService,
-  AnonCredsModule,
-  AnonCredsProofFormatService,
-  LegacyIndyCredentialFormatService,
-  LegacyIndyProofFormatService,
-  V1CredentialProtocol,
-  V1ProofProtocol,
-} from "@aries-framework/anoncreds";
-import { AnonCredsRsModule } from "@aries-framework/anoncreds-rs";
-import { anoncreds } from "@hyperledger/anoncreds-nodejs";
-import { readFileSync } from "fs";
-import {
-  IndySdkAnonCredsRegistry,
-  IndySdkModule,
-  IndySdkSovDidResolver,
-} from "@aries-framework/indy-sdk";
-import * as indySdk from "indy-sdk";
-
-//////////////////////////////////
+/**
+ * Functions for handling credentials.
+ */
 
 import * as log from "loglevel";
+import {
+  CredentialState,
+  CredentialRecordBinding,
+  CredentialPreviewAttribute,
+} from "@aries-framework/core";
+import { AnoncredAgent } from "./agent-setup";
 
+// Constants
+const WAIT_FOR_ISSUE_ACCEPT_POLL_INTERVAL = 1000;
+const WAIT_FOR_ISSUE_ACCEPT_TIMEOUT = 30 * 1000;
+
+const JOB_CERTIFICATE_SCHEMA_NAME = "cactiJobCert";
 const JOB_CERTIFICATE_SCHEMA_ATTRS = [
   "first_name",
   "last_name",
@@ -65,7 +22,7 @@ const JOB_CERTIFICATE_SCHEMA_ATTRS = [
   "employee_status",
   "experience",
 ];
-const JOB_CERTIFICATE_SCHEMA_NAME = "cactiJobCert_TODO2"; // todo change
+
 export type JobCertificateSchema = [
   { name: "first_name"; value: string },
   { name: "last_name"; value: string },
@@ -74,16 +31,36 @@ export type JobCertificateSchema = [
   { name: "experience"; value: string },
 ];
 
-export async function registerCredentialSchema(agent: Agent, did: string) {
+export type AgentCredentialSummary = {
+  id: string;
+  schemaId: string;
+  credentialDefinitionId: string;
+  connectionId: string | undefined;
+  credentials: CredentialRecordBinding[];
+  credentialAttributes: CredentialPreviewAttribute[] | undefined;
+};
+
+/**
+ * Register employment credential schema using specified endorser DID and agent.
+ *
+ * @param agent Aries agent
+ * @param did endorser DID
+ *
+ * @returns schema ID
+ */
+export async function registerCredentialSchema(
+  agent: AnoncredAgent,
+  did: string,
+): Promise<string> {
   log.info(
-    `Register job certificate credential schema '${JOB_CERTIFICATE_SCHEMA_NAME}'...`,
+    `Register employment certificate credential schema '${JOB_CERTIFICATE_SCHEMA_NAME}'...`,
   );
 
   const [createdSchema] = await agent.modules.anoncreds.getCreatedSchemas({
     schemaName: JOB_CERTIFICATE_SCHEMA_NAME,
   });
   if (createdSchema) {
-    log.info("Schema was already registered", createdSchema);
+    log.info("Schema was already registered");
     return createdSchema.schemaId;
   }
 
@@ -113,11 +90,20 @@ export async function registerCredentialSchema(agent: Agent, did: string) {
   return schemaResult.schemaState.schemaId;
 }
 
+/**
+ * Register employment credential definition using specified endorser DID and agent.
+ *
+ * @param agent Aries agent
+ * @param schemaId job credential schema id
+ * @param did endorser DID
+ *
+ * @returns credentialDefinitionId
+ */
 export async function registerCredentialDefinition(
-  agent: Agent,
+  agent: AnoncredAgent,
   schemaId: string,
   did: string,
-) {
+): Promise<string> {
   log.info(
     `Register job certificate credential definition (schemaId: '${schemaId}') ...`,
   );
@@ -128,10 +114,7 @@ export async function registerCredentialDefinition(
       issuerId: did,
     });
   if (createdCredentialDefinition) {
-    log.info(
-      "Credential definition was already registered",
-      createdCredentialDefinition,
-    );
+    log.info("Credential definition was already registered");
     return createdCredentialDefinition.credentialDefinitionId;
   }
 
@@ -164,59 +147,61 @@ export async function registerCredentialDefinition(
     .credentialDefinitionId;
 }
 
-const ISSUE_ACCEPT_POLL_INTERVAL = 1000;
-
+/**
+ * Register schema and credential definition (if not done already), and issue new credential to agent
+ * with specified `connectionId`.
+ * Will wait until credential is accepted by the peer.
+ *
+ * @param issuerAgent Aries agent
+ * @param credential credential to be issued
+ * @param connectionId peer agent connection ID
+ * @param did endorser DID
+ * @returns schemaId, credentialDefinitionId, credentialId
+ */
 export async function issueCredential(
-  issuerAgent: Agent,
+  issuerAgent: AnoncredAgent,
   credential: JobCertificateSchema,
   connectionId: string,
   did: string,
-) {
-  console.log("Register Credential Schema");
+): Promise<{
+  schemaId: string;
+  credentialDefinitionId: string;
+  credentialId: string;
+}> {
+  log.info("Register Credential Schema...");
   const schemaId = await registerCredentialSchema(issuerAgent, did);
-  console.log("schemaId:", schemaId);
+  log.debug("Employment credential schemaId:", schemaId);
 
-  console.log("Register Credential Definition");
+  log.info("Register Credential Definition...");
   const credentialDefinitionId = await registerCredentialDefinition(
     issuerAgent,
     schemaId,
     did,
   );
-  console.log("credentialDefinitionId:", credentialDefinitionId);
+  log.debug(
+    "Employment credential credentialDefinitionId:",
+    credentialDefinitionId,
+  );
 
-  // Issue
-  // const issent = setupCredentialListener(acmeAgent)
-
-  const indyCredentialExchangeRecord = await (
-    issuerAgent as any
-  ).credentials.offerCredential({
-    protocolVersion: "v2",
-    connectionId,
-    credentialFormats: {
-      anoncreds: {
-        credentialDefinitionId,
-        attributes: credential,
+  log.info("Issue the credential...");
+  const indyCredentialExchangeRecord =
+    await issuerAgent.credentials.offerCredential({
+      protocolVersion: "v2",
+      connectionId,
+      credentialFormats: {
+        anoncreds: {
+          credentialDefinitionId,
+          attributes: credential,
+        },
       },
-    },
-  });
+    });
+  log.debug("Employment credential issued:", indyCredentialExchangeRecord.id);
+  await waitForCredentialAcceptance(
+    issuerAgent,
+    indyCredentialExchangeRecord.id,
+  );
+  log.info("Credential was issed and accepted by a peer agent!");
 
-  // Can wait for acceptance as well
-  console.log("indyCredentialExchangeRecord:", indyCredentialExchangeRecord);
-
-  // Wait for credential acceptance
-  let credentialState: CredentialState | undefined;
-  do {
-    await new Promise((resolve) =>
-      setTimeout(resolve, ISSUE_ACCEPT_POLL_INTERVAL),
-    );
-    const credential = await issuerAgent.credentials.findById(
-      indyCredentialExchangeRecord.id,
-    );
-    credentialState = credential?.state;
-    console.log("credentialState:", credentialState);
-  } while (credentialState !== CredentialState.Done);
-
-  console.log("Issue done!");
   return {
     schemaId,
     credentialDefinitionId,
@@ -224,7 +209,48 @@ export async function issueCredential(
   };
 }
 
-export async function getAgentCredentials(agent: Agent) {
+/**
+ * Block until credential was accepted by peer agent.
+ *
+ * @param agent Aries agent
+ * @param credentialId issued credential id
+ * @param timeout operation timeout (will throw exception if timeout exceeded)
+ */
+export async function waitForCredentialAcceptance(
+  agent: AnoncredAgent,
+  credentialId: string,
+  timeout = WAIT_FOR_ISSUE_ACCEPT_TIMEOUT,
+): Promise<void> {
+  let credentialState: CredentialState | undefined;
+  let counter = Math.ceil(timeout / WAIT_FOR_ISSUE_ACCEPT_POLL_INTERVAL);
+
+  do {
+    counter--;
+    await new Promise((resolve) =>
+      setTimeout(resolve, WAIT_FOR_ISSUE_ACCEPT_POLL_INTERVAL),
+    );
+
+    const credential = await agent.credentials.findById(credentialId);
+    credentialState = credential?.state;
+  } while (
+    counter > 0 &&
+    (!credentialState || credentialState !== CredentialState.Done)
+  );
+
+  if (counter <= 0) {
+    throw new Error("waitForCredentialAcceptance() timeout reached!");
+  }
+}
+
+/**
+ * Get summary of given agent credentials.
+ *
+ * @param agent Aries agent
+ * @returns list of credentials
+ */
+export async function getAgentCredentials(
+  agent: AnoncredAgent,
+): Promise<AgentCredentialSummary[]> {
   const validCredentials = await agent.credentials.findAllByQuery({
     state: CredentialState.Done,
   });

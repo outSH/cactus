@@ -1,91 +1,69 @@
-import { AskarModule } from "@aries-framework/askar";
+/**
+ * Functions for handling proofs.
+ */
+
+import * as log from "loglevel";
 import {
-  Agent,
-  InitConfig,
-  ConnectionEventTypes,
-  ConnectionStateChangedEvent,
-  WsOutboundTransport,
-  HttpOutboundTransport,
-  DidExchangeState,
-  OutOfBandRecord,
-  ConnectionsModule,
-  DidsModule,
-  TypedArrayEncoder,
-  KeyType,
-  CredentialsModule,
-  V2CredentialProtocol,
-  CredentialStateChangedEvent,
-  CredentialEventTypes,
-  CredentialState,
-  ConnectionRecord,
   ProofEventTypes,
   ProofStateChangedEvent,
   ProofState,
   ProofExchangeRecord,
-  ProofsModule,
-  AutoAcceptProof,
-  V2ProofProtocol,
-  AutoAcceptCredential,
 } from "@aries-framework/core";
-import { agentDependencies, HttpInboundTransport } from "@aries-framework/node";
-import { ariesAskar } from "@hyperledger/aries-askar-nodejs";
-import {
-  IndyVdrAnonCredsRegistry,
-  IndyVdrIndyDidRegistrar,
-  IndyVdrIndyDidResolver,
-  IndyVdrModule,
-} from "@aries-framework/indy-vdr";
-import { indyVdr } from "@hyperledger/indy-vdr-nodejs";
-import {
-  AnonCredsCredentialFormatService,
-  AnonCredsModule,
-  AnonCredsProofFormatService,
-  LegacyIndyCredentialFormatService,
-  LegacyIndyProofFormatService,
-  V1CredentialProtocol,
-  V1ProofProtocol,
-} from "@aries-framework/anoncreds";
-import { AnonCredsRsModule } from "@aries-framework/anoncreds-rs";
-import { anoncreds } from "@hyperledger/anoncreds-nodejs";
-import { readFileSync } from "fs";
-import {
-  IndySdkAnonCredsRegistry,
-  IndySdkModule,
-  IndySdkSovDidResolver,
-} from "@aries-framework/indy-sdk";
-import * as indySdk from "indy-sdk";
+import { AnoncredAgent } from "./agent-setup";
 
-//////////////////////////////////
+// Constants
+const WAIT_FOR_PROOF_TIMEOUT = 60 * 1000;
 
-import * as log from "loglevel";
-
+/**
+ * Sends employmenet proof request to the peer agent (under connectionId), waits for proof to be accepted.
+ * Function will timout after prederermined amount of time.
+ * @note it returns if any proof was accepted, not necessarily one we've sent.
+ *
+ * @param agent Aries agent
+ * @param credentialDefinitionId employement credential definition id
+ * @param connectionId peer agent connection id
+ *
+ * @returns accepted ProofExchangeRecord id
+ */
 export async function checkCredentialProof(
-  agent: Agent,
+  agent: AnoncredAgent,
   credentialDefinitionId: string,
   connectionId: string,
-) {
+): Promise<ProofExchangeRecord> {
   // Create proof accepted listener
-  const isProofOK = new Promise<ProofExchangeRecord>((resolve) => {
+  const isProofOK = new Promise<ProofExchangeRecord>((resolve, reject) => {
+    const timeoutId = setTimeout(
+      () =>
+        reject(
+          new Error(
+            "Timeout reached - could not receive proof confirmation from peer",
+          ),
+        ),
+      WAIT_FOR_PROOF_TIMEOUT,
+    );
+
+    // Start listener
     agent.events.on(
       ProofEventTypes.ProofStateChanged,
       async ({ payload }: ProofStateChangedEvent) => {
-        console.log("PROOF RECORD RECEIVED ON ACME:", payload.proofRecord);
+        log.debug("Received proofRecord:", payload.proofRecord);
+
         const { state } = payload.proofRecord;
         if (
           state === ProofState.Done ||
           state === ProofState.Abandoned ||
           state === ProofState.Declined
         ) {
-          console.log("PROOF received!");
-          // TODO - check if this is the proof we wanted
+          clearTimeout(timeoutId);
+          log.info("Requested proof status:", state);
           resolve(payload.proofRecord);
         }
       },
     );
   });
 
-  // Send proof
-  const proofAttribute = {
+  // Send proof request
+  const proofAttributes = {
     employee_status: {
       name: "employee_status",
       restrictions: [
@@ -104,11 +82,11 @@ export async function checkCredentialProof(
       anoncreds: {
         name: "proof-request",
         version: "1.0",
-        requested_attributes: proofAttribute,
+        requested_attributes: proofAttributes,
       },
     },
   });
-  console.log("PROOF REQUEST SENT");
+  log.info("Proof request was sent");
 
   return isProofOK;
 }

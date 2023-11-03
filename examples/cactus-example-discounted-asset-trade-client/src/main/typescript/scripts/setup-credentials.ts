@@ -1,110 +1,76 @@
-import { AskarModule } from "@aries-framework/askar";
-import {
-  Agent,
-  InitConfig,
-  ConnectionEventTypes,
-  ConnectionStateChangedEvent,
-  WsOutboundTransport,
-  HttpOutboundTransport,
-  DidExchangeState,
-  OutOfBandRecord,
-  ConnectionsModule,
-  DidsModule,
-  TypedArrayEncoder,
-  KeyType,
-  CredentialsModule,
-  V2CredentialProtocol,
-  CredentialStateChangedEvent,
-  CredentialEventTypes,
-  CredentialState,
-  ConnectionRecord,
-  ProofEventTypes,
-  ProofStateChangedEvent,
-  ProofState,
-  ProofsModule,
-  AutoAcceptProof,
-  V2ProofProtocol,
-  AutoAcceptCredential,
-} from "@aries-framework/core";
-import { agentDependencies, HttpInboundTransport } from "@aries-framework/node";
-import { ariesAskar } from "@hyperledger/aries-askar-nodejs";
-import {
-  IndyVdrAnonCredsRegistry,
-  IndyVdrIndyDidRegistrar,
-  IndyVdrIndyDidResolver,
-  IndyVdrModule,
-} from "@aries-framework/indy-vdr";
-import { indyVdr } from "@hyperledger/indy-vdr-nodejs";
-import {
-  AnonCredsCredentialFormatService,
-  AnonCredsModule,
-  AnonCredsProofFormatService,
-  LegacyIndyCredentialFormatService,
-  LegacyIndyProofFormatService,
-  V1CredentialProtocol,
-  V1ProofProtocol,
-} from "@aries-framework/anoncreds";
-import { AnonCredsRsModule } from "@aries-framework/anoncreds-rs";
-import { anoncreds } from "@hyperledger/anoncreds-nodejs";
-import { readFileSync } from "fs";
-import {
-  IndySdkAnonCredsRegistry,
-  IndySdkModule,
-  IndySdkSovDidResolver,
-} from "@aries-framework/indy-sdk";
-import * as indySdk from "indy-sdk";
+#!/usr/bin/env node
 
-//////////////////////////////////
+/**
+ * Simple script for setting up employment credential on the ledger and issuing one to Alice.
+ * Alice can later use it when interacting with discounted asset trade app.
+ * Script can also be used to verify whether test indy ledger is operational.
+ */
 
 import * as log from "loglevel";
+import {
+  createAliceAgent,
+  createIssuerAgent,
+  connectAgents,
+  issueCredential,
+  checkCredentialProof,
+} from "../public-api";
 
-log.setDefaultLevel("DEBUG");
+// Logger setup
+const logLevel = process.env.LOG_LEVEL ?? "INFO";
+log.setDefaultLevel(logLevel as log.LogLevelDesc);
+console.log("Running with log level", logLevel);
 
-import { createAliceAgent, createIssuerAgent } from "../lib/agent-setup";
-import { connectAgents } from "../lib/connections";
-import { issueCredential } from "../lib/credentials";
-import { checkCredentialProof } from "../lib/proofs";
-
-// https://github.com/SamVerschueren/listr ??
-async function runTest() {
+/**
+ * Main setup script logic.
+ * Creates agents for Alice and Issuer, connects them, registers credentials, issues it to Alice, and verify the proof.
+ */
+async function run() {
   const aliceAgent = await createAliceAgent();
-  console.log("BOB FINISHED");
+  log.debug("Alice agent created");
 
-  const { agent: issuerAgent, did: isserDid } = await createIssuerAgent();
-  console.log("ISSUER DONE");
+  const { agent: issuerAgent, did: issuerDid } = await createIssuerAgent();
+  log.debug("Issuer agent created.");
+  log.debug("Issuer endorsing DID:", issuerDid);
 
-  console.log("Connect...");
-  const [aliceAgentConRecord, issuerAgentConRecord] = await connectAgents(
-    aliceAgent,
-    issuerAgent,
-  );
-  log.debug("Alice connection ID:", aliceAgentConRecord.id);
-  log.debug("Issuer connection ID:", issuerAgentConRecord.id);
+  try {
+    log.info("Connecting Alice with Issuer...");
+    const [aliceAgentConRecord, issuerAgentConRecord] = await connectAgents(
+      aliceAgent,
+      issuerAgent,
+    );
+    log.debug("Alice connection ID:", aliceAgentConRecord.id);
+    log.debug("Issuer connection ID:", issuerAgentConRecord.id);
 
-  console.log("Issue...");
-  const { credentialDefinitionId } = await issueCredential(
-    issuerAgent,
-    [
-      { name: "first_name", value: "Alice" },
-      { name: "last_name", value: "Garcia" },
-      { name: "salary", value: "2400" },
-      { name: "employee_status", value: "Permanent" },
-      { name: "experience", value: "10" },
-    ],
-    issuerAgentConRecord.id,
-    isserDid,
-  );
+    log.info("Register and issue the employment credential...");
+    const { credentialDefinitionId } = await issueCredential(
+      issuerAgent,
+      [
+        { name: "first_name", value: "Alice" },
+        { name: "last_name", value: "Garcia" },
+        { name: "salary", value: "2400" },
+        { name: "employee_status", value: "Permanent" },
+        { name: "experience", value: "10" },
+      ],
+      issuerAgentConRecord.id,
+      issuerDid,
+    );
 
-  console.log("Check proof...");
-  await checkCredentialProof(
-    issuerAgent,
-    credentialDefinitionId,
-    issuerAgentConRecord.id,
-  );
+    log.info("Verify employment status proof...");
+    await checkCredentialProof(
+      issuerAgent,
+      credentialDefinitionId,
+      issuerAgentConRecord.id,
+    );
+  } catch (error) {
+    log.error("Error when running setup scenario:", error);
+  } finally {
+    log.info("Finishing - cleaning up the agents...");
+    await aliceAgent.shutdown();
+    await issuerAgent.shutdown();
+  }
 
-  console.log("Close...");
-  await aliceAgent.shutdown();
-  await issuerAgent.shutdown();
+  log.info("All done.");
 }
 
-void runTest();
+// Run the script logic
+run();

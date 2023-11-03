@@ -49,7 +49,7 @@ assetTradeInfo:
     chaincodeID: basic
 
   indy:
-    credentialDefinitionId: "did:indy:bcovrin:test:Th7MpTaRZVRYnPiabds81Y/anoncreds/v0/CLAIM_DEF/95/default"
+    credentialDefinitionId: "did:indy:cacti:test:Th7MpTaRZVRYnPiabds81Y/anoncreds/v0/CLAIM_DEF/95/default"
 
   ethereum:
     validatorID: 84jUisrs
