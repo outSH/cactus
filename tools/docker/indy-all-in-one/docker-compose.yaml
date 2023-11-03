@@ -1,9 +1,9 @@
 version: "3"
 
 services:
-  indy-testnet-pool:
-    container_name: ${CACTUS_INDY_TESTNET_NAME:-indy-testnet-pool}
-    image: ${CACTUS_INDY_TESTNET_IMAGE_NAME:-indy-testnet-pool}
+  indy-all-in-one:
+    container_name: ${CACTUS_INDY_ALL_IN_ONE_NAME:-indy-all-in-one}
+    image: ${CACTUS_INDY_ALL_IN_ONE_IMAGE_NAME:-indy-all-in-one}
     build:
       context: ./
       args:
@@ -19,13 +19,13 @@ services:
     - "9707:9707"
     - "9708:9708"
     networks:
-      indy_net:
+      indy_aio_net:
         ipv4_address: 172.16.0.2
     volumes:
-    - ./sandbox:/var/lib/indy/sandbox/
+    - /tmp/indy-all-in-one/:/var/lib/indy/sandbox/
 
 networks:
-  indy_net:
+  indy_aio_net:
     driver: bridge
     ipam:
       driver: default

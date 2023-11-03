@@ -40,8 +40,8 @@
   "module": "dist/lib/main/typescript/index.js",
   "types": "dist/lib/main/typescript/index.d.ts",
   "bin": {
-    "setup-credentials": "dist/lib/main/typescript/scripts/setup-credentials.js",
-    "run-discounted-asset-trade-client": "dist/lib/main/typescript/scripts/run-discounted-asset-trade-client.js"
+    "run-discounted-asset-trade-client": "dist/lib/main/typescript/scripts/run-discounted-asset-trade-client.js",
+    "setup-credentials": "dist/lib/main/typescript/scripts/setup-credentials.js"
   },
   "files": [
     "dist/*"

@@ -7767,7 +7767,8 @@ __metadata:
     inquirer: ^8.2.6
     loglevel: ^1.8.1
   bin:
-    cacti-ethereum-connector-status: dist/lib/scripts/get-ethereum-connector-status.js
+    run-discounted-asset-trade-client: dist/lib/main/typescript/scripts/run-discounted-asset-trade-client.js
+    setup-credentials: dist/lib/main/typescript/scripts/setup-credentials.js
   languageName: unknown
   linkType: soft
 

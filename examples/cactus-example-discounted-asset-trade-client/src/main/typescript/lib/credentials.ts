@@ -170,7 +170,7 @@ export async function issueCredential(
 }> {
   log.info("Register Credential Schema...");
   const schemaId = await registerCredentialSchema(issuerAgent, did);
-  log.debug("Employment credential schemaId:", schemaId);
+  log.info("Employment credential schemaId:", schemaId);
 
   log.info("Register Credential Definition...");
   const credentialDefinitionId = await registerCredentialDefinition(
@@ -178,7 +178,7 @@ export async function issueCredential(
     schemaId,
     did,
   );
-  log.debug(
+  log.info(
     "Employment credential credentialDefinitionId:",
     credentialDefinitionId,
   );
@@ -195,7 +195,7 @@ export async function issueCredential(
         },
       },
     });
-  log.debug("Employment credential issued:", indyCredentialExchangeRecord.id);
+  log.info("Employment credential issued:", indyCredentialExchangeRecord.id);
   await waitForCredentialAcceptance(
     issuerAgent,
     indyCredentialExchangeRecord.id,

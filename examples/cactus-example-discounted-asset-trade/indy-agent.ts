@@ -15,7 +15,7 @@ const moduleName = "indy-agent";
 const logger = getLogger(`${moduleName}`);
 logger.level = config.logLevel;
 
-const BLP_AGENT_NAME = "discountedAssetTradeAgent";
+const BLP_AGENT_NAME = "cactiDiscountedAssetTradeAgent";
 const BLP_AGENT_PORT = 5035;
 
 // Single BLP indy agent instance
