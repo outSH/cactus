@@ -19,10 +19,5 @@ socketOptions:
   reconnection: false
   timeout: 20000
 
-# Verifier component configuration
-verifier:
-  maxCounterRequestID: 100
-  syncFunctionTimeoutMillisecond: 5000
-
 # API route path and JS file to handle that route logic
 appRouters: []

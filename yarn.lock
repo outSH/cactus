@@ -7743,7 +7743,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hyperledger/cactus-example-discounted-asset-trade-client@workspace:examples/cactus-example-discounted-asset-trade-client":
+"@hyperledger/cactus-example-discounted-asset-trade-client@2.0.0-alpha.2, @hyperledger/cactus-example-discounted-asset-trade-client@workspace:examples/cactus-example-discounted-asset-trade-client":
   version: 0.0.0-use.local
   resolution: "@hyperledger/cactus-example-discounted-asset-trade-client@workspace:examples/cactus-example-discounted-asset-trade-client"
   dependencies:
@@ -7761,6 +7761,7 @@ __metadata:
     "@types/figlet": ^1.5.4
     "@types/indy-sdk": ^1.16.26
     "@types/inquirer": ^8.2.6
+    axios: 1.5.1
     clear: ^0.1.0
     figlet: ^1.5.2
     inquirer: ^8.2.6
@@ -7778,10 +7779,10 @@ __metadata:
     "@hyperledger/cactus-common": 2.0.0-alpha.2
     "@hyperledger/cactus-core": 2.0.0-alpha.2
     "@hyperledger/cactus-core-api": 2.0.0-alpha.2
+    "@hyperledger/cactus-example-discounted-asset-trade-client": 2.0.0-alpha.2
     "@hyperledger/cactus-plugin-keychain-memory": 2.0.0-alpha.2
     "@hyperledger/cactus-plugin-ledger-connector-ethereum": 2.0.0-alpha.2
     "@hyperledger/cactus-plugin-ledger-connector-fabric": 2.0.0-alpha.2
-    "@hyperledger/cactus-verifier-client": 2.0.0-alpha.2
     "@types/elliptic": 6.4.14
     "@types/escape-html": 1.0.1
     "@types/express": 4.17.19
@@ -7801,7 +7802,6 @@ __metadata:
     fabric-ca-client: 2.2.19
     fabric-network: 2.2.19
     http-errors: 1.6.3
-    indy-sdk: 1.16.0-dev-1649
     jsonwebtoken: 9.0.0
     jsrsasign: 10.5.25
     log4js: 6.4.0
@@ -18207,15 +18207,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"bindings@npm:^1.3.1":
-  version: 1.5.0
-  resolution: "bindings@npm:1.5.0"
-  dependencies:
-    file-uri-to-path: 1.0.0
-  checksum: 65b6b48095717c2e6105a021a7da4ea435aa8d3d3cd085cb9e85bcb6e5773cf318c4745c3f7c504412855940b585bdf9b918236612a1c7a7942491de176f1ae7
-  languageName: node
-  linkType: hard
-
 "bintrees@npm:1.0.1":
   version: 1.0.1
   resolution: "bintrees@npm:1.0.1"
@@ -26725,13 +26716,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"file-uri-to-path@npm:1.0.0":
-  version: 1.0.0
-  resolution: "file-uri-to-path@npm:1.0.0"
-  checksum: b648580bdd893a008c92c7ecc96c3ee57a5e7b6c4c18a9a09b44fb5d36d79146f8e442578bc0e173dc027adf3987e254ba1dfd6e3ec998b7c282873010502144
-  languageName: node
-  linkType: hard
-
 "filelist@npm:^1.0.4":
   version: 1.0.4
   resolution: "filelist@npm:1.0.4"
@@ -29822,17 +29806,6 @@ __metadata:
   version: 0.0.1
   resolution: "indexof@npm:0.0.1"
   checksum: 0fb04e8b147b8585d981a6df1564f25bb3678d6fa74e33e5cecc1464b10f78e15e8ef6bb688f135fe5c2844a128fac8a7831cbe5adc81fdcf12681b093dfcc25
-  languageName: node
-  linkType: hard
-
-"indy-sdk@npm:1.16.0-dev-1649":
-  version: 1.16.0-dev-1649
-  resolution: "indy-sdk@npm:1.16.0-dev-1649"
-  dependencies:
-    bindings: ^1.3.1
-    nan: ^2.11.1
-    node-gyp: ^8.0.0
-  checksum: 39b8064257e0bab4bfb1c150b7a335e4bfb6586d749e843c143d8f317289afd556f9e375f8cabb6f5f305fe65371bd4bca4fbb9c70bd12c52ee351688d72cc25
   languageName: node
   linkType: hard
 
@@ -36725,7 +36698,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nan@npm:^2.11.1, nan@npm:^2.13.2":
+"nan@npm:^2.13.2":
   version: 2.18.0
   resolution: "nan@npm:2.18.0"
   dependencies:
@@ -37239,7 +37212,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-gyp@npm:8.x, node-gyp@npm:^8.0.0":
+"node-gyp@npm:8.x":
   version: 8.4.1
   resolution: "node-gyp@npm:8.4.1"
   dependencies:

@@ -2,7 +2,6 @@
   "name": "@hyperledger/cactus-example-discounted-asset-trade-client",
   "version": "2.0.0-alpha.2",
   "description": "Client for interacting with discounted asset trade sample app and some tools for setting up indy enviroment",
-  "private": true,
   "keywords": [
     "Hyperledger",
     "Cacti",
@@ -50,6 +49,7 @@
     "@hyperledger/anoncreds-nodejs": "^0.2.0-dev.4",
     "@hyperledger/aries-askar-nodejs": "^0.2.0-dev.1",
     "@hyperledger/indy-vdr-nodejs": "^0.2.0-dev.3",
+    "axios": "1.5.1",
     "inquirer": "^8.2.6",
     "loglevel": "^1.8.1"
   },
@@ -71,5 +71,8 @@
   "engines": {
     "node": ">=18",
     "npm": ">=8"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

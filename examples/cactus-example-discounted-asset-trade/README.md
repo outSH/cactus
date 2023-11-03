@@ -279,6 +279,6 @@ For development purposes, it might be useful to run the sample application outsi
    ```
 
 #### Possible improvements
+
 - Ethereum events are duplicated, causing trade to proceed even if previous step was not successfull.
-   - Handle this case properly - ignore duplciated events, move forward only if current step was completed.
-   - Investigate and fix duplicated events in Verifier / Ethereum connector (or use openapi ethereum connector).
+  - Handle this case properly - ignore duplciated events, move forward only if current step was completed.

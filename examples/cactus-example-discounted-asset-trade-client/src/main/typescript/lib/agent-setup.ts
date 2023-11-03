@@ -98,7 +98,25 @@ export async function importExistingIndyDidFromPrivateKey(
   return did;
 }
 
-export async function setupAgent(name: string, port: number) {
+export type AnoncredAgent = Agent<{
+  readonly connections: ConnectionsModule;
+  readonly credentials: CredentialsModule<
+    V2CredentialProtocol<AnonCredsCredentialFormatService[]>[]
+  >;
+  readonly proofs: ProofsModule<
+    V2ProofProtocol<AnonCredsProofFormatService[]>[]
+  >;
+  readonly anoncreds: AnonCredsModule;
+  readonly anoncredsRs: AnonCredsRsModule;
+  readonly indyVdr: IndyVdrModule;
+  readonly dids: DidsModule;
+  readonly askar: AskarModule;
+}>;
+
+export async function setupAgent(
+  name: string,
+  port: number,
+): Promise<AnoncredAgent> {
   const config: InitConfig = {
     label: name,
     walletConfig: {
@@ -197,25 +215,33 @@ const setupProofListener = (agent: Agent) => {
       console.log("PROOF RECORD RECEIVED ON BOB:", payload.proofRecord);
 
       if (payload.proofRecord.state === ProofState.RequestReceived) {
-        console.log("PROOF REQUEST RECEIVED (BOB)!");
+        try {
+          console.log("PROOF REQUEST RECEIVED (BOB)!");
 
-        const requestedCredentials =
-          await agent.proofs.selectCredentialsForRequest({
+          const requestedCredentials =
+            await agent.proofs.selectCredentialsForRequest({
+              proofRecordId: payload.proofRecord.id,
+            });
+          console.log("requestedCredentials", requestedCredentials);
+
+          await agent.proofs.acceptRequest({
             proofRecordId: payload.proofRecord.id,
+            proofFormats: requestedCredentials.proofFormats,
           });
-        console.log("requestedCredentials", requestedCredentials);
-
-        await agent.proofs.acceptRequest({
-          proofRecordId: payload.proofRecord.id,
-          proofFormats: requestedCredentials.proofFormats,
-        });
-        console.log("proof accepted by BOB");
+          console.log("proof accepted by BOB");
+        } catch (error) {
+          console.log("Error occured!");
+          await agent.proofs.declineRequest({
+            proofRecordId: payload.proofRecord.id,
+            sendProblemReport: true,
+          });
+        }
       }
     },
   );
 };
 
-export async function createAliceAgent() {
+export async function createAliceAgent(): Promise<AnoncredAgent> {
   const agent = await setupAgent(ALICE_AGENT_NAME, ALICE_AGENT_PORT);
   setupCredentialListener(agent);
   setupProofListener(agent);
@@ -228,7 +254,10 @@ const ISSUER_AGENT_NAME = "issuerCactiAgent";
 const ISSUER_AGENT_PORT = 3004;
 const ISSUER_DID_SEED = "000000000000000000000000Steward1";
 
-export async function createIssuerAgent() {
+export async function createIssuerAgent(): Promise<{
+  agent: AnoncredAgent;
+  did: string;
+}> {
   const agent = await setupAgent(ISSUER_AGENT_NAME, ISSUER_AGENT_PORT);
   const did = await importExistingIndyDidFromPrivateKey(agent, ISSUER_DID_SEED);
   log.info("Issuer DID:", did);

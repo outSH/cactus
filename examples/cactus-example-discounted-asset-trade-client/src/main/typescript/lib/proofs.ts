@@ -21,6 +21,7 @@ import {
   ProofEventTypes,
   ProofStateChangedEvent,
   ProofState,
+  ProofExchangeRecord,
   ProofsModule,
   AutoAcceptProof,
   V2ProofProtocol,
@@ -64,13 +65,18 @@ export async function checkCredentialProof(
   connectionId: string,
 ) {
   // Create proof accepted listener
-  const isProofOK = new Promise((resolve) => {
+  const isProofOK = new Promise<ProofExchangeRecord>((resolve) => {
     agent.events.on(
       ProofEventTypes.ProofStateChanged,
       async ({ payload }: ProofStateChangedEvent) => {
         console.log("PROOF RECORD RECEIVED ON ACME:", payload.proofRecord);
-        if (payload.proofRecord.state === ProofState.Done) {
-          console.log("PROOF ACCEPTED (ACME)!");
+        const { state } = payload.proofRecord;
+        if (
+          state === ProofState.Done ||
+          state === ProofState.Abandoned ||
+          state === ProofState.Declined
+        ) {
+          console.log("PROOF received!");
           // TODO - check if this is the proof we wanted
           resolve(payload.proofRecord);
         }
@@ -80,10 +86,11 @@ export async function checkCredentialProof(
 
   // Send proof
   const proofAttribute = {
-    name: {
+    employee_status: {
       name: "employee_status",
       restrictions: [
         {
+          "attr::employee_status::value": "Permanent",
           cred_def_id: credentialDefinitionId,
         },
       ],
@@ -103,6 +110,5 @@ export async function checkCredentialProof(
   });
   console.log("PROOF REQUEST SENT");
 
-  await isProofOK;
-  console.log("DONE.");
+  return isProofOK;
 }

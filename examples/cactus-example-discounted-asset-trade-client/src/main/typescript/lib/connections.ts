@@ -58,7 +58,8 @@ import * as indySdk from "indy-sdk";
 
 import * as log from "loglevel";
 
-const CONNECT_WAIT_TIMEOUT = 60 * 1000;
+const WAIT_FOR_CLIENT_ACCEPT_TIMEOUT = 60 * 1000;
+const WAIT_FOR_CONNECTION_READY_TIMEOUT = 500;
 
 export async function createNewConnectionInvitation(agent: Agent) {
   const outOfBandRecord = await agent.oob.createInvitation();
@@ -87,7 +88,7 @@ export async function waitForConnection(agent: Agent, outOfBandId: string) {
     new Promise<ConnectionRecord>((resolve, reject) => {
       const timeoutId = setTimeout(
         () => reject(new Error("Missing connection")),
-        CONNECT_WAIT_TIMEOUT,
+        WAIT_FOR_CLIENT_ACCEPT_TIMEOUT,
       );
 
       // Start listener
@@ -190,4 +191,20 @@ export async function connectAgents(
   }
 
   throw new Error("Could not connect the agents!");
+}
+
+export async function waitForConnectionReady(
+  agent: Agent,
+  outOfBandRecordId: string,
+) {
+  let connection: ConnectionRecord | undefined;
+  do {
+    await new Promise((resolve) =>
+      setTimeout(resolve, WAIT_FOR_CONNECTION_READY_TIMEOUT),
+    );
+
+    connection = (
+      await agent.connections.findAllByOutOfBandId(outOfBandRecordId)
+    ).pop();
+  } while (!connection || !connection.isReady);
 }
