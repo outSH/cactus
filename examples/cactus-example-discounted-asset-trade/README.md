@@ -84,7 +84,8 @@ Alice knows that Acme Corp. provides digital certificates. She asks Acme Corp. t
    - Use `setup-credentials` script from `cactus-example-discounted-asset-trade-client`.
 
 ```bash
-pushd ../cactus-example-discounted-asset-trade-client
+# In separat shell (can be used later for client app)
+cd ./examples/cactus-example-discounted-asset-trade-client
 yarn setup-credentials
 popd
 ```
@@ -143,11 +144,6 @@ vim ./etc/cactus/usersetting.yaml
    cactus-example-discounted-asset-trade-indy-validator-nginx | 2022/01/31 16:00:49 [notice] 1#1: start worker process 35
    ...
    cmd-socketio-base-dummy exited with code 0
-   ...
-   indy-sdk-cli-base-dummy exited with code 0
-   ...
-   register-indy-data      | Done.
-   register-indy-data exited with code 0
    ...
    cactus-example-discounted-asset-trade-blp      | [2022-01-31T16:00:56.208] [INFO] www - listening on *: 5034
    ```
@@ -311,8 +307,8 @@ Action: Get assets
    ```
 1. Stop the docker containers of Ethereum, Fabric and Indy
 
-   - `docker stop geth1 asset_trade_faio2x_testnet indy-testnet-pool`
-   - `docker rm geth1 asset_trade_faio2x_testnet indy-testnet-pool`
+   - `docker stop geth1 asset_trade_faio2x_testnet asset_trade_indy_all_in_one`
+   - `docker rm geth1 asset_trade_faio2x_testnet asset_trade_indy_all_in_one`
 
 1. Clear indy-all-in-one
 
