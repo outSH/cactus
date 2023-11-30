@@ -1,0 +1,87 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Hyperledger Cacti Plugin - Connector Aries",
+    "description": "Can communicate with other Aries agents",
+    "version": "v2.0.0-alpha.2",
+    "license": {
+      "name": "Apache-2.0",
+      "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  },
+  "components": {
+    "schemas": {
+      "AriesAgentSummary": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "TODO"
+          }
+        }
+      },
+      "GetAgentsV1Response": {
+        "type": "array",
+        "default": [],
+        "items": {
+          "$ref": "#/components/schemas/AriesAgentSummary"
+        }
+      },
+      "ErrorExceptionV1Response": {
+        "type": "object",
+        "description": "Error response from the connector.",
+        "required": ["message", "error"],
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "Short error description message.",
+            "nullable": false
+          },
+          "error": {
+            "type": "string",
+            "description": "Detailed error information.",
+            "nullable": false
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/api/v1/plugins/@hyperledger/cactus-plugin-ledger-connector-aries/get-agents": {
+      "post": {
+        "x-hyperledger-cacti": {
+          "http": {
+            "verbLowerCase": "post",
+            "path": "/api/v1/plugins/@hyperledger/cactus-plugin-ledger-connector-aries/get-agents"
+          }
+        },
+        "operationId": "getAgents",
+        "summary": "Get all Aries agents configured in this connector plugin.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetAgentsV1Response"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorExceptionV1Response"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
