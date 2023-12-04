@@ -11,21 +11,155 @@
   },
   "components": {
     "schemas": {
-      "AriesAgentSummary": {
+      "CactiAcceptPolicyV1": {
+        "type": "string",
+        "description": "Credential / Proof requests acceptance policies for Aries agent",
+        "enum": ["always", "contentApproved", "never"],
+        "x-enum-varnames": ["Always", "ContentApproved", "Never"]
+      },
+      "AriesIndyVdrPoolConfigV1": {
         "type": "object",
-        "required": ["name"],
+        "description": "Indy VDR network configuration",
+        "required": ["genesisTransactions", "isProduction", "indyNamespace"],
+        "properties": {
+          "genesisTransactions": {
+            "type": "string",
+            "nullable": false,
+            "description": "Indy genesis transactions."
+          },
+          "isProduction": {
+            "type": "boolean",
+            "nullable": false,
+            "description": "Flag to specify whether this is production or development ledger."
+          },
+          "indyNamespace": {
+            "type": "string",
+            "nullable": false,
+            "description": "Indy namespace"
+          },
+          "connectOnStartup": {
+            "type": "boolean",
+            "nullable": false,
+            "description": "Connect to the ledger on startup flag"
+          }
+        }
+      },
+      "AriesAgentConfigV1": {
+        "type": "object",
+        "description": "Aries agent configuration to be setup and used by the connector.",
+        "required": ["name", "walletKey", "indyNetworks"],
         "properties": {
           "name": {
             "type": "string",
-            "description": "TODO"
+            "nullable": false,
+            "description": "Aries agent label that will also be used as wallet id."
+          },
+          "walletKey": {
+            "type": "string",
+            "nullable": false,
+            "description": "Wallet private key - do not share with anyone."
+          },
+          "indyNetworks": {
+            "type": "array",
+            "nullable": false,
+            "items": {
+              "$ref": "#/components/schemas/AriesIndyVdrPoolConfigV1",
+              "minItems": 1
+            }
+          },
+          "inboundUrl": {
+            "type": "string",
+            "nullable": false,
+            "description": "Inbound endpoint URL for this agent. Must be unique for this connector. Must contain port.",
+            "example": "http://127.0.0.1:1234",
+            "default": "undefined"
+          },
+          "autoAcceptConnections": {
+            "type": "boolean",
+            "nullable": false,
+            "description": "Flag to accept new connection by default",
+            "default": "false"
+          },
+          "autoAcceptCredentials": {
+            "$ref": "#/components/schemas/CactiAcceptPolicyV1",
+            "nullable": false,
+            "description": "Policy for accepting new credentials by this agent",
+            "default": "never"
+          },
+          "autoAcceptProofs": {
+            "$ref": "#/components/schemas/CactiAcceptPolicyV1",
+            "nullable": false,
+            "description": "Policy for accepting new proof requests by this agent",
+            "default": "never"
+          }
+        }
+      },
+      "AriesAgentSummaryV1": {
+        "type": "object",
+        "description": "Summary of an Aries Agent configured in the connector.",
+        "required": [
+          "name",
+          "isAgentInitialized",
+          "isWalletInitialized",
+          "isWalletProvisioned",
+          "walletConfig",
+          "endpoints"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "nullable": false,
+            "description": "Aries label of an agent"
+          },
+          "isAgentInitialized": {
+            "type": "boolean",
+            "nullable": false,
+            "description": "True when Aries agent has been initialized properly."
+          },
+          "isWalletInitialized": {
+            "type": "boolean",
+            "nullable": false,
+            "description": "True when this agents wallet has been initialized properly."
+          },
+          "isWalletProvisioned": {
+            "type": "boolean",
+            "nullable": false,
+            "description": "True when this agents wallet has been provisioned properly."
+          },
+          "walletConfig": {
+            "type": "object",
+            "nullable": false,
+            "required": ["id", "type"],
+            "properties": {
+              "id": {
+                "type": "string",
+                "nullable": false,
+                "description": "Wallet entry ID"
+              },
+              "type": {
+                "type": "string",
+                "nullable": false,
+                "description": "Wallet storage type"
+              }
+            }
+          },
+          "endpoints": {
+            "type": "array",
+            "nullable": false,
+            "description": "Aries agent endpoints configured",
+            "items": {
+              "type": "string",
+              "nullable": false
+            }
           }
         }
       },
       "GetAgentsV1Response": {
         "type": "array",
+        "description": "Response for GetAgents endpoint.",
         "default": [],
         "items": {
-          "$ref": "#/components/schemas/AriesAgentSummary"
+          "$ref": "#/components/schemas/AriesAgentSummaryV1"
         }
       },
       "ErrorExceptionV1Response": {

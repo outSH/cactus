@@ -24,18 +24,164 @@ import type { RequestArgs } from './base';
 import { BASE_PATH, COLLECTION_FORMATS, BaseAPI, RequiredError } from './base';
 
 /**
- * 
+ * Aries agent configuration to be setup and used by the connector.
  * @export
- * @interface AriesAgentSummary
+ * @interface AriesAgentConfigV1
  */
-export interface AriesAgentSummary {
+export interface AriesAgentConfigV1 {
     /**
-     * TODO
+     * Aries agent label that will also be used as wallet id.
      * @type {string}
-     * @memberof AriesAgentSummary
+     * @memberof AriesAgentConfigV1
      */
     'name': string;
+    /**
+     * Wallet private key - do not share with anyone.
+     * @type {string}
+     * @memberof AriesAgentConfigV1
+     */
+    'walletKey': string;
+    /**
+     * 
+     * @type {Array<AriesIndyVdrPoolConfigV1>}
+     * @memberof AriesAgentConfigV1
+     */
+    'indyNetworks': Array<AriesIndyVdrPoolConfigV1>;
+    /**
+     * Inbound endpoint URL for this agent. Must be unique for this connector. Must contain port.
+     * @type {string}
+     * @memberof AriesAgentConfigV1
+     */
+    'inboundUrl'?: string;
+    /**
+     * Flag to accept new connection by default
+     * @type {boolean}
+     * @memberof AriesAgentConfigV1
+     */
+    'autoAcceptConnections'?: boolean;
+    /**
+     * 
+     * @type {CactiAcceptPolicyV1}
+     * @memberof AriesAgentConfigV1
+     */
+    'autoAcceptCredentials'?: CactiAcceptPolicyV1;
+    /**
+     * 
+     * @type {CactiAcceptPolicyV1}
+     * @memberof AriesAgentConfigV1
+     */
+    'autoAcceptProofs'?: CactiAcceptPolicyV1;
 }
+
+
+/**
+ * Summary of an Aries Agent configured in the connector.
+ * @export
+ * @interface AriesAgentSummaryV1
+ */
+export interface AriesAgentSummaryV1 {
+    /**
+     * Aries label of an agent
+     * @type {string}
+     * @memberof AriesAgentSummaryV1
+     */
+    'name': string;
+    /**
+     * True when Aries agent has been initialized properly.
+     * @type {boolean}
+     * @memberof AriesAgentSummaryV1
+     */
+    'isAgentInitialized': boolean;
+    /**
+     * True when this agents wallet has been initialized properly.
+     * @type {boolean}
+     * @memberof AriesAgentSummaryV1
+     */
+    'isWalletInitialized': boolean;
+    /**
+     * True when this agents wallet has been provisioned properly.
+     * @type {boolean}
+     * @memberof AriesAgentSummaryV1
+     */
+    'isWalletProvisioned': boolean;
+    /**
+     * 
+     * @type {AriesAgentSummaryV1WalletConfig}
+     * @memberof AriesAgentSummaryV1
+     */
+    'walletConfig': AriesAgentSummaryV1WalletConfig;
+    /**
+     * Aries agent endpoints configured
+     * @type {Array<string>}
+     * @memberof AriesAgentSummaryV1
+     */
+    'endpoints': Array<string>;
+}
+/**
+ * 
+ * @export
+ * @interface AriesAgentSummaryV1WalletConfig
+ */
+export interface AriesAgentSummaryV1WalletConfig {
+    /**
+     * Wallet entry ID
+     * @type {string}
+     * @memberof AriesAgentSummaryV1WalletConfig
+     */
+    'id': string;
+    /**
+     * Wallet storage type
+     * @type {string}
+     * @memberof AriesAgentSummaryV1WalletConfig
+     */
+    'type': string;
+}
+/**
+ * Indy VDR network configuration
+ * @export
+ * @interface AriesIndyVdrPoolConfigV1
+ */
+export interface AriesIndyVdrPoolConfigV1 {
+    /**
+     * Indy genesis transactions.
+     * @type {string}
+     * @memberof AriesIndyVdrPoolConfigV1
+     */
+    'genesisTransactions': string;
+    /**
+     * Flag to specify whether this is production or development ledger.
+     * @type {boolean}
+     * @memberof AriesIndyVdrPoolConfigV1
+     */
+    'isProduction': boolean;
+    /**
+     * Indy namespace
+     * @type {string}
+     * @memberof AriesIndyVdrPoolConfigV1
+     */
+    'indyNamespace': string;
+    /**
+     * Connect to the ledger on startup flag
+     * @type {boolean}
+     * @memberof AriesIndyVdrPoolConfigV1
+     */
+    'connectOnStartup'?: boolean;
+}
+/**
+ * Credential / Proof requests acceptance policies for Aries agent
+ * @export
+ * @enum {string}
+ */
+
+export const CactiAcceptPolicyV1 = {
+    Always: 'always',
+    ContentApproved: 'contentApproved',
+    Never: 'never'
+} as const;
+
+export type CactiAcceptPolicyV1 = typeof CactiAcceptPolicyV1[keyof typeof CactiAcceptPolicyV1];
+
+
 /**
  * Error response from the connector.
  * @export
@@ -108,7 +254,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getAgents(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<AriesAgentSummary>>> {
+        async getAgents(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<AriesAgentSummaryV1>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.getAgents(options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
@@ -128,7 +274,7 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getAgents(options?: any): AxiosPromise<Array<AriesAgentSummary>> {
+        getAgents(options?: any): AxiosPromise<Array<AriesAgentSummaryV1>> {
             return localVarFp.getAgents(options).then((request) => request(axios, basePath));
         },
     };
