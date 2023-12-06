@@ -43,6 +43,7 @@ import {
   PluginLedgerConnectorAries,
   AriesApiClient,
   AriesAgentSummaryV1,
+  AgentConnectionRecordV1,
 } from "../../../main/typescript/public-api";
 
 import {
@@ -220,7 +221,7 @@ describe("Connector setup tests", () => {
   });
 });
 
-describe.only("Schemas and credential creation", () => {
+describe("Schemas and credential creation", () => {
   let addressInfo,
     address: string,
     port: number,
@@ -339,121 +340,62 @@ describe.only("Schemas and credential creation", () => {
     expect(allAgents.length).toBe(2);
   });
 
-  async function waitForConnection(
-    agent: Agent,
-    outOfBandId: string,
-  ): Promise<ConnectionRecord> {
-    if (!outOfBandId) {
-      throw new Error("Missing outOfBandId in waitForConnection");
-    }
-
-    const getConnectionRecord = (outOfBandId: string) =>
-      new Promise<ConnectionRecord>((resolve, reject) => {
-        // Start listener
-        const observable = apiClient.watchConnectionStateV1({
-          agentName: aliceAgentName,
-        });
-        const sub = observable.subscribe((e) => {
-          if (
-            e.connectionRecord.outOfBandId !== outOfBandId ||
-            e.connectionRecord.state !== "completed"
-          ) {
-            return;
-          }
-          log.debug(
-            "waitForConnection() - received ConnectionStateChanged event for given outOfBandId",
-          );
-          clearTimeout(timeoutId);
-          sub.unsubscribe();
-          resolve(e.connectionRecord);
-        });
-
-        const timeoutId = setTimeout(() => {
-          reject(new Error("Missing connection"));
-          sub.unsubscribe();
-        }, WAIT_FOR_CLIENT_ACCEPT_TIMEOUT);
-
-        // Also retrieve the connection record by invitation if the event has already fired
-        connector
-          .getConnections(bobAgentName, {
-            outOfBandId,
-          })
-          .then(([connectionRecord]) => {
-            if (connectionRecord) {
-              clearTimeout(timeoutId);
-              resolve(connectionRecord);
-            }
-          });
-      });
-
-    log.error("Getting connectionRecord");
-    const connectionRecord = await getConnectionRecord(outOfBandId);
-
-    log.error("returnWhenIsConnected connectionRecord", connectionRecord);
-    // get connection
-    // https://github.com/openwallet-foundation/agent-framework-javascript/blob/3653819076ec7edbda1bc1616e08919ee72d68af/packages/core/src/modules/connections/services/ConnectionService.ts#L882
-    return agent.connections.returnWhenIsConnected(connectionRecord.id);
-  }
-
-  async function waitForConnectionReady(
-    outOfBandRecordId: string,
-    timeout = WAIT_FOR_CLIENT_ACCEPT_TIMEOUT,
-  ): Promise<void> {
-    let connection: ConnectionRecord | undefined;
-    let counter = Math.ceil(timeout / WAIT_FOR_CONNECTION_READY_POLL_INTERVAL);
-
-    do {
-      counter--;
-      await new Promise((resolve) =>
-        setTimeout(resolve, WAIT_FOR_CONNECTION_READY_POLL_INTERVAL),
-      );
-
-      try {
-        const connections = await connector.getConnections(bobAgentName, {
-          outOfBandId: outOfBandRecordId,
-        });
-        connection = connections.pop();
-      } catch (error) {}
-    } while (counter > 0 && (!connection || !connection.isReady));
-
-    log.error("waitForConnectionReady DONE!");
-    if (counter <= 0) {
-      throw new Error("waitForConnectionReady() timeout reached!");
-    }
-  }
+  test("Invitation with custom domain works", async () => {
+    const customDomain = "https://my-custom-domain.org";
+    const invitationResponse = await apiClient.createNewConnectionInvitationV1({
+      agentName: aliceAgentName,
+      invitationDomain: customDomain,
+    });
+    const { invitationUrl, outOfBandRecordId } = invitationResponse.data;
+    expect(invitationUrl).toBeTruthy();
+    expect(outOfBandRecordId).toBeTruthy();
+    expect(new URL(invitationUrl).origin).toEqual(customDomain);
+  });
 
   test("Connect to another aries agent using invitation URL", async () => {
-    const inv = await connector.createNewConnectionInvitation(aliceAgentName);
-    log.error("inv", inv);
-
-    // DO THIS IN API CLIENT
-    const agentAlice = await connector.getAriesAgentOrThrow(aliceAgentName);
-    const isConnectedPromise = waitForConnection(
-      agentAlice,
-      inv.outOfBandRecord.id,
-    );
-
-    // Accept invitation as the secondAgent
-    const secondAgentOOBRecord = await connector.acceptInvitation(
-      bobAgentName,
-      inv.invitationUrl,
-    );
-    log.error("secondAgentOOBRecord", secondAgentOOBRecord);
-    await waitForConnectionReady(secondAgentOOBRecord.id);
-
-    // Wait until connection is done
-    await isConnectedPromise;
-
-    log.error("DONE");
-
-    // Getters test
-    const resp = await connector.getConnections(bobAgentName, {
-      state: "completed",
+    // Connect Alice and Bob
+    log.info("1. Create invitation from Alice");
+    const invitationResponse = await apiClient.createNewConnectionInvitationV1({
+      agentName: aliceAgentName,
     });
-    log.error("resp", resp);
-    log.error("resp isReady", resp[0].isReady);
+    const invitationUrl = invitationResponse.data.invitationUrl;
+    const aliceOutOfBandRecordId = invitationResponse.data.outOfBandRecordId;
+    expect(invitationUrl).toBeTruthy();
+    expect(aliceOutOfBandRecordId).toBeTruthy();
+    const isPeerConnectedPromise = apiClient.waitForInvitedPeerConnection(
+      aliceAgentName,
+      aliceOutOfBandRecordId,
+    );
+
+    log.info("2. Accept invitation as Bob");
+    const acceptResponse = await apiClient.acceptInvitationV1({
+      agentName: bobAgentName,
+      invitationUrl: invitationUrl,
+    });
+    const bobOutOfBandRecordId = acceptResponse.data.outOfBandRecordId;
+    expect(bobOutOfBandRecordId).toBeTruthy();
+
+    log.info("3. Wait for connection readiness on Bob side");
+    await apiClient.waitForConnectionReady(bobAgentName, bobOutOfBandRecordId);
+
+    log.info("4. Wait for connection readiness on Alice side");
+    await isPeerConnectedPromise;
+
+    log.info("Connection between Alice and Bob connectors established!");
+
+    // Check getConnectionsV1 endpoint
+    const bobConnectionsResponse = await apiClient.getConnectionsV1({
+      agentName: bobAgentName,
+      filter: {
+        state: "completed",
+      },
+    });
+    expect(bobConnectionsResponse).toBeTruthy();
+    expect(bobConnectionsResponse.data).toBeTruthy();
+    const firstBobConnection =
+      bobConnectionsResponse.data.pop() as AgentConnectionRecordV1;
+    expect(firstBobConnection).toBeTruthy();
+    expect(firstBobConnection.state).toEqual("completed");
+    expect(firstBobConnection.isReady).toBeTrue();
   });
 });
-
-const WAIT_FOR_CONNECTION_READY_POLL_INTERVAL = 500;
-const WAIT_FOR_CLIENT_ACCEPT_TIMEOUT = 60 * 1000;

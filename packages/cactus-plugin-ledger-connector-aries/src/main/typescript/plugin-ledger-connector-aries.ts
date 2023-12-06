@@ -25,16 +25,22 @@ import {
 } from "@hyperledger/cactus-common";
 
 import {
+  AcceptInvitationV1Response,
+  AgentConnectionRecordV1,
   AgentConnectionsFilterV1,
   AriesAgentConfigV1,
   AriesAgentSummaryV1,
   CactiAcceptPolicyV1,
+  CreateNewConnectionInvitationV1Response,
   WatchConnectionStateOptionsV1,
   WatchConnectionStateV1,
 } from "./generated/openapi/typescript-axios";
 
 import { WatchConnectionStateV1Endpoint } from "./web-services/watch-connection-state-v1-endpoint";
 import { GetAgentsEndpoint } from "./web-services/get-agents-v1-endpoint";
+import { GetConnectionsEndpoint } from "./web-services/get-connections-v1-endpoint";
+import { CreateNewConnectionInvitationEndpoint } from "./web-services/create-new-connection-invitation-v1-endpoint";
+import { AcceptInvitationEndpoint } from "./web-services/accept-invitation-v1-endpoint";
 
 ///////
 import { AskarModule } from "@aries-framework/askar";
@@ -85,13 +91,17 @@ export interface IPluginLedgerConnectorAriesOptions
   logLevel?: LogLevelDesc;
   pluginRegistry: PluginRegistry;
   ariesAgents?: AriesAgentConfigV1[];
+  invitationDomain?: string;
 }
+
+const DEFAULT_INVITATION_DOMAIN = "https://example.org";
 
 export class PluginLedgerConnectorAries
   implements ICactusPlugin, IPluginWebService
 {
   // private readonly pluginRegistry: PluginRegistry;
   private readonly instanceId: string;
+  private readonly invitationDomain: string;
   private readonly log: Logger;
   private endpoints: IWebServiceEndpoint[] | undefined;
   private ariesAgentConfigs: AriesAgentConfigV1[] | undefined;
@@ -113,6 +123,8 @@ export class PluginLedgerConnectorAries
     this.log = LoggerProvider.getOrCreate({ level, label });
 
     this.instanceId = options.instanceId;
+    this.invitationDomain =
+      options.invitationDomain ?? DEFAULT_INVITATION_DOMAIN;
     this.ariesAgentConfigs = options.ariesAgents;
     // this.pluginRegistry = options.pluginRegistry as PluginRegistry;
   }
@@ -202,6 +214,27 @@ export class PluginLedgerConnectorAries
     const endpoints: IWebServiceEndpoint[] = [];
     {
       const endpoint = new GetAgentsEndpoint({
+        connector: this,
+        logLevel: this.options.logLevel,
+      });
+      endpoints.push(endpoint);
+    }
+    {
+      const endpoint = new GetConnectionsEndpoint({
+        connector: this,
+        logLevel: this.options.logLevel,
+      });
+      endpoints.push(endpoint);
+    }
+    {
+      const endpoint = new CreateNewConnectionInvitationEndpoint({
+        connector: this,
+        logLevel: this.options.logLevel,
+      });
+      endpoints.push(endpoint);
+    }
+    {
+      const endpoint = new AcceptInvitationEndpoint({
         connector: this,
         logLevel: this.options.logLevel,
       });
@@ -411,40 +444,49 @@ export class PluginLedgerConnectorAries
     return did;
   }
 
-  async createNewConnectionInvitation(agentName: string): Promise<{
-    invitationUrl: string;
-    outOfBandRecord: OutOfBandRecord;
-  }> {
+  async createNewConnectionInvitation(
+    agentName: string,
+    invitationDomain?: string,
+  ): Promise<CreateNewConnectionInvitationV1Response> {
     const agent = await this.getAriesAgentOrThrow(agentName);
     const outOfBandRecord = await agent.oob.createInvitation();
 
     return {
       invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
-        domain: "https://example.org",
+        domain: invitationDomain ?? this.invitationDomain,
       }),
-      outOfBandRecord,
+      outOfBandRecordId: outOfBandRecord.id,
     };
   }
 
   async acceptInvitation(
     agentName: string,
     invitationUrl: string,
-  ): Promise<OutOfBandRecord> {
+  ): Promise<AcceptInvitationV1Response> {
     const agent = await this.getAriesAgentOrThrow(agentName);
 
     const { outOfBandRecord } =
       await agent.oob.receiveInvitationFromUrl(invitationUrl);
 
-    return outOfBandRecord;
+    return {
+      outOfBandRecordId: outOfBandRecord.id,
+    };
   }
 
   async getConnections(
     agentName: string,
     filter: AgentConnectionsFilterV1 = {},
-  ): Promise<any[]> {
+  ): Promise<AgentConnectionRecordV1[]> {
+    Checks.truthy(agentName, "getConnections arg options");
     const agent = await this.getAriesAgentOrThrow(agentName);
-    return agent.connections.findAllByQuery(
+    const allRecords = await agent.connections.findAllByQuery(
       cactiAgentConnectionsFilterToQuery(filter),
     );
+    return allRecords.map((c) => {
+      return {
+        ...c,
+        isReady: c.isReady,
+      };
+    });
   }
 }
