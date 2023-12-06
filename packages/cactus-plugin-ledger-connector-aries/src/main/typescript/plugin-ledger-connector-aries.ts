@@ -21,15 +21,19 @@ import {
   Logger,
   LoggerProvider,
   LogLevelDesc,
+  safeStringifyException,
 } from "@hyperledger/cactus-common";
 
 import {
+  AgentConnectionsFilterV1,
   AriesAgentConfigV1,
   AriesAgentSummaryV1,
   CactiAcceptPolicyV1,
+  WatchConnectionStateOptionsV1,
+  WatchConnectionStateV1,
 } from "./generated/openapi/typescript-axios";
 
-import { WatchBlocksV1Endpoint } from "./web-services/watch-blocks-v1-endpoint";
+import { WatchConnectionStateV1Endpoint } from "./web-services/watch-connection-state-v1-endpoint";
 import { GetAgentsEndpoint } from "./web-services/get-agents-v1-endpoint";
 
 ///////
@@ -48,6 +52,7 @@ import {
   AutoAcceptProof,
   V2ProofProtocol,
   AutoAcceptCredential,
+  OutOfBandRecord,
 } from "@aries-framework/core";
 import { agentDependencies, HttpInboundTransport } from "@aries-framework/node";
 import { ariesAskar } from "@hyperledger/aries-askar-nodejs";
@@ -66,17 +71,20 @@ import {
 } from "@aries-framework/anoncreds";
 import { AnonCredsRsModule } from "@aries-framework/anoncreds-rs";
 import { anoncreds } from "@hyperledger/anoncreds-nodejs";
+///////////
+
 import {
   AnoncredAgent,
   cactiAcceptPolicyToAutoAcceptCredential,
   cactiAcceptPolicyToAutoAcceptProof,
+  cactiAgentConnectionsFilterToQuery,
 } from "./aries-types";
-///////////
 
 export interface IPluginLedgerConnectorAriesOptions
   extends ICactusPluginOptions {
   logLevel?: LogLevelDesc;
   pluginRegistry: PluginRegistry;
+  ariesAgents?: AriesAgentConfigV1[];
 }
 
 export class PluginLedgerConnectorAries
@@ -86,7 +94,9 @@ export class PluginLedgerConnectorAries
   private readonly instanceId: string;
   private readonly log: Logger;
   private endpoints: IWebServiceEndpoint[] | undefined;
+  private ariesAgentConfigs: AriesAgentConfigV1[] | undefined;
   private ariesAgents = new Map<string, AnoncredAgent>();
+  private connectedSockets = new Map<string, SocketIoSocket>();
 
   public get className(): string {
     return "PluginLedgerConnectorAries";
@@ -103,6 +113,7 @@ export class PluginLedgerConnectorAries
     this.log = LoggerProvider.getOrCreate({ level, label });
 
     this.instanceId = options.instanceId;
+    this.ariesAgentConfigs = options.ariesAgents;
     // this.pluginRegistry = options.pluginRegistry as PluginRegistry;
   }
 
@@ -117,6 +128,9 @@ export class PluginLedgerConnectorAries
   public async shutdown(): Promise<void> {
     this.log.info(`Shutting down ${this.className}...`);
 
+    this.log.debug("Disconnect all the sockets");
+    this.connectedSockets.forEach((socket) => socket.disconnect());
+
     for (const [agentName, agent] of this.ariesAgents) {
       this.log.debug("Shutdown agent", agentName);
       await agent.shutdown();
@@ -126,6 +140,13 @@ export class PluginLedgerConnectorAries
   }
 
   public async onPluginInit(): Promise<unknown> {
+    if (this.ariesAgentConfigs) {
+      this.log.info("Create aries agent instances");
+      for (const agentConfig of this.ariesAgentConfigs) {
+        await this.addAriesAgent(agentConfig);
+      }
+    }
+
     return;
   }
 
@@ -137,17 +158,38 @@ export class PluginLedgerConnectorAries
     const webServices = await this.getOrCreateWebServices();
     await Promise.all(webServices.map((ws) => ws.registerExpress(app)));
 
-    this.log.debug(`WebSocketProvider created for socketio endpoints`);
     wsApi.on("connection", (socket: SocketIoSocket) => {
       this.log.info(`New Socket connected. ID=${socket.id}`);
+      this.connectedSockets.set(socket.id, socket);
 
-      socket.on("WatchBlocksV1.Subscribe", () => {
-        new WatchBlocksV1Endpoint({
-          socket,
-          logLevel,
-        }).subscribe();
+      // WatchConnectionStateV1
+      socket.on(
+        WatchConnectionStateV1.Subscribe,
+        async (options: WatchConnectionStateOptionsV1) => {
+          try {
+            const agent = await this.getAriesAgentOrThrow(options.agentName);
+            new WatchConnectionStateV1Endpoint({
+              socket,
+              logLevel,
+              agent,
+            }).subscribe();
+          } catch (error) {
+            this.log.warn(WatchConnectionStateV1.Error, error);
+            socket.emit(
+              WatchConnectionStateV1.Error,
+              safeStringifyException(error),
+            );
+            socket.disconnect();
+          }
+        },
+      );
+
+      // Disconnect
+      socket.on("disconnect", () => {
+        this.connectedSockets.delete(socket.id);
       });
     });
+    this.log.info(`WebSocketProvider created for socketio endpoints`);
 
     return webServices;
   }
@@ -324,39 +366,85 @@ export class PluginLedgerConnectorAries
     if (agent) {
       await agent.shutdown();
       this.ariesAgents.delete(agentName);
-      this.log.info("removeAriesAgent(): Agent removed: ", agentName);
+      this.log.info("removeAriesAgent(): Agent removed:", agentName);
     } else {
-      this.log.warn("removeAriesAgent(): No agent with name", agentName);
+      this.log.warn(
+        "removeAriesAgent(): No agent to remove with a name",
+        agentName,
+      );
     }
   }
 
-  // TODO
-  // async function importExistingIndyDidFromPrivateKey(
-  //   agent: Agent<any>,
-  //   seed: string,
-  // ): Promise<string> {
-  //   const [endorserDid] = await agent.dids.getCreatedDids({ method: "indy" });
-  //   if (endorserDid) {
-  //     throw new Error("Endorser DID already present in a wallet");
-  //   }
+  // todo - private
+  async getAriesAgentOrThrow(agentName: string): Promise<AnoncredAgent> {
+    const agent = this.ariesAgents.get(agentName);
+    if (!agent) {
+      throw new Error(`No agent with a name ${agentName}`);
+    }
+    return agent;
+  }
 
-  //   const seedBuffer = TypedArrayEncoder.fromString(seed);
-  //   const key = await agent.wallet.createKey({
-  //     keyType: KeyType.Ed25519,
-  //     privateKey: seedBuffer,
-  //   });
+  async importExistingIndyDidFromPrivateKey(
+    agentName: string,
+    seed: string,
+    indyNamespace: string,
+  ): Promise<string> {
+    const agent = await this.getAriesAgentOrThrow(agentName);
 
-  //   // did is first 16 bytes of public key encoded as base58
-  //   const unqualifiedIndyDid = TypedArrayEncoder.toBase58(
-  //     key.publicKey.slice(0, 16),
-  //   );
+    const seedBuffer = TypedArrayEncoder.fromString(seed);
+    const key = await agent.wallet.createKey({
+      keyType: KeyType.Ed25519,
+      privateKey: seedBuffer,
+    });
 
-  //   const did = `did:indy:${TEST_INDY_NAMESPACE}:${unqualifiedIndyDid}`;
+    // did is first 16 bytes of public key encoded as base58
+    const unqualifiedIndyDid = TypedArrayEncoder.toBase58(
+      key.publicKey.slice(0, 16),
+    );
 
-  //   await agent.dids.import({
-  //     did,
-  //   });
+    const did = `did:indy:${indyNamespace}:${unqualifiedIndyDid}`;
 
-  //   return did;
-  // }
+    await agent.dids.import({
+      did,
+    });
+
+    return did;
+  }
+
+  async createNewConnectionInvitation(agentName: string): Promise<{
+    invitationUrl: string;
+    outOfBandRecord: OutOfBandRecord;
+  }> {
+    const agent = await this.getAriesAgentOrThrow(agentName);
+    const outOfBandRecord = await agent.oob.createInvitation();
+
+    return {
+      invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
+        domain: "https://example.org",
+      }),
+      outOfBandRecord,
+    };
+  }
+
+  async acceptInvitation(
+    agentName: string,
+    invitationUrl: string,
+  ): Promise<OutOfBandRecord> {
+    const agent = await this.getAriesAgentOrThrow(agentName);
+
+    const { outOfBandRecord } =
+      await agent.oob.receiveInvitationFromUrl(invitationUrl);
+
+    return outOfBandRecord;
+  }
+
+  async getConnections(
+    agentName: string,
+    filter: AgentConnectionsFilterV1 = {},
+  ): Promise<any[]> {
+    const agent = await this.getAriesAgentOrThrow(agentName);
+    return agent.connections.findAllByQuery(
+      cactiAgentConnectionsFilterToQuery(filter),
+    );
+  }
 }

@@ -1,10 +1,14 @@
-// import { Observable, ReplaySubject } from "rxjs";
-// import { finalize } from "rxjs/operators";
-// import { io } from "socket.io-client";
+import { Observable, ReplaySubject } from "rxjs";
+import { finalize } from "rxjs/operators";
+import { io } from "socket.io-client";
 import { Logger, Checks } from "@hyperledger/cactus-common";
 import { LogLevelDesc, LoggerProvider } from "@hyperledger/cactus-common";
 import { Constants } from "@hyperledger/cactus-core-api";
-import { DefaultApi } from "../generated/openapi/typescript-axios";
+import {
+  DefaultApi,
+  WatchConnectionStateOptionsV1,
+  WatchConnectionStateV1,
+} from "../generated/openapi/typescript-axios";
 import { Configuration } from "../generated/openapi/typescript-axios/configuration";
 
 export class AriesApiClientOptions extends Configuration {
@@ -12,6 +16,8 @@ export class AriesApiClientOptions extends Configuration {
   readonly wsApiHost?: string;
   readonly wsApiPath?: string;
 }
+
+type WatchConnectionStateV1Progress = any;
 
 export class AriesApiClient extends DefaultApi {
   private readonly log: Logger;
@@ -39,38 +45,45 @@ export class AriesApiClient extends DefaultApi {
     this.log.debug(`basePath=${this.options.basePath}`);
   }
 
-  // public watchBlocksV1(): Observable<WatchBlocksV1Progress> {
-  //   const socket = io(this.wsApiHost, { path: this.wsApiPath });
-  //   const subject = new ReplaySubject<WatchBlocksV1Progress>(0);
+  public watchConnectionStateV1(
+    options: WatchConnectionStateOptionsV1,
+  ): Observable<WatchConnectionStateV1Progress> {
+    const socket = io(this.wsApiHost, { path: this.wsApiPath });
+    const subject = new ReplaySubject<WatchConnectionStateV1Progress>(0);
 
-  //   socket.on(WatchBlocksV1.Next, (data: WatchBlocksV1Progress) => {
-  //     this.log.debug("Received WatchBlocksV1.Next");
-  //     subject.next(data);
-  //   });
+    socket.on(
+      WatchConnectionStateV1.Next,
+      (data: WatchConnectionStateV1Progress) => {
+        this.log.debug("Received WatchConnectionStateV1.Next");
+        subject.next(data);
+      },
+    );
 
-  //   socket.on(WatchBlocksV1.Error, (ex: string) => {
-  //     this.log.warn("Received WatchBlocksV1.Error:", ex);
-  //     subject.error(ex);
-  //   });
+    socket.on(WatchConnectionStateV1.Error, (ex: string) => {
+      this.log.warn("Received WatchConnectionStateV1.Error:", ex);
+      subject.error(ex);
+    });
 
-  //   socket.on(WatchBlocksV1.Complete, () => {
-  //     this.log.debug("Received WatchBlocksV1.Complete");
-  //     subject.complete();
-  //   });
+    socket.on(WatchConnectionStateV1.Complete, () => {
+      this.log.debug("Received WatchConnectionStateV1.Complete");
+      subject.complete();
+    });
 
-  //   socket.on("connect", () => {
-  //     this.log.info("Connected OK, sending WatchBlocksV1.Subscribe request...");
-  //     socket.emit(WatchBlocksV1.Subscribe, options);
-  //   });
+    socket.on("connect", () => {
+      this.log.info(
+        "Connected OK, sending WatchConnectionStateV1.Subscribe request...",
+      );
+      socket.emit(WatchConnectionStateV1.Subscribe, options);
+    });
 
-  //   socket.connect();
+    socket.connect();
 
-  //   return subject.pipe(
-  //     finalize(() => {
-  //       this.log.info("FINALIZE - unsubscribing from the stream...");
-  //       socket.emit(WatchBlocksV1.Unsubscribe);
-  //       socket.close();
-  //     }),
-  //   );
-  // }
+    return subject.pipe(
+      finalize(() => {
+        this.log.info("FINALIZE - unsubscribing from the stream...");
+        socket.emit(WatchConnectionStateV1.Unsubscribe);
+        socket.close();
+      }),
+    );
+  }
 }

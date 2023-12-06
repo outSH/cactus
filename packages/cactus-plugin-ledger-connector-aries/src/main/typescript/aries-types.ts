@@ -14,6 +14,10 @@ import {
   AutoAcceptProof,
   V2ProofProtocol,
   AutoAcceptCredential,
+  Query,
+  ConnectionRecord,
+  DidExchangeState,
+  DidExchangeRole,
 } from "@aries-framework/core";
 import { agentDependencies, HttpInboundTransport } from "@aries-framework/node";
 import { ariesAskar } from "@hyperledger/aries-askar-nodejs";
@@ -32,7 +36,7 @@ import {
 } from "@aries-framework/anoncreds";
 import { AnonCredsRsModule } from "@aries-framework/anoncreds-rs";
 import { anoncreds } from "@hyperledger/anoncreds-nodejs";
-import { CactiAcceptPolicyV1 } from "./public-api";
+import { AgentConnectionsFilterV1, CactiAcceptPolicyV1 } from "./public-api";
 ///////////
 
 /**
@@ -84,4 +88,60 @@ export function cactiAcceptPolicyToAutoAcceptCredential(
       const _unknownPolicy: never = policy;
       throw new Error(`Unknown CactiAcceptPolicyV1: ${_unknownPolicy}`);
   }
+}
+
+export function safeStringToEnum<T extends Record<string, string>>(
+  enumType: T,
+  value?: string,
+): T[keyof T] | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  const enumValue = (enumType as any)[value];
+  if (enumValue === undefined) {
+    throw new Error(`Unknown ${enumType.name}: ${value}`);
+  }
+
+  return enumValue;
+}
+
+export function validateEnumValue<T extends Record<string, string>>(
+  enumType: T,
+  value?: string,
+): T[keyof T] | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  if (!(value in enumType)) {
+    throw new Error(`Invalid enum value: ${value}`);
+  }
+
+  return value as unknown as T[keyof T];
+}
+
+export function validateEnumValue2<T extends Record<string, string>>(
+  enumType: T,
+  value?: string,
+): T[keyof T] | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  if (!Object.values(enumType).includes(value)) {
+    throw new Error(`Invalid aries enum value: ${value}`);
+  }
+
+  return value as unknown as T[keyof T];
+}
+
+export function cactiAgentConnectionsFilterToQuery(
+  filter: AgentConnectionsFilterV1,
+): Query<ConnectionRecord> {
+  return {
+    ...filter,
+    state: validateEnumValue2(DidExchangeState, filter.state),
+    role: validateEnumValue2(DidExchangeRole, filter.role),
+  };
 }

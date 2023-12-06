@@ -24,6 +24,49 @@ import type { RequestArgs } from './base';
 import { BASE_PATH, COLLECTION_FORMATS, BaseAPI, RequiredError } from './base';
 
 /**
+ * Fields that can be used to filter agent connection list.
+ * @export
+ * @interface AgentConnectionsFilterV1
+ */
+export interface AgentConnectionsFilterV1 {
+    /**
+     * 
+     * @type {string}
+     * @memberof AgentConnectionsFilterV1
+     */
+    'did'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AgentConnectionsFilterV1
+     */
+    'outOfBandId'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AgentConnectionsFilterV1
+     */
+    'role'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AgentConnectionsFilterV1
+     */
+    'state'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AgentConnectionsFilterV1
+     */
+    'theirDid'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AgentConnectionsFilterV1
+     */
+    'threadId'?: string;
+}
+/**
  * Aries agent configuration to be setup and used by the connector.
  * @export
  * @interface AriesAgentConfigV1
@@ -201,6 +244,36 @@ export interface ErrorExceptionV1Response {
      */
     'error': string;
 }
+/**
+ * Options passed when monitoring connection change events.
+ * @export
+ * @interface WatchConnectionStateOptionsV1
+ */
+export interface WatchConnectionStateOptionsV1 {
+    /**
+     * Aries agent label that will also be used as wallet id.
+     * @type {string}
+     * @memberof WatchConnectionStateOptionsV1
+     */
+    'agentName': string;
+}
+/**
+ * Websocket requests for monitoring connection change events.
+ * @export
+ * @enum {string}
+ */
+
+export const WatchConnectionStateV1 = {
+    Subscribe: 'org.hyperledger.cactus.api.async.hlaries.WatchConnectionStateV1.Subscribe',
+    Next: 'org.hyperledger.cactus.api.async.hlaries.WatchConnectionStateV1.Next',
+    Unsubscribe: 'org.hyperledger.cactus.api.async.hlaries.WatchConnectionStateV1.Unsubscribe',
+    Error: 'org.hyperledger.cactus.api.async.hlaries.WatchConnectionStateV1.Error',
+    Complete: 'org.hyperledger.cactus.api.async.hlaries.WatchConnectionStateV1.Complete'
+} as const;
+
+export type WatchConnectionStateV1 = typeof WatchConnectionStateV1[keyof typeof WatchConnectionStateV1];
+
+
 
 /**
  * DefaultApi - axios parameter creator

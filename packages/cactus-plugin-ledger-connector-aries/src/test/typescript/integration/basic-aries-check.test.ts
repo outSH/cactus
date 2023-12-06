@@ -9,11 +9,11 @@ const containerImageVersion = "0.1";
 // For development on local sawtooth network
 // 1. leaveLedgerRunning = true, useRunningLedger = false to run ledger and leave it running after test finishes.
 // 2. leaveLedgerRunning = true, useRunningLedger = true to use that ledger in future runs.
-const leaveLedgerRunning = false;
-const useRunningLedger = false;
+const leaveLedgerRunning = true;
+const useRunningLedger = true;
 
 // Log settings
-const testLogLevel: LogLevelDesc = "info";
+const testLogLevel: LogLevelDesc = "debug";
 
 import "jest-extended";
 import express from "express";
@@ -41,9 +41,18 @@ import { rmdir } from "node:fs/promises";
 
 import {
   PluginLedgerConnectorAries,
-  DefaultApi as AriesApi,
+  AriesApiClient,
   AriesAgentSummaryV1,
 } from "../../../main/typescript/public-api";
+
+import {
+  Agent,
+  ConnectionEventTypes,
+  ConnectionStateChangedEvent,
+  DidExchangeState,
+  OutOfBandRecord,
+  ConnectionRecord,
+} from "@aries-framework/core";
 
 // Logger setup
 const log: Logger = LoggerProvider.getOrCreate({
@@ -53,6 +62,7 @@ const log: Logger = LoggerProvider.getOrCreate({
 
 const AFJ_WALLET_PATH = path.join(os.homedir(), ".afj/data/wallet/");
 
+// TODO - spearate?
 describe("Connector setup tests", () => {
   const fakeIndyNetworkConfig = {
     isProduction: false,
@@ -128,7 +138,6 @@ describe("Connector setup tests", () => {
     const allAgents = await connector.getAgents();
     expect(allAgents.length).toBe(1);
     const agent = allAgents.pop() as AriesAgentSummaryV1;
-    log.error("agent", agent);
     expect(agent).toBeTruthy();
     expect(agent.name).toEqual(agentName);
     expect(agent.walletConfig.id).toEqual(agentName);
@@ -211,124 +220,240 @@ describe("Connector setup tests", () => {
   });
 });
 
-// describe("TODO", () => {
-//   let ledger: IndyTestLedger;
+describe.only("Schemas and credential creation", () => {
+  let addressInfo,
+    address: string,
+    port: number,
+    apiHost,
+    apiConfig,
+    ledger: IndyTestLedger,
+    apiClient: AriesApiClient,
+    connector: PluginLedgerConnectorAries;
 
-//   beforeAll(async () => {
-//     const pruning = pruneDockerAllIfGithubAction({ logLevel: testLogLevel });
-//     await expect(pruning).resolves.toBeTruthy();
+  const indyNamespace = "cacti:test";
+  const aliceAgentName = `cacti-alice-${uuidV4()}`;
+  const aliceInboundUrl = "http://127.0.0.1:8255";
+  const bobAgentName = `cacti-bob-${uuidV4()}`;
+  const bobInboundUrl = "http://127.0.0.1:8256";
+  const expressApp = express();
+  expressApp.use(bodyParser.json({ limit: "250mb" }));
+  const server = http.createServer(expressApp);
+  const wsApi = new SocketIoServer(server, {
+    path: Constants.SocketIoConnectionPathV1,
+  });
 
-//     ledger = new IndyTestLedger({
-//       containerImageName,
-//       containerImageVersion,
-//       useRunningLedger,
-//       emitContainerLogs: false,
-//       logLevel: testLogLevel,
-//     });
-//     await ledger.start();
-//   });
+  //////////////////////////////////
+  // Setup
+  //////////////////////////////////
 
-//   afterAll(async () => {
-//     log.info("Cleanup the whole suite...");
+  beforeAll(async () => {
+    const pruning = pruneDockerAllIfGithubAction({ logLevel: testLogLevel });
+    await expect(pruning).resolves.toBeTruthy();
 
-//     if (ledger && !leaveLedgerRunning) {
-//       log.info("Stop the indy ledger...");
-//       await ledger.stop();
-//       await ledger.destroy();
-//     }
+    //ledger = new GethTestLedger({ emitContainerLogs: true, testLogLevel });
+    ledger = new IndyTestLedger({
+      containerImageName,
+      containerImageVersion,
+      useRunningLedger,
+      emitContainerLogs: false,
+      logLevel: testLogLevel,
+    });
+    await ledger.start();
 
-//     log.info("Prune Docker...");
-//     await pruneDockerAllIfGithubAction({ logLevel: testLogLevel });
-//   });
+    addressInfo = (await Servers.listen({
+      hostname: "127.0.0.1",
+      port: 0,
+      server,
+    })) as AddressInfo;
+    ({ address, port } = addressInfo);
+    apiHost = `http://${address}:${port}`;
+    apiConfig = new Configuration({ basePath: apiHost });
+    apiClient = new AriesApiClient(apiConfig);
 
-//   // describe("TODO", () => {
-//   //   let addressInfo,
-//   //     address: string,
-//   //     port: number,
-//   //     apiHost,
-//   //     apiConfig,
-//   //     ledger: IndyTestLedger,
-//   //     apiClient: AriesApi,
-//   //     connector: PluginLedgerConnectorAries;
+    connector = new PluginLedgerConnectorAries({
+      instanceId: uuidV4(),
+      logLevel: testLogLevel,
+      pluginRegistry: new PluginRegistry({ plugins: [] }),
+      ariesAgents: [
+        {
+          name: aliceAgentName,
+          walletKey: aliceAgentName,
+          indyNetworks: [await ledger.getIndyVdrPoolConfig(indyNamespace)],
+          inboundUrl: aliceInboundUrl,
+          autoAcceptConnections: true,
+        },
+        {
+          name: bobAgentName,
+          walletKey: bobAgentName,
+          indyNetworks: [await ledger.getIndyVdrPoolConfig(indyNamespace)],
+          inboundUrl: bobInboundUrl,
+          autoAcceptConnections: true,
+        },
+      ],
+    });
 
-//   //   const expressApp = express();
-//   //   expressApp.use(bodyParser.json({ limit: "250mb" }));
-//   //   const server = http.createServer(expressApp);
-//   //   const wsApi = new SocketIoServer(server, {
-//   //     path: Constants.SocketIoConnectionPathV1,
-//   //   });
+    await connector.getOrCreateWebServices();
+    await connector.registerWebServices(expressApp, wsApi);
+    await connector.onPluginInit();
 
-//   //   //////////////////////////////////
-//   //   // Setup
-//   //   //////////////////////////////////
+    // Import endorser DID for Alice Agent
+    await connector.importExistingIndyDidFromPrivateKey(
+      aliceAgentName,
+      ledger.getEndorserDidSeed(),
+      indyNamespace,
+    );
+  });
 
-//   //   beforeAll(async () => {
-//   //     const pruning = pruneDockerAllIfGithubAction({ logLevel: testLogLevel });
-//   //     await expect(pruning).resolves.toBeTruthy();
+  afterAll(async () => {
+    log.info("FINISHING THE TESTS");
 
-//   //     //ledger = new GethTestLedger({ emitContainerLogs: true, testLogLevel });
-//   //     ledger = new IndyTestLedger({
-//   //       containerImageName,
-//   //       containerImageVersion,
-//   //       useRunningLedger,
-//   //       emitContainerLogs: false,
-//   //       logLevel: testLogLevel,
-//   //     });
-//   //     await ledger.start();
+    if (server) {
+      log.info("Stop the connector server...");
+      await Servers.shutdown(server);
+    }
 
-//   //     addressInfo = (await Servers.listen({
-//   //       hostname: "0.0.0.0",
-//   //       port: 0,
-//   //       server,
-//   //     })) as AddressInfo;
-//   //     ({ address, port } = addressInfo);
-//   //     apiHost = `http://${address}:${port}`;
-//   //     apiConfig = new Configuration({ basePath: apiHost });
-//   //     apiClient = new AriesApi(apiConfig);
+    if (connector) {
+      log.info("Stop the connector...");
+      await connector.shutdown();
+    }
 
-//   //     connector = new PluginLedgerConnectorAries({
-//   //       instanceId: uuidV4(),
-//   //       logLevel: testLogLevel,
-//   //       pluginRegistry: new PluginRegistry({ plugins: [] }),
-//   //     });
-//   //     await connector.getOrCreateWebServices();
-//   //     await connector.registerWebServices(expressApp, wsApi);
-//   //   });
+    if (ledger && !leaveLedgerRunning) {
+      log.info("Stop the indy ledger...");
+      await ledger.stop();
+      await ledger.destroy();
+    }
 
-//   //   afterAll(async () => {
-//   //     log.info("FINISHING THE TESTS");
+    log.info("Prune Docker...");
+    await pruneDockerAllIfGithubAction({ logLevel: testLogLevel });
 
-//   //     if (connector) {
-//   //       log.info("Stop the connector...");
-//   //       await connector.shutdown();
-//   //     }
+    // try {
+    //   await rmdir(walletPath, { recursive: true, maxRetries: 5 });
+    //   log.info(`${walletPath} remove successfully.`);
+    // } catch (error) {
+    //   log.warn(`${walletPath} could not be removed:`, error);
+    // }
+  });
 
-//   //     if (server) {
-//   //       log.info("Stop the connector server...");
-//   //       await Servers.shutdown(server);
-//   //     }
+  test("Aries agent created on plugin init", async () => {
+    const allAgents = await connector.getAgents();
+    expect(allAgents.length).toBe(2);
+  });
 
-//   //     if (ledger && !leaveLedgerRunning) {
-//   //       log.info("Stop the indy ledger...");
-//   //       await ledger.stop();
-//   //       await ledger.destroy();
-//   //     }
+  async function waitForConnection(
+    agent: Agent,
+    outOfBandId: string,
+  ): Promise<ConnectionRecord> {
+    if (!outOfBandId) {
+      throw new Error("Missing outOfBandId in waitForConnection");
+    }
 
-//   //     log.info("Prune Docker...");
-//   //     await pruneDockerAllIfGithubAction({ logLevel: testLogLevel });
+    const getConnectionRecord = (outOfBandId: string) =>
+      new Promise<ConnectionRecord>((resolve, reject) => {
+        // Start listener
+        const observable = apiClient.watchConnectionStateV1({
+          agentName: aliceAgentName,
+        });
+        const sub = observable.subscribe((e) => {
+          if (
+            e.connectionRecord.outOfBandId !== outOfBandId ||
+            e.connectionRecord.state !== "completed"
+          ) {
+            return;
+          }
+          log.debug(
+            "waitForConnection() - received ConnectionStateChanged event for given outOfBandId",
+          );
+          clearTimeout(timeoutId);
+          sub.unsubscribe();
+          resolve(e.connectionRecord);
+        });
 
-//   //     // try {
-//   //     //   await rmdir(walletPath, { recursive: true, maxRetries: 5 });
-//   //     //   log.info(`${walletPath} remove successfully.`);
-//   //     // } catch (error) {
-//   //     //   log.warn(`${walletPath} could not be removed:`, error);
-//   //     // }
-//   //   });
+        const timeoutId = setTimeout(() => {
+          reject(new Error("Missing connection"));
+          sub.unsubscribe();
+        }, WAIT_FOR_CLIENT_ACCEPT_TIMEOUT);
 
-//   //   test("test", async () => {
-//   //     expect(1).toBe(1);
-//   //     const agents = await apiClient.getAgents();
-//   //     log.error("agents", agents.data);
-//   //   });
-//   // });
-// });
+        // Also retrieve the connection record by invitation if the event has already fired
+        connector
+          .getConnections(bobAgentName, {
+            outOfBandId,
+          })
+          .then(([connectionRecord]) => {
+            if (connectionRecord) {
+              clearTimeout(timeoutId);
+              resolve(connectionRecord);
+            }
+          });
+      });
+
+    log.error("Getting connectionRecord");
+    const connectionRecord = await getConnectionRecord(outOfBandId);
+
+    log.error("returnWhenIsConnected connectionRecord", connectionRecord);
+    // get connection
+    // https://github.com/openwallet-foundation/agent-framework-javascript/blob/3653819076ec7edbda1bc1616e08919ee72d68af/packages/core/src/modules/connections/services/ConnectionService.ts#L882
+    return agent.connections.returnWhenIsConnected(connectionRecord.id);
+  }
+
+  async function waitForConnectionReady(
+    outOfBandRecordId: string,
+    timeout = WAIT_FOR_CLIENT_ACCEPT_TIMEOUT,
+  ): Promise<void> {
+    let connection: ConnectionRecord | undefined;
+    let counter = Math.ceil(timeout / WAIT_FOR_CONNECTION_READY_POLL_INTERVAL);
+
+    do {
+      counter--;
+      await new Promise((resolve) =>
+        setTimeout(resolve, WAIT_FOR_CONNECTION_READY_POLL_INTERVAL),
+      );
+
+      try {
+        const connections = await connector.getConnections(bobAgentName, {
+          outOfBandId: outOfBandRecordId,
+        });
+        connection = connections.pop();
+      } catch (error) {}
+    } while (counter > 0 && (!connection || !connection.isReady));
+
+    log.error("waitForConnectionReady DONE!");
+    if (counter <= 0) {
+      throw new Error("waitForConnectionReady() timeout reached!");
+    }
+  }
+
+  test("Connect to another aries agent using invitation URL", async () => {
+    const inv = await connector.createNewConnectionInvitation(aliceAgentName);
+    log.error("inv", inv);
+
+    // DO THIS IN API CLIENT
+    const agentAlice = await connector.getAriesAgentOrThrow(aliceAgentName);
+    const isConnectedPromise = waitForConnection(
+      agentAlice,
+      inv.outOfBandRecord.id,
+    );
+
+    // Accept invitation as the secondAgent
+    const secondAgentOOBRecord = await connector.acceptInvitation(
+      bobAgentName,
+      inv.invitationUrl,
+    );
+    log.error("secondAgentOOBRecord", secondAgentOOBRecord);
+    await waitForConnectionReady(secondAgentOOBRecord.id);
+
+    // Wait until connection is done
+    await isConnectedPromise;
+
+    log.error("DONE");
+
+    // Getters test
+    const resp = await connector.getConnections(bobAgentName, {
+      state: "completed",
+    });
+    log.error("resp", resp);
+    log.error("resp isReady", resp[0].isReady);
+  });
+});
+
+const WAIT_FOR_CONNECTION_READY_POLL_INTERVAL = 500;
+const WAIT_FOR_CLIENT_ACCEPT_TIMEOUT = 60 * 1000;

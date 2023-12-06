@@ -11,6 +11,36 @@
   },
   "components": {
     "schemas": {
+      "WatchConnectionStateV1": {
+        "type": "string",
+        "description": "Websocket requests for monitoring connection change events.",
+        "enum": [
+          "org.hyperledger.cactus.api.async.hlaries.WatchConnectionStateV1.Subscribe",
+          "org.hyperledger.cactus.api.async.hlaries.WatchConnectionStateV1.Next",
+          "org.hyperledger.cactus.api.async.hlaries.WatchConnectionStateV1.Unsubscribe",
+          "org.hyperledger.cactus.api.async.hlaries.WatchConnectionStateV1.Error",
+          "org.hyperledger.cactus.api.async.hlaries.WatchConnectionStateV1.Complete"
+        ],
+        "x-enum-varnames": [
+          "Subscribe",
+          "Next",
+          "Unsubscribe",
+          "Error",
+          "Complete"
+        ]
+      },
+      "WatchConnectionStateOptionsV1": {
+        "type": "object",
+        "description": "Options passed when monitoring connection change events.",
+        "required": ["agentName"],
+        "properties": {
+          "agentName": {
+            "type": "string",
+            "nullable": false,
+            "description": "Aries agent label that will also be used as wallet id."
+          }
+        }
+      },
       "CactiAcceptPolicyV1": {
         "type": "string",
         "description": "Credential / Proof requests acceptance policies for Aries agent",
@@ -154,6 +184,41 @@
           }
         }
       },
+      "AgentConnectionsFilterV1": {
+        "type": "object",
+        "description": "Fields that can be used to filter agent connection list.",
+        "properties": {
+          "did": {
+            "type": "string",
+            "nullable": false
+          },
+          "invitationDid": {
+            "type": "string",
+            "nullable": false
+          },
+          "outOfBandId": {
+            "type": "string",
+            "nullable": false
+          },
+          "role": {
+            "type": "string",
+            "nullable": false
+          },
+          "state": {
+            "type": "string",
+            "nullable": false
+          },
+          "theirDid": {
+            "type": "string",
+            "nullable": false
+          },
+          "threadId": {
+            "type": "string",
+            "nullable": false
+          }
+        }
+      },
+
       "GetAgentsV1Response": {
         "type": "array",
         "description": "Response for GetAgents endpoint.",
