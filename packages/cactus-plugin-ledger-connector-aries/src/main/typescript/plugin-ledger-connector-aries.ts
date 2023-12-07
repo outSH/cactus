@@ -30,14 +30,20 @@ import {
   AgentConnectionsFilterV1,
   AriesAgentConfigV1,
   AriesAgentSummaryV1,
+  AriesProofExchangeRecordV1,
   CactiAcceptPolicyV1,
+  CactiProofRequestAttributeV1,
   CreateNewConnectionInvitationV1Response,
   WatchConnectionStateOptionsV1,
   WatchConnectionStateV1,
+  WatchProofStateOptionsV1,
+  WatchProofStateV1,
 } from "./generated/openapi/typescript-axios";
 
 import { WatchConnectionStateV1Endpoint } from "./web-services/watch-connection-state-v1-endpoint";
+import { WatchProofStateV1Endpoint } from "./web-services/watch-proof-state-v1-endpoint";
 import { GetAgentsEndpoint } from "./web-services/get-agents-v1-endpoint";
+import { RquestProofEndpoint } from "./web-services/request-proof-v1-endpoint";
 import { GetConnectionsEndpoint } from "./web-services/get-connections-v1-endpoint";
 import { CreateNewConnectionInvitationEndpoint } from "./web-services/create-new-connection-invitation-v1-endpoint";
 import { AcceptInvitationEndpoint } from "./web-services/accept-invitation-v1-endpoint";
@@ -84,6 +90,7 @@ import {
   cactiAcceptPolicyToAutoAcceptCredential,
   cactiAcceptPolicyToAutoAcceptProof,
   cactiAgentConnectionsFilterToQuery,
+  cactiAttributesToAnonCredsRequestedAttributes,
 } from "./aries-types";
 
 export interface IPluginLedgerConnectorAriesOptions
@@ -196,6 +203,25 @@ export class PluginLedgerConnectorAries
         },
       );
 
+      // WatchProofStateV1Endpoint
+      socket.on(
+        WatchProofStateV1.Subscribe,
+        async (options: WatchProofStateOptionsV1) => {
+          try {
+            const agent = await this.getAriesAgentOrThrow(options.agentName);
+            new WatchProofStateV1Endpoint({
+              socket,
+              logLevel,
+              agent,
+            }).subscribe();
+          } catch (error) {
+            this.log.warn(WatchProofStateV1.Error, error);
+            socket.emit(WatchProofStateV1.Error, safeStringifyException(error));
+            socket.disconnect();
+          }
+        },
+      );
+
       // Disconnect
       socket.on("disconnect", () => {
         this.connectedSockets.delete(socket.id);
@@ -214,6 +240,13 @@ export class PluginLedgerConnectorAries
     const endpoints: IWebServiceEndpoint[] = [];
     {
       const endpoint = new GetAgentsEndpoint({
+        connector: this,
+        logLevel: this.options.logLevel,
+      });
+      endpoints.push(endpoint);
+    }
+    {
+      const endpoint = new RquestProofEndpoint({
         connector: this,
         logLevel: this.options.logLevel,
       });
@@ -278,23 +311,39 @@ export class PluginLedgerConnectorAries
         `Agent ${agentConfig.name} must have at least one Indy network defined!`,
       );
     }
-    const autoAcceptConnections = agentConfig.autoAcceptConnections ?? false;
+    // const autoAcceptConnections = agentConfig.autoAcceptConnections ?? false;
+    // this.log.debug(
+    //   `Agent ${agentConfig.name} autoAcceptConnections:`,
+    //   autoAcceptConnections,
+    // );
+    // const autoAcceptCredentials = agentConfig.autoAcceptCredentials
+    //   ? cactiAcceptPolicyToAutoAcceptCredential(
+    //       agentConfig.autoAcceptCredentials,
+    //     )
+    //   : AutoAcceptCredential.Never;
+    // this.log.debug(
+    //   `Agent ${agentConfig.name} autoAcceptCredentials:`,
+    //   autoAcceptCredentials,
+    // );
+    // const autoAcceptProofs = agentConfig.autoAcceptProofs
+    //   ? cactiAcceptPolicyToAutoAcceptProof(agentConfig.autoAcceptProofs)
+    //   : AutoAcceptProof.Never;
+    // this.log.debug(
+    //   `Agent ${agentConfig.name} autoAcceptProofs:`,
+    //   autoAcceptProofs,
+    // );
+
+    const autoAcceptConnections = true;
     this.log.debug(
       `Agent ${agentConfig.name} autoAcceptConnections:`,
       autoAcceptConnections,
     );
-    const autoAcceptCredentials = agentConfig.autoAcceptCredentials
-      ? cactiAcceptPolicyToAutoAcceptCredential(
-          agentConfig.autoAcceptCredentials,
-        )
-      : AutoAcceptCredential.Never;
+    const autoAcceptCredentials = AutoAcceptCredential.ContentApproved;
     this.log.debug(
       `Agent ${agentConfig.name} autoAcceptCredentials:`,
       autoAcceptCredentials,
     );
-    const autoAcceptProofs = agentConfig.autoAcceptProofs
-      ? cactiAcceptPolicyToAutoAcceptProof(agentConfig.autoAcceptProofs)
-      : AutoAcceptProof.Never;
+    const autoAcceptProofs = AutoAcceptProof.ContentApproved;
     this.log.debug(
       `Agent ${agentConfig.name} autoAcceptProofs:`,
       autoAcceptProofs,
@@ -455,7 +504,7 @@ export class PluginLedgerConnectorAries
       invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
         domain: invitationDomain ?? this.invitationDomain,
       }),
-      outOfBandRecordId: outOfBandRecord.id,
+      outOfBandId: outOfBandRecord.id,
     };
   }
 
@@ -469,7 +518,7 @@ export class PluginLedgerConnectorAries
       await agent.oob.receiveInvitationFromUrl(invitationUrl);
 
     return {
-      outOfBandRecordId: outOfBandRecord.id,
+      outOfBandId: outOfBandRecord.id,
     };
   }
 
@@ -477,7 +526,7 @@ export class PluginLedgerConnectorAries
     agentName: string,
     filter: AgentConnectionsFilterV1 = {},
   ): Promise<AgentConnectionRecordV1[]> {
-    Checks.truthy(agentName, "getConnections arg options");
+    Checks.truthy(agentName, "getConnections agentName options");
     const agent = await this.getAriesAgentOrThrow(agentName);
     const allRecords = await agent.connections.findAllByQuery(
       cactiAgentConnectionsFilterToQuery(filter),
@@ -488,5 +537,38 @@ export class PluginLedgerConnectorAries
         isReady: c.isReady,
       };
     });
+  }
+
+  async requestProof(
+    agentName: string,
+    connectionId: string,
+    proofAttributes: CactiProofRequestAttributeV1[],
+  ): Promise<AriesProofExchangeRecordV1> {
+    Checks.truthy(agentName, "getConnections agentName options");
+    Checks.truthy(connectionId, "getConnections connectionId options");
+    Checks.truthy(proofAttributes, "getConnections proofAttributes options");
+    Checks.truthy(
+      proofAttributes.length > 0,
+      "getConnections proofAttributes must be at least one",
+    );
+
+    const agent = await this.getAriesAgentOrThrow(agentName);
+
+    const proof = await agent.proofs.requestProof({
+      protocolVersion: "v2",
+      connectionId,
+      proofFormats: {
+        anoncreds: {
+          name: "proof-request",
+          version: "1.0",
+          requested_attributes:
+            await cactiAttributesToAnonCredsRequestedAttributes(
+              proofAttributes,
+            ),
+        },
+      },
+    });
+
+    return proof;
   }
 }

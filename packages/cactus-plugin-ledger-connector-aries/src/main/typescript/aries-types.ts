@@ -33,10 +33,15 @@ import {
   AnonCredsCredentialFormatService,
   AnonCredsModule,
   AnonCredsProofFormatService,
+  AnonCredsRequestedAttribute,
 } from "@aries-framework/anoncreds";
 import { AnonCredsRsModule } from "@aries-framework/anoncreds-rs";
 import { anoncreds } from "@hyperledger/anoncreds-nodejs";
-import { AgentConnectionsFilterV1, CactiAcceptPolicyV1 } from "./public-api";
+import {
+  AgentConnectionsFilterV1,
+  CactiAcceptPolicyV1,
+  CactiProofRequestAttributeV1,
+} from "./public-api";
 ///////////
 
 /**
@@ -144,4 +149,25 @@ export function cactiAgentConnectionsFilterToQuery(
     state: validateEnumValue2(DidExchangeState, filter.state),
     role: validateEnumValue2(DidExchangeRole, filter.role),
   };
+}
+
+export async function cactiAttributesToAnonCredsRequestedAttributes(
+  proofAttributes: CactiProofRequestAttributeV1[],
+): Promise<Record<string, AnonCredsRequestedAttribute>> {
+  const attributesArray = proofAttributes.map((attr) => {
+    return [
+      attr.name,
+      {
+        name: attr.name,
+        restrictions: [
+          {
+            [`attr::${attr.name}::value`]: attr.isValueEqual,
+            cred_def_id: attr.isCredentialDefinitionIdEqual,
+          },
+        ],
+      },
+    ];
+  });
+
+  return Object.fromEntries(attributesArray);
 }

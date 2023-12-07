@@ -9,46 +9,43 @@ import {
 } from "@hyperledger/cactus-common";
 
 import {
-  WatchConnectionStateProgressV1,
-  WatchConnectionStateV1,
+  AriesProofExchangeRecordV1,
+  WatchProofStateProgressV1,
+  WatchProofStateV1,
 } from "../generated/openapi/typescript-axios";
 
 ///////
 import {
   Agent,
   ConnectionEventTypes,
-  ConnectionStateChangedEvent,
+  ProofStateChangedEvent,
   DidExchangeState,
   OutOfBandRecord,
   ConnectionRecord,
+  ProofEventTypes,
 } from "@aries-framework/core";
 import { AnoncredAgent } from "../aries-types";
 ///////////
 
-export interface IWatchConnectionStateV1EndpointConfiguration {
+export interface IWatchProofStateV1EndpointConfiguration {
   logLevel?: LogLevelDesc;
   socket: SocketIoSocket;
   agent: AnoncredAgent;
 }
 
-export class WatchConnectionStateV1Endpoint {
+export class WatchProofStateV1Endpoint {
   private readonly log: Logger;
   private readonly socket: SocketIoSocket<
-    Record<WatchConnectionStateV1, (next: string) => void>,
-    Record<
-      WatchConnectionStateV1,
-      (next: WatchConnectionStateProgressV1) => void
-    >
+    Record<WatchProofStateV1, (next: string) => void>,
+    Record<WatchProofStateV1, (next: WatchProofStateProgressV1) => void>
   >;
   private readonly agent: AnoncredAgent;
 
   public get className(): string {
-    return "WatchConnectionStateV1Endpoint";
+    return "WatchProofStateV1Endpoint";
   }
 
-  constructor(
-    public readonly config: IWatchConnectionStateV1EndpointConfiguration,
-  ) {
+  constructor(public readonly config: IWatchProofStateV1EndpointConfiguration) {
     const fnTag = `${this.className}#constructor()`;
     Checks.truthy(config, `${fnTag} arg options`);
     Checks.truthy(config.socket, `${fnTag} arg options.socket`);
@@ -63,31 +60,31 @@ export class WatchConnectionStateV1Endpoint {
 
   public async subscribe(): Promise<void> {
     const { socket, log, agent } = this;
-    log.info(`${WatchConnectionStateV1.Subscribe} => ${socket.id}`);
+    log.info(`${WatchProofStateV1.Subscribe} => ${socket.id}`);
 
-    const eventListener = (e: ConnectionStateChangedEvent) => {
-      socket.emit(WatchConnectionStateV1.Next, e.payload);
+    const eventListener = (e: ProofStateChangedEvent) => {
+      socket.emit(WatchProofStateV1.Next, e.payload);
     };
 
-    agent.events.on<ConnectionStateChangedEvent>(
-      ConnectionEventTypes.ConnectionStateChanged,
+    agent.events.on<ProofStateChangedEvent>(
+      ProofEventTypes.ProofStateChanged,
       eventListener,
     );
 
     socket.on("disconnect", async (reason: string) => {
       log.info("WebSocket:disconnect reason=%o", reason);
-      agent.events.off<ConnectionStateChangedEvent>(
-        ConnectionEventTypes.ConnectionStateChanged,
+      agent.events.off<ProofStateChangedEvent>(
+        ProofEventTypes.ProofStateChanged,
         eventListener,
       );
     });
 
-    socket.on(WatchConnectionStateV1.Unsubscribe, async () => {
-      agent.events.off<ConnectionStateChangedEvent>(
-        ConnectionEventTypes.ConnectionStateChanged,
+    socket.on(WatchProofStateV1.Unsubscribe, async () => {
+      agent.events.off<ProofStateChangedEvent>(
+        ProofEventTypes.ProofStateChanged,
         eventListener,
       );
-      log.debug("WatchConnectionStateV1 unsubscribe done.");
+      log.debug("WatchProofStateV1 unsubscribe done.");
     });
 
     log.debug(

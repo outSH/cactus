@@ -9,8 +9,8 @@ const containerImageVersion = "0.1";
 // For development on local sawtooth network
 // 1. leaveLedgerRunning = true, useRunningLedger = false to run ledger and leave it running after test finishes.
 // 2. leaveLedgerRunning = true, useRunningLedger = true to use that ledger in future runs.
-const leaveLedgerRunning = true;
-const useRunningLedger = true;
+const leaveLedgerRunning = false;
+const useRunningLedger = false;
 
 // Log settings
 const testLogLevel: LogLevelDesc = "debug";
@@ -346,9 +346,9 @@ describe("Schemas and credential creation", () => {
       agentName: aliceAgentName,
       invitationDomain: customDomain,
     });
-    const { invitationUrl, outOfBandRecordId } = invitationResponse.data;
+    const { invitationUrl, outOfBandId } = invitationResponse.data;
     expect(invitationUrl).toBeTruthy();
-    expect(outOfBandRecordId).toBeTruthy();
+    expect(outOfBandId).toBeTruthy();
     expect(new URL(invitationUrl).origin).toEqual(customDomain);
   });
 
@@ -359,12 +359,12 @@ describe("Schemas and credential creation", () => {
       agentName: aliceAgentName,
     });
     const invitationUrl = invitationResponse.data.invitationUrl;
-    const aliceOutOfBandRecordId = invitationResponse.data.outOfBandRecordId;
+    const aliceOutOfBandId = invitationResponse.data.outOfBandId;
     expect(invitationUrl).toBeTruthy();
-    expect(aliceOutOfBandRecordId).toBeTruthy();
-    const isPeerConnectedPromise = apiClient.waitForInvitedPeerConnection(
+    expect(aliceOutOfBandId).toBeTruthy();
+    const isPeerConnectedPromise = apiClient.waitForInvitedPeerConnectionV1(
       aliceAgentName,
-      aliceOutOfBandRecordId,
+      aliceOutOfBandId,
     );
 
     log.info("2. Accept invitation as Bob");
@@ -372,11 +372,11 @@ describe("Schemas and credential creation", () => {
       agentName: bobAgentName,
       invitationUrl: invitationUrl,
     });
-    const bobOutOfBandRecordId = acceptResponse.data.outOfBandRecordId;
-    expect(bobOutOfBandRecordId).toBeTruthy();
+    const bobOutOfBandId = acceptResponse.data.outOfBandId;
+    expect(bobOutOfBandId).toBeTruthy();
 
     log.info("3. Wait for connection readiness on Bob side");
-    await apiClient.waitForConnectionReady(bobAgentName, bobOutOfBandRecordId);
+    await apiClient.waitForConnectionReadyV1(bobAgentName, bobOutOfBandId);
 
     log.info("4. Wait for connection readiness on Alice side");
     await isPeerConnectedPromise;

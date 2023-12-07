@@ -53,7 +53,7 @@ export interface AcceptInvitationV1Response {
      * @type {string}
      * @memberof AcceptInvitationV1Response
      */
-    'outOfBandRecordId': string;
+    'outOfBandId': string;
 }
 /**
  * Aries agent connection information.
@@ -324,6 +324,57 @@ export interface AriesIndyVdrPoolConfigV1 {
     'connectOnStartup'?: boolean;
 }
 /**
+ * Proof exchange record from Aries framework (simplified)
+ * @export
+ * @interface AriesProofExchangeRecordV1
+ */
+export interface AriesProofExchangeRecordV1 {
+    [key: string]: any;
+
+    /**
+     * 
+     * @type {string}
+     * @memberof AriesProofExchangeRecordV1
+     */
+    'id': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AriesProofExchangeRecordV1
+     */
+    'connectionId'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AriesProofExchangeRecordV1
+     */
+    'threadId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AriesProofExchangeRecordV1
+     */
+    'state': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof AriesProofExchangeRecordV1
+     */
+    'protocolVersion': string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof AriesProofExchangeRecordV1
+     */
+    'isVerified'?: boolean;
+    /**
+     * 
+     * @type {string}
+     * @memberof AriesProofExchangeRecordV1
+     */
+    'errorMessage'?: string;
+}
+/**
  * Credential / Proof requests acceptance policies for Aries agent
  * @export
  * @enum {string}
@@ -338,6 +389,31 @@ export const CactiAcceptPolicyV1 = {
 export type CactiAcceptPolicyV1 = typeof CactiAcceptPolicyV1[keyof typeof CactiAcceptPolicyV1];
 
 
+/**
+ * Credential attribute checks to be performed by a proof request.
+ * @export
+ * @interface CactiProofRequestAttributeV1
+ */
+export interface CactiProofRequestAttributeV1 {
+    /**
+     * Attribute name.
+     * @type {string}
+     * @memberof CactiProofRequestAttributeV1
+     */
+    'name': string;
+    /**
+     * Check if attribute has specified value
+     * @type {any}
+     * @memberof CactiProofRequestAttributeV1
+     */
+    'isValueEqual'?: any;
+    /**
+     * Check if credentialDefinitionId has specified value
+     * @type {any}
+     * @memberof CactiProofRequestAttributeV1
+     */
+    'isCredentialDefinitionIdEqual'?: any;
+}
 /**
  * Request for CreateNewConnectionInvitation endpoint.
  * @export
@@ -374,7 +450,7 @@ export interface CreateNewConnectionInvitationV1Response {
      * @type {string}
      * @memberof CreateNewConnectionInvitationV1Response
      */
-    'outOfBandRecordId': string;
+    'outOfBandId': string;
 }
 /**
  * Error response from the connector.
@@ -415,6 +491,31 @@ export interface GetConnectionsV1Request {
     'filter'?: AgentConnectionsFilterV1;
 }
 /**
+ * Request for RequestProof endpoint.
+ * @export
+ * @interface RequestProofV1Request
+ */
+export interface RequestProofV1Request {
+    /**
+     * Aries label of an agent to be used to connect using URL
+     * @type {string}
+     * @memberof RequestProofV1Request
+     */
+    'agentName': string;
+    /**
+     * Peer connection ID from which we want to request a proof.
+     * @type {string}
+     * @memberof RequestProofV1Request
+     */
+    'connectionId': string;
+    /**
+     * 
+     * @type {Array<CactiProofRequestAttributeV1>}
+     * @memberof RequestProofV1Request
+     */
+    'proofAttributes': Array<CactiProofRequestAttributeV1>;
+}
+/**
  * Options passed when monitoring connection change events.
  * @export
  * @interface WatchConnectionStateOptionsV1
@@ -426,6 +527,25 @@ export interface WatchConnectionStateOptionsV1 {
      * @memberof WatchConnectionStateOptionsV1
      */
     'agentName': string;
+}
+/**
+ * Values pushed on each connection state change.
+ * @export
+ * @interface WatchConnectionStateProgressV1
+ */
+export interface WatchConnectionStateProgressV1 {
+    /**
+     * 
+     * @type {AgentConnectionRecordV1}
+     * @memberof WatchConnectionStateProgressV1
+     */
+    'connectionRecord': AgentConnectionRecordV1;
+    /**
+     * 
+     * @type {string}
+     * @memberof WatchConnectionStateProgressV1
+     */
+    'previousState': string | null;
 }
 /**
  * Websocket requests for monitoring connection change events.
@@ -442,6 +562,55 @@ export const WatchConnectionStateV1 = {
 } as const;
 
 export type WatchConnectionStateV1 = typeof WatchConnectionStateV1[keyof typeof WatchConnectionStateV1];
+
+
+/**
+ * Options passed when monitoring proof change events.
+ * @export
+ * @interface WatchProofStateOptionsV1
+ */
+export interface WatchProofStateOptionsV1 {
+    /**
+     * Aries agent label that will also be used as wallet id.
+     * @type {string}
+     * @memberof WatchProofStateOptionsV1
+     */
+    'agentName': string;
+}
+/**
+ * Values pushed on each proof state change.
+ * @export
+ * @interface WatchProofStateProgressV1
+ */
+export interface WatchProofStateProgressV1 {
+    /**
+     * 
+     * @type {AriesProofExchangeRecordV1}
+     * @memberof WatchProofStateProgressV1
+     */
+    'proofRecord': AriesProofExchangeRecordV1;
+    /**
+     * 
+     * @type {string}
+     * @memberof WatchProofStateProgressV1
+     */
+    'previousState': string | null;
+}
+/**
+ * Websocket requests for monitoring connection change events.
+ * @export
+ * @enum {string}
+ */
+
+export const WatchProofStateV1 = {
+    Subscribe: 'org.hyperledger.cactus.api.async.hlaries.WatchProofStateV1.Subscribe',
+    Next: 'org.hyperledger.cactus.api.async.hlaries.WatchProofStateV1.Next',
+    Unsubscribe: 'org.hyperledger.cactus.api.async.hlaries.WatchProofStateV1.Unsubscribe',
+    Error: 'org.hyperledger.cactus.api.async.hlaries.WatchProofStateV1.Error',
+    Complete: 'org.hyperledger.cactus.api.async.hlaries.WatchProofStateV1.Complete'
+} as const;
+
+export type WatchProofStateV1 = typeof WatchProofStateV1[keyof typeof WatchProofStateV1];
 
 
 
@@ -583,6 +752,40 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
                 options: localVarRequestOptions,
             };
         },
+        /**
+         * 
+         * @summary Request proof matching provided requriements from connected peer agent.
+         * @param {RequestProofV1Request} [requestProofV1Request] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        requestProofV1: async (requestProofV1Request?: RequestProofV1Request, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/v1/plugins/@hyperledger/cactus-plugin-ledger-connector-aries/request-proof`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(requestProofV1Request, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
     }
 };
 
@@ -636,6 +839,17 @@ export const DefaultApiFp = function(configuration?: Configuration) {
             const localVarAxiosArgs = await localVarAxiosParamCreator.getConnectionsV1(getConnectionsV1Request, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
+        /**
+         * 
+         * @summary Request proof matching provided requriements from connected peer agent.
+         * @param {RequestProofV1Request} [requestProofV1Request] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async requestProofV1(requestProofV1Request?: RequestProofV1Request, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<AriesProofExchangeRecordV1>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.requestProofV1(requestProofV1Request, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
     }
 };
 
@@ -684,6 +898,16 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          */
         getConnectionsV1(getConnectionsV1Request?: GetConnectionsV1Request, options?: any): AxiosPromise<Array<AgentConnectionRecordV1>> {
             return localVarFp.getConnectionsV1(getConnectionsV1Request, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Request proof matching provided requriements from connected peer agent.
+         * @param {RequestProofV1Request} [requestProofV1Request] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        requestProofV1(requestProofV1Request?: RequestProofV1Request, options?: any): AxiosPromise<AriesProofExchangeRecordV1> {
+            return localVarFp.requestProofV1(requestProofV1Request, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -740,6 +964,18 @@ export class DefaultApi extends BaseAPI {
      */
     public getConnectionsV1(getConnectionsV1Request?: GetConnectionsV1Request, options?: AxiosRequestConfig) {
         return DefaultApiFp(this.configuration).getConnectionsV1(getConnectionsV1Request, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Request proof matching provided requriements from connected peer agent.
+     * @param {RequestProofV1Request} [requestProofV1Request] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public requestProofV1(requestProofV1Request?: RequestProofV1Request, options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).requestProofV1(requestProofV1Request, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
