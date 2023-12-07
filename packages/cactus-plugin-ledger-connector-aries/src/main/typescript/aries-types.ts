@@ -1,13 +1,11 @@
-///////
-import { AskarModule } from "@aries-framework/askar";
+/**
+ * Helper functions used mostly to convert from Open API endpoint inputs to Aries compatible structures.
+ */
+
 import {
   Agent,
-  InitConfig,
-  HttpOutboundTransport,
   ConnectionsModule,
   DidsModule,
-  TypedArrayEncoder,
-  KeyType,
   CredentialsModule,
   V2CredentialProtocol,
   ProofsModule,
@@ -19,34 +17,25 @@ import {
   DidExchangeState,
   DidExchangeRole,
 } from "@aries-framework/core";
-import { agentDependencies, HttpInboundTransport } from "@aries-framework/node";
-import { ariesAskar } from "@hyperledger/aries-askar-nodejs";
-import {
-  IndyVdrAnonCredsRegistry,
-  IndyVdrIndyDidRegistrar,
-  IndyVdrIndyDidResolver,
-  IndyVdrModule,
-  IndyVdrPoolConfig,
-} from "@aries-framework/indy-vdr";
-import { indyVdr } from "@hyperledger/indy-vdr-nodejs";
-import {
+import type { AskarModule } from "@aries-framework/askar";
+import type { IndyVdrModule } from "@aries-framework/indy-vdr";
+import type {
   AnonCredsCredentialFormatService,
   AnonCredsModule,
   AnonCredsProofFormatService,
   AnonCredsRequestedAttribute,
 } from "@aries-framework/anoncreds";
-import { AnonCredsRsModule } from "@aries-framework/anoncreds-rs";
-import { anoncreds } from "@hyperledger/anoncreds-nodejs";
+import type { AnonCredsRsModule } from "@aries-framework/anoncreds-rs";
+
 import {
   AgentConnectionsFilterV1,
   CactiAcceptPolicyV1,
   CactiProofRequestAttributeV1,
 } from "./public-api";
-///////////
 
 /**
  * Aries JS Agent with Anoncreds/Indy/Askar modules configured.
- * This is exact Agent type returned by factories used in this module.
+ * This is exact Agent type returned by factories used by this connector for now.
  */
 export type AnoncredAgent = Agent<{
   readonly connections: ConnectionsModule;
@@ -63,6 +52,12 @@ export type AnoncredAgent = Agent<{
   readonly askar: AskarModule;
 }>;
 
+/**
+ * Convert Cacti OpenAPI input to Aries compatible `AutoAcceptProof`
+ *
+ * @param policy `CactiAcceptPolicyV1`
+ * @returns `AutoAcceptProof`
+ */
 export function cactiAcceptPolicyToAutoAcceptProof(
   policy: CactiAcceptPolicyV1,
 ): AutoAcceptProof {
@@ -79,6 +74,12 @@ export function cactiAcceptPolicyToAutoAcceptProof(
   }
 }
 
+/**
+ * Convert Cacti OpenAPI input to Aries compatible `AutoAcceptCredential`
+ *
+ * @param policy `CactiAcceptPolicyV1`
+ * @returns `AutoAcceptCredential`
+ */
 export function cactiAcceptPolicyToAutoAcceptCredential(
   policy: CactiAcceptPolicyV1,
 ): AutoAcceptCredential {
@@ -95,38 +96,14 @@ export function cactiAcceptPolicyToAutoAcceptCredential(
   }
 }
 
-export function safeStringToEnum<T extends Record<string, string>>(
-  enumType: T,
-  value?: string,
-): T[keyof T] | undefined {
-  if (!value) {
-    return undefined;
-  }
-
-  const enumValue = (enumType as any)[value];
-  if (enumValue === undefined) {
-    throw new Error(`Unknown ${enumType.name}: ${value}`);
-  }
-
-  return enumValue;
-}
-
+/**
+ * Validate and convert value to any enum (intended to use with AFJ but should work with any enum)
+ *
+ * @param enumType enum to validate the value against
+ * @param value string value
+ * @returns same value converted to the enum or undefined if value missing. Throws exception if validation failed.
+ */
 export function validateEnumValue<T extends Record<string, string>>(
-  enumType: T,
-  value?: string,
-): T[keyof T] | undefined {
-  if (!value) {
-    return undefined;
-  }
-
-  if (!(value in enumType)) {
-    throw new Error(`Invalid enum value: ${value}`);
-  }
-
-  return value as unknown as T[keyof T];
-}
-
-export function validateEnumValue2<T extends Record<string, string>>(
   enumType: T,
   value?: string,
 ): T[keyof T] | undefined {
@@ -141,16 +118,29 @@ export function validateEnumValue2<T extends Record<string, string>>(
   return value as unknown as T[keyof T];
 }
 
+/**
+ * Convert Cacti OpenAPI input to Aries compatible `ConnectionRecord` filter `Query`.
+ * Validates enums and throws exception if invalid value was used.
+ *
+ * @param filter `AgentConnectionsFilterV1`
+ * @returns `Query<ConnectionRecord>`
+ */
 export function cactiAgentConnectionsFilterToQuery(
   filter: AgentConnectionsFilterV1,
 ): Query<ConnectionRecord> {
   return {
     ...filter,
-    state: validateEnumValue2(DidExchangeState, filter.state),
-    role: validateEnumValue2(DidExchangeRole, filter.role),
+    state: validateEnumValue(DidExchangeState, filter.state),
+    role: validateEnumValue(DidExchangeRole, filter.role),
   };
 }
 
+/**
+ * Convert Cacti OpenAPI input to Aries compatible proof request restrictions.
+ *
+ * @param proofAttributes `CactiProofRequestAttributeV1[]`
+ * @returns `Record<string, AnonCredsRequestedAttribute>`
+ */
 export async function cactiAttributesToAnonCredsRequestedAttributes(
   proofAttributes: CactiProofRequestAttributeV1[],
 ): Promise<Record<string, AnonCredsRequestedAttribute>> {

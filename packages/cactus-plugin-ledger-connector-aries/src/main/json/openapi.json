@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Hyperledger Cacti Plugin - Connector Aries",
-    "description": "Can communicate with other Aries agents",
+    "description": "Can communicate with other Aries agents and Cacti Aries connectors",
     "version": "v2.0.0-alpha.2",
     "license": {
       "name": "Apache-2.0",
@@ -58,7 +58,7 @@
       },
       "WatchProofStateV1": {
         "type": "string",
-        "description": "Websocket requests for monitoring connection change events.",
+        "description": "Websocket requests for monitoring proof state change events.",
         "enum": [
           "org.hyperledger.cactus.api.async.hlaries.WatchProofStateV1.Subscribe",
           "org.hyperledger.cactus.api.async.hlaries.WatchProofStateV1.Next",
@@ -76,7 +76,7 @@
       },
       "WatchProofStateOptionsV1": {
         "type": "object",
-        "description": "Options passed when monitoring proof change events.",
+        "description": "Options passed when monitoring proof state change events.",
         "required": ["agentName"],
         "properties": {
           "agentName": {
@@ -604,7 +604,6 @@
         }
       }
     },
-
     "/api/v1/plugins/@hyperledger/cactus-plugin-ledger-connector-aries/create-new-connection-invitation": {
       "post": {
         "x-hyperledger-cacti": {

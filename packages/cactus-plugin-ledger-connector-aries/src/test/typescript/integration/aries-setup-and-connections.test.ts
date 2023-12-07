@@ -6,14 +6,14 @@
 const containerImageName = "ghcr.io/outsh/cactus-indy-all-in-one";
 const containerImageVersion = "0.1";
 
-// For development on local sawtooth network
+// For development on local indy network
 // 1. leaveLedgerRunning = true, useRunningLedger = false to run ledger and leave it running after test finishes.
 // 2. leaveLedgerRunning = true, useRunningLedger = true to use that ledger in future runs.
 const leaveLedgerRunning = false;
 const useRunningLedger = false;
 
 // Log settings
-const testLogLevel: LogLevelDesc = "debug";
+const testLogLevel: LogLevelDesc = "info";
 
 import "jest-extended";
 import express from "express";
@@ -46,25 +46,19 @@ import {
   AgentConnectionRecordV1,
 } from "../../../main/typescript/public-api";
 
-import {
-  Agent,
-  ConnectionEventTypes,
-  ConnectionStateChangedEvent,
-  DidExchangeState,
-  OutOfBandRecord,
-  ConnectionRecord,
-} from "@aries-framework/core";
-
 // Logger setup
 const log: Logger = LoggerProvider.getOrCreate({
-  label: "basic-indy-check.test",
+  label: "aries-setup-and-connections.test",
   level: testLogLevel,
 });
 
 const AFJ_WALLET_PATH = path.join(os.homedir(), ".afj/data/wallet/");
 
-// TODO - spearate?
-describe("Connector setup tests", () => {
+//////////////////////////////////
+// Setup Tests
+//////////////////////////////////
+
+describe.only("Aries connector setup tests", () => {
   const fakeIndyNetworkConfig = {
     isProduction: false,
     genesisTransactions: `{"reqSignature":{},"txn":{"data":{"data":{"alias":"Node1","blskey":"4N8aUNHSgjQVgkpm8nhNEfDf6txHznoYREg9kirmJrkivgL4oSEimFF6nsQ6M41QvhM2Z33nves5vfSn9n1UwNFJBYtWVnHYMATn76vLuL3zU88KyeAYcHfsih3He6UHcXDxcaecHVz6jhCYz1P2UZn2bDVruL5wXpehgBfBaLKm3Ba","blskey_pop":"RahHYiCvoNCtPTrVtP7nMC5eTYrsUA8WjXbdhNc8debh1agE9bGiJxWBXYNFbnJXoXhWFMvyqhqhRoq737YQemH5ik9oL7R4NTTCz2LEZhkgLJzB3QRQqJyBNyv7acbdHrAT8nQ9UkLbaVL9NBpnWXBTw4LEMePaSHEw66RzPNdAX1","client_ip":"172.16.0.2","client_port":9702,"node_ip":"172.16.0.2","node_port":9701,"services":["VALIDATOR"]},"dest":"Gw6pDLhcBcoQesN72qfotTgFa7cbuqZpkX3Xo6pLhPhv"},"metadata":{"from":"Th7MpTaRZVRYnPiabds81Y"},"type":"0"},"txnMetadata":{"seqNo":1,"txnId":"fea82e10e894419fe2bea7d96296a6d46f50f93f9eeda954ec461b2ed2950b62"},"ver":"1"}`,
@@ -221,7 +215,11 @@ describe("Connector setup tests", () => {
   });
 });
 
-describe("Schemas and credential creation", () => {
+//////////////////////////////////
+// Connect Tests
+//////////////////////////////////
+
+describe("Connect Aries agents through connector tests", () => {
   let addressInfo,
     address: string,
     port: number,
@@ -243,15 +241,10 @@ describe("Schemas and credential creation", () => {
     path: Constants.SocketIoConnectionPathV1,
   });
 
-  //////////////////////////////////
-  // Setup
-  //////////////////////////////////
-
   beforeAll(async () => {
     const pruning = pruneDockerAllIfGithubAction({ logLevel: testLogLevel });
     await expect(pruning).resolves.toBeTruthy();
 
-    //ledger = new GethTestLedger({ emitContainerLogs: true, testLogLevel });
     ledger = new IndyTestLedger({
       containerImageName,
       containerImageVersion,

@@ -2,7 +2,7 @@
 /* eslint-disable */
 /**
  * Hyperledger Cacti Plugin - Connector Aries
- * Can communicate with other Aries agents
+ * Can communicate with other Aries agents and Cacti Aries connectors
  *
  * The version of the OpenAPI document: v2.0.0-alpha.2
  * 
@@ -565,7 +565,7 @@ export type WatchConnectionStateV1 = typeof WatchConnectionStateV1[keyof typeof 
 
 
 /**
- * Options passed when monitoring proof change events.
+ * Options passed when monitoring proof state change events.
  * @export
  * @interface WatchProofStateOptionsV1
  */
@@ -597,7 +597,7 @@ export interface WatchProofStateProgressV1 {
     'previousState': string | null;
 }
 /**
- * Websocket requests for monitoring connection change events.
+ * Websocket requests for monitoring proof state change events.
  * @export
  * @enum {string}
  */

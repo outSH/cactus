@@ -2,7 +2,7 @@
 /* eslint-disable */
 /**
  * Hyperledger Cacti Plugin - Connector Aries
- * Can communicate with other Aries agents
+ * Can communicate with other Aries agents and Cacti Aries connectors
  *
  * The version of the OpenAPI document: v2.0.0-alpha.2
  * 

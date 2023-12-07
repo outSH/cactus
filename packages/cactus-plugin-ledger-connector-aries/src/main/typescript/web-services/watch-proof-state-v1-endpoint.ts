@@ -1,31 +1,18 @@
 import { Socket as SocketIoSocket } from "socket.io";
+import { ProofStateChangedEvent, ProofEventTypes } from "@aries-framework/core";
 
 import {
   Logger,
   LogLevelDesc,
   LoggerProvider,
   Checks,
-  safeStringifyException,
 } from "@hyperledger/cactus-common";
 
 import {
-  AriesProofExchangeRecordV1,
   WatchProofStateProgressV1,
   WatchProofStateV1,
 } from "../generated/openapi/typescript-axios";
-
-///////
-import {
-  Agent,
-  ConnectionEventTypes,
-  ProofStateChangedEvent,
-  DidExchangeState,
-  OutOfBandRecord,
-  ConnectionRecord,
-  ProofEventTypes,
-} from "@aries-framework/core";
 import { AnoncredAgent } from "../aries-types";
-///////////
 
 export interface IWatchProofStateV1EndpointConfiguration {
   logLevel?: LogLevelDesc;
@@ -88,7 +75,7 @@ export class WatchProofStateV1Endpoint {
     });
 
     log.debug(
-      `Subscribing to connection state changes on aries agent ${agent.config.label}...`,
+      `Subscribing to proof state changes on aries agent ${agent.config.label}...`,
     );
   }
 }

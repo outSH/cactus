@@ -1,9 +1,16 @@
-import { Observable, ReplaySubject, Subscription } from "rxjs";
+import { Observable, ReplaySubject } from "rxjs";
 import { finalize } from "rxjs/operators";
 import { io } from "socket.io-client";
-import { Logger, Checks } from "@hyperledger/cactus-common";
-import { LogLevelDesc, LoggerProvider } from "@hyperledger/cactus-common";
+import { ProofState } from "@aries-framework/core";
+
+import {
+  Logger,
+  Checks,
+  LogLevelDesc,
+  LoggerProvider,
+} from "@hyperledger/cactus-common";
 import { Constants } from "@hyperledger/cactus-core-api";
+
 import {
   AgentConnectionRecordV1,
   AriesProofExchangeRecordV1,
@@ -17,7 +24,6 @@ import {
   WatchProofStateV1,
 } from "../generated/openapi/typescript-axios";
 import { Configuration } from "../generated/openapi/typescript-axios/configuration";
-import { ProofExchangeRecord, ProofState } from "@aries-framework/core";
 
 export class AriesApiClientOptions extends Configuration {
   readonly logLevel?: LogLevelDesc;
@@ -25,8 +31,15 @@ export class AriesApiClientOptions extends Configuration {
   readonly wsApiPath?: string;
 }
 
+/**
+ * Default timeout when waiting for certain operations (accepting proof, establishing connection, etc...)
+ */
+const DEFAULT_ARIES_OPERATION_TIMEOUT = 60 * 1000;
+
+/**
+ * How often to poll endpoints when waiting for operation to finish.
+ */
 const WAIT_FOR_CONNECTION_READY_POLL_INTERVAL = 500;
-const DEFAULT_ARIES_OPERATION_TIMEOUT = 60 * 1000; // must be greater than 1000
 
 export class AriesApiClient extends DefaultApi {
   private readonly log: Logger;
@@ -54,6 +67,13 @@ export class AriesApiClient extends DefaultApi {
     this.log.debug(`basePath=${this.options.basePath}`);
   }
 
+  /**
+   * Watch for connection state changes on given agent.
+   * Example: New connection request, connection accepted.
+   *
+   * @param options Monitor options
+   * @returns rxjs `Observable`
+   */
   public watchConnectionStateV1(
     options: WatchConnectionStateOptionsV1,
   ): Observable<WatchConnectionStateProgressV1> {
@@ -96,6 +116,13 @@ export class AriesApiClient extends DefaultApi {
     );
   }
 
+  /**
+   * Watch for proof state changes on given agent.
+   * Example: Proof request received, proof request was accepted by peer
+   *
+   * @param options Monitor options
+   * @returns rxjs `Observable`
+   */
   public watchProofStateV1(
     options: WatchProofStateOptionsV1,
   ): Observable<WatchProofStateProgressV1> {
@@ -135,11 +162,22 @@ export class AriesApiClient extends DefaultApi {
     );
   }
 
+  /**
+   * Helper method to wait for connection record to be created.
+   * This does not mean that connection is ready though, just that it was accepted by the peer.
+   * Will block until operation is completed.
+   *
+   * @param agentName agent that requested the connection.
+   * @param outOfBandId new connection outOfBandId
+   * @param timeout how much time to wait before giving up.
+   */
   private async waitForConnectionRecordV1(
     agentName: string,
     outOfBandId: string,
     timeout = DEFAULT_ARIES_OPERATION_TIMEOUT,
   ): Promise<void> {
+    Checks.truthy(agentName, "waitForConnectionRecordV1 arg agentName");
+    Checks.truthy(outOfBandId, "waitForConnectionRecordV1 arg outOfBandId");
     this.log.debug(
       "waitForConnectionRecordV1 for agent",
       agentName,
@@ -205,7 +243,14 @@ export class AriesApiClient extends DefaultApi {
     });
   }
 
-  async waitForConnectionReadyV1(
+  /**
+   * Wait (block execution) until connection with specified `outOfBandId` is ready (connected).
+   *
+   * @param agentName agent with specific connection
+   * @param outOfBandId connection outOfBandId
+   * @param timeout how much time to wait before giving up. Must be at least 1 second.
+   */
+  public async waitForConnectionReadyV1(
     agentName: string,
     outOfBandId: string,
     timeout = DEFAULT_ARIES_OPERATION_TIMEOUT,
@@ -252,7 +297,15 @@ export class AriesApiClient extends DefaultApi {
     );
   }
 
-  async waitForInvitedPeerConnectionV1(
+  /**
+   * Wait until invitation URL is accepted by remote client and connection is established.
+   * Will block until operation is completed.
+   *
+   * @param agentName agent that requested the connection (sent the invitation)
+   * @param outOfBandId new connection outOfBandId
+   * @param timeout how much time to wait before giving up.
+   */
+  public async waitForInvitedPeerConnectionV1(
     agentName: string,
     outOfBandId: string,
     timeout = DEFAULT_ARIES_OPERATION_TIMEOUT,
@@ -273,11 +326,22 @@ export class AriesApiClient extends DefaultApi {
     await this.waitForConnectionReadyV1(agentName, outOfBandId, timeout);
   }
 
-  async waitForProofCompletionV1(
+  /**
+   * Wait until proof with specified ID was either accepted or denied.
+   * Will block until operation is completed.
+   *
+   * @param agentName agent that requested the proof.
+   * @param proofId id of the proof request.
+   * @param timeout how much time to wait before giving up.
+   */
+  public async waitForProofCompletionV1(
     agentName: string,
     proofId: string,
     timeout = DEFAULT_ARIES_OPERATION_TIMEOUT,
   ): Promise<AriesProofExchangeRecordV1> {
+    Checks.truthy(agentName, "waitForProofCompletionV1 arg agentName");
+    Checks.truthy(proofId, "waitForProofCompletionV1 arg proofId");
+
     return new Promise<AriesProofExchangeRecordV1>((resolve, reject) => {
       // Common cleanup method for leaving the method
       const cleanup = () => {
@@ -331,12 +395,25 @@ export class AriesApiClient extends DefaultApi {
     });
   }
 
-  async requestProofAndWaitV1(
+  /**
+   * Send proof request and wait for response (accepted / denied by a peer)
+   * Will block until operation is completed.
+   *
+   * @param agentName agent that will request the proof.
+   * @param connectionId peer connection id that should provide the proof.
+   * @param proofAttributes proof attributes to validate.
+   * @param timeout how much time to wait before giving up.
+   */
+  public async requestProofAndWaitV1(
     agentName: string,
     connectionId: string,
     proofAttributes: CactiProofRequestAttributeV1[],
     timeout = DEFAULT_ARIES_OPERATION_TIMEOUT,
   ): Promise<AriesProofExchangeRecordV1> {
+    Checks.truthy(agentName, "requestProofAndWaitV1 arg agentName");
+    Checks.truthy(connectionId, "requestProofAndWaitV1 arg connectionId");
+    Checks.truthy(proofAttributes, "requestProofAndWaitV1 arg proofAttributes");
+
     const proof = await this.requestProofV1({
       agentName,
       connectionId,

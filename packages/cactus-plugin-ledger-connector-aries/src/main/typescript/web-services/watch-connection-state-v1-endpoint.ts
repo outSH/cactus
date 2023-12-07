@@ -1,29 +1,21 @@
 import { Socket as SocketIoSocket } from "socket.io";
+import {
+  ConnectionEventTypes,
+  ConnectionStateChangedEvent,
+} from "@aries-framework/core";
 
 import {
   Logger,
   LogLevelDesc,
   LoggerProvider,
   Checks,
-  safeStringifyException,
 } from "@hyperledger/cactus-common";
 
 import {
   WatchConnectionStateProgressV1,
   WatchConnectionStateV1,
 } from "../generated/openapi/typescript-axios";
-
-///////
-import {
-  Agent,
-  ConnectionEventTypes,
-  ConnectionStateChangedEvent,
-  DidExchangeState,
-  OutOfBandRecord,
-  ConnectionRecord,
-} from "@aries-framework/core";
 import { AnoncredAgent } from "../aries-types";
-///////////
 
 export interface IWatchConnectionStateV1EndpointConfiguration {
   logLevel?: LogLevelDesc;

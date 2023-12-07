@@ -2,53 +2,7 @@ import type {
   Server as SocketIoServer,
   Socket as SocketIoSocket,
 } from "socket.io";
-
-import { Express } from "express";
-
-import OAS from "../json/openapi.json";
-
-import {
-  IWebServiceEndpoint,
-  IPluginWebService,
-  ICactusPlugin,
-  ICactusPluginOptions,
-} from "@hyperledger/cactus-core-api";
-
-import { PluginRegistry } from "@hyperledger/cactus-core";
-
-import {
-  Checks,
-  Logger,
-  LoggerProvider,
-  LogLevelDesc,
-  safeStringifyException,
-} from "@hyperledger/cactus-common";
-
-import {
-  AcceptInvitationV1Response,
-  AgentConnectionRecordV1,
-  AgentConnectionsFilterV1,
-  AriesAgentConfigV1,
-  AriesAgentSummaryV1,
-  AriesProofExchangeRecordV1,
-  CactiAcceptPolicyV1,
-  CactiProofRequestAttributeV1,
-  CreateNewConnectionInvitationV1Response,
-  WatchConnectionStateOptionsV1,
-  WatchConnectionStateV1,
-  WatchProofStateOptionsV1,
-  WatchProofStateV1,
-} from "./generated/openapi/typescript-axios";
-
-import { WatchConnectionStateV1Endpoint } from "./web-services/watch-connection-state-v1-endpoint";
-import { WatchProofStateV1Endpoint } from "./web-services/watch-proof-state-v1-endpoint";
-import { GetAgentsEndpoint } from "./web-services/get-agents-v1-endpoint";
-import { RquestProofEndpoint } from "./web-services/request-proof-v1-endpoint";
-import { GetConnectionsEndpoint } from "./web-services/get-connections-v1-endpoint";
-import { CreateNewConnectionInvitationEndpoint } from "./web-services/create-new-connection-invitation-v1-endpoint";
-import { AcceptInvitationEndpoint } from "./web-services/accept-invitation-v1-endpoint";
-
-///////
+import type { Express } from "express";
 import { AskarModule } from "@aries-framework/askar";
 import {
   Agent,
@@ -64,7 +18,6 @@ import {
   AutoAcceptProof,
   V2ProofProtocol,
   AutoAcceptCredential,
-  OutOfBandRecord,
 } from "@aries-framework/core";
 import { agentDependencies, HttpInboundTransport } from "@aries-framework/node";
 import { ariesAskar } from "@hyperledger/aries-askar-nodejs";
@@ -83,15 +36,52 @@ import {
 } from "@aries-framework/anoncreds";
 import { AnonCredsRsModule } from "@aries-framework/anoncreds-rs";
 import { anoncreds } from "@hyperledger/anoncreds-nodejs";
-///////////
 
 import {
+  IWebServiceEndpoint,
+  IPluginWebService,
+  ICactusPlugin,
+  ICactusPluginOptions,
+} from "@hyperledger/cactus-core-api";
+import { PluginRegistry } from "@hyperledger/cactus-core";
+import {
+  Checks,
+  Logger,
+  LoggerProvider,
+  LogLevelDesc,
+  safeStringifyException,
+} from "@hyperledger/cactus-common";
+
+import OAS from "../json/openapi.json";
+import {
+  AcceptInvitationV1Response,
+  AgentConnectionRecordV1,
+  AgentConnectionsFilterV1,
+  AriesAgentConfigV1,
+  AriesAgentSummaryV1,
+  AriesProofExchangeRecordV1,
+  CactiProofRequestAttributeV1,
+  CreateNewConnectionInvitationV1Response,
+  WatchConnectionStateOptionsV1,
+  WatchConnectionStateV1,
+  WatchProofStateOptionsV1,
+  WatchProofStateV1,
+} from "./generated/openapi/typescript-axios";
+import {
   AnoncredAgent,
-  cactiAcceptPolicyToAutoAcceptCredential,
-  cactiAcceptPolicyToAutoAcceptProof,
   cactiAgentConnectionsFilterToQuery,
   cactiAttributesToAnonCredsRequestedAttributes,
 } from "./aries-types";
+
+import { WatchConnectionStateV1Endpoint } from "./web-services/watch-connection-state-v1-endpoint";
+import { WatchProofStateV1Endpoint } from "./web-services/watch-proof-state-v1-endpoint";
+import { GetAgentsEndpoint } from "./web-services/get-agents-v1-endpoint";
+import { RquestProofEndpoint } from "./web-services/request-proof-v1-endpoint";
+import { GetConnectionsEndpoint } from "./web-services/get-connections-v1-endpoint";
+import { CreateNewConnectionInvitationEndpoint } from "./web-services/create-new-connection-invitation-v1-endpoint";
+import { AcceptInvitationEndpoint } from "./web-services/accept-invitation-v1-endpoint";
+
+const DEFAULT_INVITATION_DOMAIN = "https://example.org";
 
 export interface IPluginLedgerConnectorAriesOptions
   extends ICactusPluginOptions {
@@ -100,8 +90,6 @@ export interface IPluginLedgerConnectorAriesOptions
   ariesAgents?: AriesAgentConfigV1[];
   invitationDomain?: string;
 }
-
-const DEFAULT_INVITATION_DOMAIN = "https://example.org";
 
 export class PluginLedgerConnectorAries
   implements ICactusPlugin, IPluginWebService
@@ -144,6 +132,9 @@ export class PluginLedgerConnectorAries
     return this.instanceId;
   }
 
+  /**
+   * Closes all socketio connections and shutdowns every agent configured in this connector.
+   */
   public async shutdown(): Promise<void> {
     this.log.info(`Shutting down ${this.className}...`);
 
@@ -158,15 +149,16 @@ export class PluginLedgerConnectorAries
     this.ariesAgents.clear();
   }
 
-  public async onPluginInit(): Promise<unknown> {
+  /**
+   * Creates Aries agent instances defined in connector constructor.
+   */
+  public async onPluginInit(): Promise<void> {
     if (this.ariesAgentConfigs) {
       this.log.info("Create aries agent instances");
       for (const agentConfig of this.ariesAgentConfigs) {
         await this.addAriesAgent(agentConfig);
       }
     }
-
-    return;
   }
 
   async registerWebServices(
@@ -174,9 +166,12 @@ export class PluginLedgerConnectorAries
     wsApi: SocketIoServer,
   ): Promise<IWebServiceEndpoint[]> {
     const { logLevel } = this.options;
+
+    // Register OpenAPI
     const webServices = await this.getOrCreateWebServices();
     await Promise.all(webServices.map((ws) => ws.registerExpress(app)));
 
+    // Register SocketIO (on new connection from the client)
     wsApi.on("connection", (socket: SocketIoSocket) => {
       this.log.info(`New Socket connected. ID=${socket.id}`);
       this.connectedSockets.set(socket.id, socket);
@@ -227,7 +222,6 @@ export class PluginLedgerConnectorAries
         this.connectedSockets.delete(socket.id);
       });
     });
-    this.log.info(`WebSocketProvider created for socketio endpoints`);
 
     return webServices;
   }
@@ -282,12 +276,17 @@ export class PluginLedgerConnectorAries
     return `@hyperledger/cactus-plugin-ledger-connector-aries`;
   }
 
+  /**
+   * Get summary of Aries agents managed by this connector.
+   *
+   * @returns Summary of Aries agents.
+   */
   public async getAgents(): Promise<AriesAgentSummaryV1[]> {
     const allAgents = new Array(...this.ariesAgents.values());
     return allAgents.map((agent) => {
       if (!agent.config.walletConfig) {
-        throw new Error(
-          `Agent ${agent.config.label} doesn't have wallet configured`,
+        this.log.error(
+          `Agent ${agent.config.label} doesn't have a wallet configured!`,
         );
       }
 
@@ -297,20 +296,43 @@ export class PluginLedgerConnectorAries
         isWalletInitialized: agent.wallet.isInitialized,
         isWalletProvisioned: agent.wallet.isProvisioned,
         walletConfig: {
-          id: agent.config.walletConfig.id,
-          type: agent.config.walletConfig.storage?.type ?? "unknown",
+          id: agent.config?.walletConfig?.id ?? "unknown",
+          type: agent.config?.walletConfig?.storage?.type ?? "unknown",
         },
         endpoints: agent.config.endpoints,
       };
     });
   }
 
+  /**
+   * Get Aries agent with provided name from this connector or throw error.
+   * @param agentName agent name to get.
+   *
+   * @returns `AnoncredAgent`
+   */
+  public async getAriesAgentOrThrow(agentName: string): Promise<AnoncredAgent> {
+    const agent = this.ariesAgents.get(agentName);
+    if (!agent) {
+      throw new Error(`No agent with a name ${agentName}`);
+    }
+    return agent;
+  }
+
+  /**
+   * Get Aries agent modules that matches current default configuration for this connector.
+   * Right now only Anoncreds on Indy is supported.
+   *
+   * @param agentConfig Agent configuration.
+   * @returns Modules that can be used to create new Aries agent.
+   */
   private getAskarAnonCredsIndyModules(agentConfig: AriesAgentConfigV1) {
     if (!agentConfig.indyNetworks || agentConfig.indyNetworks.length === 0) {
       throw new Error(
         `Agent ${agentConfig.name} must have at least one Indy network defined!`,
       );
     }
+
+    // For now we assume default accept policies but in the future we can use the user input:
     // const autoAcceptConnections = agentConfig.autoAcceptConnections ?? false;
     // this.log.debug(
     //   `Agent ${agentConfig.name} autoAcceptConnections:`,
@@ -397,11 +419,23 @@ export class PluginLedgerConnectorAries
     } as const;
   }
 
+  /**
+   * Create and add new Aries agent to this connector.
+   * Agent can later be used to interact with other Aries agent and Indy VDR.
+   * Wallet ID and agent label will be the same as provided agent name.
+   *
+   * @param agentConfig Agent configuration.
+   * @returns newly created Aries agent.
+   */
   public async addAriesAgent(
     agentConfig: AriesAgentConfigV1,
   ): Promise<AnoncredAgent> {
     Checks.truthy(agentConfig, `addAriesAgent arg agentConfig`);
     Checks.truthy(agentConfig.name, `addAriesAgent arg agentConfig.name`);
+    Checks.truthy(
+      !this.ariesAgents.has(agentConfig.name),
+      `addAriesAgent arg agentConfig.name already used`,
+    );
     Checks.truthy(
       agentConfig.walletKey,
       `addAriesAgent arg agentConfig.walletKey`,
@@ -439,12 +473,20 @@ export class PluginLedgerConnectorAries
 
     await agent.initialize();
     this.ariesAgents.set(agentConfig.name, agent);
+    this.log.info("addAriesAgent(): New agent", agentConfig.name);
 
     return agent;
   }
 
+  /**
+   * Remove Aries agent with provided name from this connector.
+   *
+   * @param agentName agent name to remove
+   */
   public async removeAriesAgent(agentName: string): Promise<void> {
+    Checks.truthy(agentName, `removeAriesAgent arg agentName`);
     const agent = this.ariesAgents.get(agentName);
+
     if (agent) {
       await agent.shutdown();
       this.ariesAgents.delete(agentName);
@@ -457,20 +499,28 @@ export class PluginLedgerConnectorAries
     }
   }
 
-  // todo - private
-  async getAriesAgentOrThrow(agentName: string): Promise<AnoncredAgent> {
-    const agent = this.ariesAgents.get(agentName);
-    if (!agent) {
-      throw new Error(`No agent with a name ${agentName}`);
-    }
-    return agent;
-  }
-
-  async importExistingIndyDidFromPrivateKey(
+  /**
+   * Import existing DID using private key.
+   *
+   * @param agentName Name of an agent that should own the DID.
+   * @param seed private seed to recreate DID.
+   * @param indyNamespace VDR namespace.
+   * @returns newly created DID string.
+   */
+  public async importExistingIndyDidFromPrivateKey(
     agentName: string,
     seed: string,
     indyNamespace: string,
   ): Promise<string> {
+    Checks.truthy(
+      agentName,
+      `importExistingIndyDidFromPrivateKey arg agentName`,
+    );
+    Checks.truthy(seed, `importExistingIndyDidFromPrivateKey arg seed`);
+    Checks.truthy(
+      indyNamespace,
+      `importExistingIndyDidFromPrivateKey arg indyNamespace`,
+    );
     const agent = await this.getAriesAgentOrThrow(agentName);
 
     const seedBuffer = TypedArrayEncoder.fromString(seed);
@@ -493,36 +543,15 @@ export class PluginLedgerConnectorAries
     return did;
   }
 
-  async createNewConnectionInvitation(
-    agentName: string,
-    invitationDomain?: string,
-  ): Promise<CreateNewConnectionInvitationV1Response> {
-    const agent = await this.getAriesAgentOrThrow(agentName);
-    const outOfBandRecord = await agent.oob.createInvitation();
-
-    return {
-      invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
-        domain: invitationDomain ?? this.invitationDomain,
-      }),
-      outOfBandId: outOfBandRecord.id,
-    };
-  }
-
-  async acceptInvitation(
-    agentName: string,
-    invitationUrl: string,
-  ): Promise<AcceptInvitationV1Response> {
-    const agent = await this.getAriesAgentOrThrow(agentName);
-
-    const { outOfBandRecord } =
-      await agent.oob.receiveInvitationFromUrl(invitationUrl);
-
-    return {
-      outOfBandId: outOfBandRecord.id,
-    };
-  }
-
-  async getConnections(
+  /**
+   * Get connections established by an agent (both completed and in progress).
+   * List can be filtered.
+   *
+   * @param agentName get connections for specific agent
+   * @param filter fields to filter connections by
+   * @returns list of matching connection records
+   */
+  public async getConnections(
     agentName: string,
     filter: AgentConnectionsFilterV1 = {},
   ): Promise<AgentConnectionRecordV1[]> {
@@ -539,19 +568,72 @@ export class PluginLedgerConnectorAries
     });
   }
 
-  async requestProof(
+  /**
+   * Create Aries agent invitation URL that other agents can use to connect to this one.
+   *
+   * @param agentName agent name that should create invitation.
+   * @param invitationDomain URL domain to use (will use connector default if not specified)
+   * @returns `invitationURL` and connection `outOfBandId`
+   */
+  public async createNewConnectionInvitation(
+    agentName: string,
+    invitationDomain?: string,
+  ): Promise<CreateNewConnectionInvitationV1Response> {
+    Checks.truthy(agentName, `createNewConnectionInvitation arg agentName`);
+    const agent = await this.getAriesAgentOrThrow(agentName);
+    const outOfBandRecord = await agent.oob.createInvitation();
+
+    return {
+      invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
+        domain: invitationDomain ?? this.invitationDomain,
+      }),
+      outOfBandId: outOfBandRecord.id,
+    };
+  }
+
+  /**
+   * Accept invitation from another agent using invitation URL.
+   *
+   * @param agentName agent name that should accept invitation.
+   * @param invitationUrl aries agent invitation URL.
+   * @returns established connection `outOfBandId`
+   */
+  public async acceptInvitation(
+    agentName: string,
+    invitationUrl: string,
+  ): Promise<AcceptInvitationV1Response> {
+    Checks.truthy(agentName, `acceptInvitation arg agentName`);
+    Checks.truthy(invitationUrl, `acceptInvitation arg invitationUrl`);
+    const agent = await this.getAriesAgentOrThrow(agentName);
+
+    const { outOfBandRecord } =
+      await agent.oob.receiveInvitationFromUrl(invitationUrl);
+
+    return {
+      outOfBandId: outOfBandRecord.id,
+    };
+  }
+
+  /**
+   * Request credential proof from connected agent.
+   *
+   * @param agentName agent name requesting the proof.
+   * @param connectionId peer agent connection ID that must provide the proof.
+   * @param proofAttributes credential attributes to verify.
+   * @returns proof record
+   */
+  public async requestProof(
     agentName: string,
     connectionId: string,
     proofAttributes: CactiProofRequestAttributeV1[],
   ): Promise<AriesProofExchangeRecordV1> {
-    Checks.truthy(agentName, "getConnections agentName options");
-    Checks.truthy(connectionId, "getConnections connectionId options");
-    Checks.truthy(proofAttributes, "getConnections proofAttributes options");
+    Checks.truthy(agentName, "requestProof agentName options");
+    Checks.truthy(connectionId, "requestProof connectionId options");
+    Checks.truthy(proofAttributes, "requestProof proofAttributes options");
     Checks.truthy(
       proofAttributes.length > 0,
-      "getConnections proofAttributes must be at least one",
+      "requestProof proofAttributes - must be at least one",
     );
-
     const agent = await this.getAriesAgentOrThrow(agentName);
 
     const proof = await agent.proofs.requestProof({
