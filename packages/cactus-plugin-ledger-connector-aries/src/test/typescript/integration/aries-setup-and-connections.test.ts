@@ -29,7 +29,6 @@ import {
   Logger,
   Servers,
 } from "@hyperledger/cactus-common";
-import { PluginRegistry } from "@hyperledger/cactus-core";
 import { Configuration, Constants } from "@hyperledger/cactus-core-api";
 import {
   IndyTestLedger,
@@ -37,7 +36,7 @@ import {
 } from "@hyperledger/cactus-test-tooling";
 import * as path from "node:path";
 import * as os from "node:os";
-import { rmdir } from "node:fs/promises";
+import { rm } from "node:fs/promises";
 
 import {
   PluginLedgerConnectorAries,
@@ -52,13 +51,16 @@ const log: Logger = LoggerProvider.getOrCreate({
   level: testLogLevel,
 });
 
-const AFJ_WALLET_PATH = path.join(os.homedir(), ".afj/data/wallet/");
+const testWalletPath = path.join(
+  os.tmpdir(),
+  "aries-setup-and-connections-test-wallet",
+);
 
 //////////////////////////////////
 // Setup Tests
 //////////////////////////////////
 
-describe.only("Aries connector setup tests", () => {
+describe("Aries connector setup tests", () => {
   const fakeIndyNetworkConfig = {
     isProduction: false,
     genesisTransactions: `{"reqSignature":{},"txn":{"data":{"data":{"alias":"Node1","blskey":"4N8aUNHSgjQVgkpm8nhNEfDf6txHznoYREg9kirmJrkivgL4oSEimFF6nsQ6M41QvhM2Z33nves5vfSn9n1UwNFJBYtWVnHYMATn76vLuL3zU88KyeAYcHfsih3He6UHcXDxcaecHVz6jhCYz1P2UZn2bDVruL5wXpehgBfBaLKm3Ba","blskey_pop":"RahHYiCvoNCtPTrVtP7nMC5eTYrsUA8WjXbdhNc8debh1agE9bGiJxWBXYNFbnJXoXhWFMvyqhqhRoq737YQemH5ik9oL7R4NTTCz2LEZhkgLJzB3QRQqJyBNyv7acbdHrAT8nQ9UkLbaVL9NBpnWXBTw4LEMePaSHEw66RzPNdAX1","client_ip":"172.16.0.2","client_port":9702,"node_ip":"172.16.0.2","node_port":9701,"services":["VALIDATOR"]},"dest":"Gw6pDLhcBcoQesN72qfotTgFa7cbuqZpkX3Xo6pLhPhv"},"metadata":{"from":"Th7MpTaRZVRYnPiabds81Y"},"type":"0"},"txnMetadata":{"seqNo":1,"txnId":"fea82e10e894419fe2bea7d96296a6d46f50f93f9eeda954ec461b2ed2950b62"},"ver":"1"}`,
@@ -66,13 +68,12 @@ describe.only("Aries connector setup tests", () => {
     connectOnStartup: true,
   };
   let connector: PluginLedgerConnectorAries;
-  let agentName: string;
 
   beforeEach(() => {
     connector = new PluginLedgerConnectorAries({
       instanceId: uuidV4(),
       logLevel: testLogLevel,
-      pluginRegistry: new PluginRegistry({ plugins: [] }),
+      walletPath: testWalletPath,
     });
   });
 
@@ -81,15 +82,18 @@ describe.only("Aries connector setup tests", () => {
       log.info("Cleanup the temporary connector...");
       await connector.shutdown();
     }
+  });
 
-    if (agentName) {
-      try {
-        const walletPath = path.join(AFJ_WALLET_PATH, agentName);
-        await rmdir(walletPath, { recursive: true, maxRetries: 5 });
-        log.info(`${walletPath} remove successfully.`);
-      } catch (error) {
-        log.warn(`${agentName} could not be removed:`, error);
-      }
+  afterAll(async () => {
+    try {
+      await rm(testWalletPath, {
+        recursive: true,
+        force: true,
+        maxRetries: 5,
+      });
+      log.info(`${testWalletPath} removed successfully.`);
+    } catch (error) {
+      log.warn(`${testWalletPath} could not be removed:`, error);
     }
   });
 
@@ -100,7 +104,7 @@ describe.only("Aries connector setup tests", () => {
   });
 
   test("Adding simple aries agent works", async () => {
-    agentName = `simple-${uuidV4()}`;
+    const agentName = `simple-${uuidV4()}`;
 
     await connector.addAriesAgent({
       name: agentName,
@@ -120,7 +124,7 @@ describe.only("Aries connector setup tests", () => {
   });
 
   test("Adding aries agent with inbound url works", async () => {
-    agentName = `inbound-${uuidV4()}`;
+    const agentName = `inbound-${uuidV4()}`;
     const inboundUrl = "http://127.0.0.1:8253";
 
     await connector.addAriesAgent({
@@ -148,7 +152,7 @@ describe.only("Aries connector setup tests", () => {
   });
 
   test("Adding aries agent with invalid inbound url throws error", async () => {
-    agentName = `shouldThrow-${uuidV4()}`;
+    const agentName = `shouldThrow-${uuidV4()}`;
 
     try {
       await connector.addAriesAgent({
@@ -183,7 +187,7 @@ describe.only("Aries connector setup tests", () => {
   });
 
   test("Removing single aries agent works", async () => {
-    agentName = `removeCheck-${uuidV4()}`;
+    const agentName = `removeCheck-${uuidV4()}`;
 
     await connector.addAriesAgent({
       name: agentName,
@@ -199,7 +203,7 @@ describe.only("Aries connector setup tests", () => {
   });
 
   test("Connector shutdown clears aries agent", async () => {
-    agentName = `shutdownCheck-${uuidV4()}`;
+    const agentName = `shutdownCheck-${uuidV4()}`;
 
     await connector.addAriesAgent({
       name: agentName,
@@ -267,7 +271,7 @@ describe("Connect Aries agents through connector tests", () => {
     connector = new PluginLedgerConnectorAries({
       instanceId: uuidV4(),
       logLevel: testLogLevel,
-      pluginRegistry: new PluginRegistry({ plugins: [] }),
+      walletPath: testWalletPath,
       ariesAgents: [
         {
           name: aliceAgentName,
@@ -320,12 +324,16 @@ describe("Connect Aries agents through connector tests", () => {
     log.info("Prune Docker...");
     await pruneDockerAllIfGithubAction({ logLevel: testLogLevel });
 
-    // try {
-    //   await rmdir(walletPath, { recursive: true, maxRetries: 5 });
-    //   log.info(`${walletPath} remove successfully.`);
-    // } catch (error) {
-    //   log.warn(`${walletPath} could not be removed:`, error);
-    // }
+    try {
+      await rm(testWalletPath, {
+        recursive: true,
+        force: true,
+        maxRetries: 5,
+      });
+      log.info(`${testWalletPath} remove successfully.`);
+    } catch (error) {
+      log.warn(`${testWalletPath} could not be removed:`, error);
+    }
   });
 
   test("Aries agent created on plugin init", async () => {

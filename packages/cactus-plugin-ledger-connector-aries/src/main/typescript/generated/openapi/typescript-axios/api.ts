@@ -198,6 +198,12 @@ export interface AriesAgentConfigV1 {
      */
     'walletKey': string;
     /**
+     * Path to wallet sqlite database to use. If not provided, the connector default path and agent name will be used.
+     * @type {string}
+     * @memberof AriesAgentConfigV1
+     */
+    'walletPath'?: string;
+    /**
      * 
      * @type {Array<AriesIndyVdrPoolConfigV1>}
      * @memberof AriesAgentConfigV1

@@ -32,7 +32,7 @@ import {
 
 import * as path from "node:path";
 import * as os from "node:os";
-import { rmdir } from "node:fs/promises";
+import { rm } from "node:fs/promises";
 import "jest-extended";
 import { v4 as uuidv4 } from "uuid";
 import {
@@ -50,8 +50,10 @@ import { agentDependencies } from "@aries-framework/node";
 import { ariesAskar } from "@hyperledger/aries-askar-nodejs";
 import { indyVdr } from "@hyperledger/indy-vdr-nodejs";
 
-// This path is used by default, investigate how to use custom one.
-const AFJ_WALLET_PATH = path.join(os.homedir(), ".afj/data/wallet/");
+const TEST_WALLET_PATH = path.join(
+  os.tmpdir(),
+  "indy-test-ledger.test-test-wallet",
+);
 const TEST_INDY_NAMESPACE = "cacti:test";
 
 // Logger setup
@@ -103,7 +105,6 @@ async function importExistingIndyDidFromPrivateKey(
  */
 describe("Indy Test Ledger checks", () => {
   const walletName = uuidv4();
-  const walletPath = path.join(AFJ_WALLET_PATH, walletName);
   let ledger: IndyTestLedger;
 
   //////////////////////////////////
@@ -141,10 +142,14 @@ describe("Indy Test Ledger checks", () => {
     await pruneDockerAllIfGithubAction({ logLevel: testLogLevel });
 
     try {
-      await rmdir(walletPath, { recursive: true, maxRetries: 5 });
-      log.info(`${walletPath} remove successfully.`);
+      await rm(TEST_WALLET_PATH, {
+        recursive: true,
+        force: true,
+        maxRetries: 5,
+      });
+      log.info(`${TEST_WALLET_PATH} removed successfully.`);
     } catch (error) {
-      log.warn(`${walletPath} could not be removed:`, error);
+      log.warn(`${TEST_WALLET_PATH} could not be removed:`, error);
     }
   });
 
@@ -197,6 +202,10 @@ describe("Indy Test Ledger checks", () => {
         walletConfig: {
           id: walletName,
           key: walletName,
+          storage: {
+            type: "sqlite",
+            path: path.join(TEST_WALLET_PATH, "test-wallet.sqlite"),
+          },
         },
       },
       modules: {

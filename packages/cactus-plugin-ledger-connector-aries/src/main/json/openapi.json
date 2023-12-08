@@ -205,6 +205,11 @@
             "nullable": false,
             "description": "Wallet private key - do not share with anyone."
           },
+          "walletPath": {
+            "type": "string",
+            "nullable": false,
+            "description": "Path to wallet sqlite database to use. If not provided, the connector default path and agent name will be used."
+          },
           "indyNetworks": {
             "type": "array",
             "nullable": false,

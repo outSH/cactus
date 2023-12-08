@@ -3,6 +3,8 @@ import type {
   Socket as SocketIoSocket,
 } from "socket.io";
 import type { Express } from "express";
+import * as path from "node:path";
+import * as os from "node:os";
 import { AskarModule } from "@aries-framework/askar";
 import {
   Agent,
@@ -43,7 +45,6 @@ import {
   ICactusPlugin,
   ICactusPluginOptions,
 } from "@hyperledger/cactus-core-api";
-import { PluginRegistry } from "@hyperledger/cactus-core";
 import {
   Checks,
   Logger,
@@ -82,13 +83,18 @@ import { CreateNewConnectionInvitationEndpoint } from "./web-services/create-new
 import { AcceptInvitationEndpoint } from "./web-services/accept-invitation-v1-endpoint";
 
 const DEFAULT_INVITATION_DOMAIN = "https://example.org";
+const DEFAULT_WALLET_PATH = path.join(
+  os.homedir(),
+  ".cacti/cactus-plugin-ledger-connector-aries/wallet",
+);
 
 export interface IPluginLedgerConnectorAriesOptions
   extends ICactusPluginOptions {
   logLevel?: LogLevelDesc;
-  pluginRegistry: PluginRegistry;
+  // pluginRegistry: PluginRegistry;
   ariesAgents?: AriesAgentConfigV1[];
   invitationDomain?: string;
+  walletPath?: string;
 }
 
 export class PluginLedgerConnectorAries
@@ -97,6 +103,7 @@ export class PluginLedgerConnectorAries
   // private readonly pluginRegistry: PluginRegistry;
   private readonly instanceId: string;
   private readonly invitationDomain: string;
+  private readonly walletPath: string;
   private readonly log: Logger;
   private endpoints: IWebServiceEndpoint[] | undefined;
   private ariesAgentConfigs: AriesAgentConfigV1[] | undefined;
@@ -111,7 +118,7 @@ export class PluginLedgerConnectorAries
     const fnTag = `${this.className}#constructor()`;
     Checks.truthy(options, `${fnTag} arg options`);
     Checks.truthy(options.instanceId, `${fnTag} options.instanceId`);
-    Checks.truthy(options.pluginRegistry, `${fnTag} options.pluginRegistry`);
+    // Checks.truthy(options.pluginRegistry, `${fnTag} options.pluginRegistry`);
 
     const level = this.options.logLevel || "INFO";
     const label = this.className;
@@ -120,6 +127,7 @@ export class PluginLedgerConnectorAries
     this.instanceId = options.instanceId;
     this.invitationDomain =
       options.invitationDomain ?? DEFAULT_INVITATION_DOMAIN;
+    this.walletPath = options.walletPath ?? DEFAULT_WALLET_PATH;
     this.ariesAgentConfigs = options.ariesAgents;
     // this.pluginRegistry = options.pluginRegistry as PluginRegistry;
   }
@@ -445,11 +453,19 @@ export class PluginLedgerConnectorAries
       `addAriesAgent arg agentConfig.indyNetworks`,
     );
 
+    let walletPath = path.join(this.walletPath, `${agentConfig.name}.sqlite`);
+    if (agentConfig.walletPath) {
+      walletPath = agentConfig.walletPath;
+    }
     const config: InitConfig = {
       label: agentConfig.name,
       walletConfig: {
         id: agentConfig.name,
         key: agentConfig.walletKey,
+        storage: {
+          type: "sqlite",
+          path: walletPath,
+        },
       },
       endpoints: agentConfig.inboundUrl ? [agentConfig.inboundUrl] : undefined,
     };

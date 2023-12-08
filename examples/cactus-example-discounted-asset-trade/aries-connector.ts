@@ -1,4 +1,3 @@
-import { PluginRegistry } from "@hyperledger/cactus-core";
 import { IListenOptions, Servers } from "@hyperledger/cactus-common";
 import { Constants, Configuration } from "@hyperledger/cactus-core-api";
 import { ConfigUtil } from "@hyperledger/cactus-cmd-socketio-server";
@@ -25,6 +24,8 @@ logger.level = config.logLevel;
 const BLP_AGENT_NAME = "cactiDiscountedAssetTradeAgent";
 const BLP_AGENT_INBOUND_URL = "http://127.0.0.1:5035";
 const DID_INDY_NAMESPACE = "cacti:test";
+const ARIES_WALLET_PATH =
+  "/etc/cactus/cactus-plugin-ledger-connector-aries/wallet";
 
 // Read Genesis transactions
 const genesisTransactionsPath =
@@ -60,7 +61,7 @@ async function createAriesConnector() {
   ariesConnectorPlugin = new PluginLedgerConnectorAries({
     instanceId: `ariesAssetTrade-${uuidv4()}`,
     logLevel: config.logLevel,
-    pluginRegistry: new PluginRegistry({ plugins: [] }),
+    walletPath: ARIES_WALLET_PATH,
     ariesAgents: [
       {
         name: BLP_AGENT_NAME,
