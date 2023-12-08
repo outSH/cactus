@@ -58,9 +58,9 @@ log.info(
   "Reading Indy genesis transactions from file:",
   genesisTransactionsPath,
 );
-const genesisTransactions = readFileSync(
-  "/etc/cactus/indy-all-in-one/pool_transactions_genesis",
-).toString("utf-8");
+const genesisTransactions = readFileSync(genesisTransactionsPath).toString(
+  "utf-8",
+);
 
 /**
  * Configuration for local indy-all-in-one ledger.
