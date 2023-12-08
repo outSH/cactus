@@ -18,19 +18,19 @@ import { registerWebServiceEndpoint } from "@hyperledger/cactus-core";
 import { PluginLedgerConnectorAries } from "../plugin-ledger-connector-aries";
 import OAS from "../../json/openapi.json";
 
-export interface IRquestProofOptions {
+export interface IRequestProofOptions {
   logLevel?: LogLevelDesc;
   connector: PluginLedgerConnectorAries;
 }
 
-export class RquestProofEndpoint implements IWebServiceEndpoint {
+export class RequestProofEndpoint implements IWebServiceEndpoint {
   private readonly log: Logger;
 
   public get className(): string {
-    return "RquestProofEndpoint";
+    return "RequestProofEndpoint";
   }
 
-  constructor(public readonly options: IRquestProofOptions) {
+  constructor(public readonly options: IRequestProofOptions) {
     const fnTag = `${this.className}#constructor()`;
     Checks.truthy(options, `${fnTag} arg options`);
     Checks.truthy(options.connector, `${fnTag} arg options.connector`);

@@ -77,7 +77,7 @@ import {
 import { WatchConnectionStateV1Endpoint } from "./web-services/watch-connection-state-v1-endpoint";
 import { WatchProofStateV1Endpoint } from "./web-services/watch-proof-state-v1-endpoint";
 import { GetAgentsEndpoint } from "./web-services/get-agents-v1-endpoint";
-import { RquestProofEndpoint } from "./web-services/request-proof-v1-endpoint";
+import { RequestProofEndpoint } from "./web-services/request-proof-v1-endpoint";
 import { GetConnectionsEndpoint } from "./web-services/get-connections-v1-endpoint";
 import { CreateNewConnectionInvitationEndpoint } from "./web-services/create-new-connection-invitation-v1-endpoint";
 import { AcceptInvitationEndpoint } from "./web-services/accept-invitation-v1-endpoint";
@@ -248,7 +248,7 @@ export class PluginLedgerConnectorAries
       endpoints.push(endpoint);
     }
     {
-      const endpoint = new RquestProofEndpoint({
+      const endpoint = new RequestProofEndpoint({
         connector: this,
         logLevel: this.options.logLevel,
       });
