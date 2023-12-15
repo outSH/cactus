@@ -1,0 +1,195 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Hyperledger Cacti Plugin - Connector CDL",
+    "description": "Can perform basic tasks on Fujitsu CDL service.",
+    "version": "v2.0.0-alpha.2",
+    "license": {
+      "name": "Apache-2.0",
+      "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  },
+  "components": {
+    "schemas": {
+      "GatewayConfigurationV1": {
+        "type": "object",
+        "required": ["url"],
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "Gateway URL",
+            "nullable": false
+          },
+          "userAgent": {
+            "type": "string",
+            "description": "Value of User-Agent header sent to CDL (to identify this client)",
+            "nullable": false
+          },
+          "skipCertCheck": {
+            "type": "boolean",
+            "description": "Set to true to ignore self-signed and other rejected certificates",
+            "default": "false",
+            "nullable": false
+          },
+          "caPath": {
+            "type": "string",
+            "description": "CA of CDL API gateway server in PEM format to use",
+            "nullable": false
+          },
+          "serverName": {
+            "type": "string",
+            "description": "Overwrite server name from cdlApiGateway.url to match one specified in CA",
+            "nullable": false
+          }
+        }
+      },
+      "AuthInfoAccessTokenV1": {
+        "type": "object",
+        "required": ["accessToken", "trustAgentId"],
+        "properties": {
+          "accessToken": {
+            "type": "string",
+            "nullable": false
+          },
+          "trustAgentId": {
+            "type": "string",
+            "nullable": false
+          }
+        }
+      },
+      "AuthInfoSubscriptionKeyV1": {
+        "type": "object",
+        "required": [
+          "subscriptionKey",
+          "trustAgentId",
+          "trustAgentRole",
+          "trustUserId",
+          "trustUserRole"
+        ],
+        "properties": {
+          "subscriptionKey": {
+            "type": "string",
+            "nullable": false
+          },
+          "trustAgentId": {
+            "type": "string",
+            "nullable": false
+          },
+          "trustAgentRole": {
+            "type": "string",
+            "nullable": false
+          },
+          "trustUserId": {
+            "type": "string",
+            "nullable": false
+          },
+          "trustUserRole": {
+            "type": "string",
+            "nullable": false
+          }
+        }
+      },
+      "AuthInfoV1": {
+        "type": "object",
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/AuthInfoAccessTokenV1"
+          },
+          {
+            "$ref": "#/components/schemas/AuthInfoSubscriptionKeyV1"
+          }
+        ]
+      },
+      "RegisterHistoryDataV1Request": {
+        "type": "object",
+        "required": ["authInfo"],
+        "properties": {
+          "authInfo": {
+            "$ref": "#/components/schemas/AuthInfoV1",
+            "nullable": false
+          },
+          "eventId": {
+            "type": "string",
+            "nullable": false
+          },
+          "lineageId": {
+            "type": "string",
+            "nullable": false
+          },
+          "tags": {
+            "nullable": false
+          },
+          "properties": {
+            "nullable": false
+          }
+        }
+      },
+      "RegisterHistoryDataV1Response": {
+        "description": "TODO"
+      },
+      "ErrorExceptionResponseV1": {
+        "type": "object",
+        "description": "Error response from the connector.",
+        "required": ["message", "error"],
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "Short error description message.",
+            "nullable": false
+          },
+          "error": {
+            "type": "string",
+            "description": "Detailed error information.",
+            "nullable": false
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/api/v1/plugins/@hyperledger/cactus-plugin-ledger-connector-cdl/register-history-data": {
+      "post": {
+        "x-hyperledger-cacti": {
+          "http": {
+            "verbLowerCase": "post",
+            "path": "/api/v1/plugins/@hyperledger/cactus-plugin-ledger-connector-cdl/register-history-data"
+          }
+        },
+        "operationId": "registerHistoryDataV1",
+        "summary": "Register new data trail on CDL",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterHistoryDataV1Request"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegisterHistoryDataV1Response"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorExceptionResponseV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
