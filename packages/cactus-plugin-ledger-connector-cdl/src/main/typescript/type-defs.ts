@@ -4,8 +4,22 @@ import {
   AuthInfoV1,
 } from "./public-api";
 
+// CDL specific header names
+export const HTTP_HEADER_SUBSCRIPTION_KEY = "Ocp-Apim-Subscription-Key";
+export const HTTP_HEADER_TRUST_USER_ID = "Trust-User-Id";
+export const HTTP_HEADER_TRUST_USER_ROLE = "Trust-User-Role";
+export const HTTP_HEADER_TRUST_AGENT_ID = "Trust-Agent-Id";
+export const HTTP_HEADER_TRUST_AGENT_ROLE = "Trust-Agent-Role";
+
 export type HTTPAuthHeadersType = Record<string, string | number | boolean>;
 
+/**
+ * Get HTTP request headers based on `AuthInfoV1` provided by the user.
+ * Will throw if mixed / invalid authInfo was provided.
+ *
+ * @param authInfo authentication data
+ * @returns object with headers and their values
+ */
 export function getAuthorizationHeaders(
   authInfo: AuthInfoV1,
 ): HTTPAuthHeadersType {
@@ -38,6 +52,10 @@ export function getAuthorizationHeaders(
   }
 }
 
+/**
+ * True if provided argument is of `AuthInfoAccessTokenV1` type.
+ * Use for type narrowing.
+ */
 export function isAuthInfoAccessTokenV1(
   authInfo: AuthInfoV1,
 ): authInfo is AuthInfoAccessTokenV1 {
@@ -49,6 +67,10 @@ export function isAuthInfoAccessTokenV1(
   );
 }
 
+/**
+ * True if provided argument is of `AuthInfoSubscriptionKeyV1` type.
+ * Use for type narrowing.
+ */
 export function isAuthInfoSubscriptionKeyV1(
   authInfo: AuthInfoV1,
 ): authInfo is AuthInfoSubscriptionKeyV1 {
@@ -62,9 +84,3 @@ export function isAuthInfoSubscriptionKeyV1(
     typeof typedAuthInfo.trustUserRole !== "undefined"
   );
 }
-
-export const HTTP_HEADER_SUBSCRIPTION_KEY = "Ocp-Apim-Subscription-Key";
-export const HTTP_HEADER_TRUST_USER_ID = "Trust-User-Id";
-export const HTTP_HEADER_TRUST_USER_ROLE = "Trust-User-Role";
-export const HTTP_HEADER_TRUST_AGENT_ID = "Trust-Agent-Id";
-export const HTTP_HEADER_TRUST_AGENT_ROLE = "Trust-Agent-Role";

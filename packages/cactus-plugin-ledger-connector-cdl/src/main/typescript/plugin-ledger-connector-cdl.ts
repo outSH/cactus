@@ -1,7 +1,13 @@
-import { Express } from "express";
+import type { Express } from "express";
+import sanitizeHtml from "sanitize-html";
 
-import OAS from "../json/openapi.json";
-
+import {
+  Checks,
+  Logger,
+  LoggerProvider,
+  LogLevelDesc,
+} from "@hyperledger/cactus-common";
+import { consensusHasTransactionFinality } from "@hyperledger/cactus-core";
 import {
   ConsensusAlgorithmFamily,
   IWebServiceEndpoint,
@@ -10,17 +16,14 @@ import {
   ICactusPluginOptions,
 } from "@hyperledger/cactus-core-api";
 
-import { consensusHasTransactionFinality } from "@hyperledger/cactus-core";
+import { RegisterHistoryDataEndpoint } from "./web-services/register-history-data-v1-endpoint";
+import { GetLineageDataEndpoint } from "./web-services/get-lineage-v1-endpoint";
+import { SearchLineageByHeaderEndpoint } from "./web-services/search-lineage-by-header-v1-endpoint";
+import { SearchLineageByGlobalDataEndpoint } from "./web-services/search-lineage-by-globaldata-v1-endpoint";
 
+import OAS from "../json/openapi.json";
 import {
-  Checks,
-  Logger,
-  LoggerProvider,
-  LogLevelDesc,
-} from "@hyperledger/cactus-common";
-
-import {
-  RegisterHistoryDataV1Request,
+  RegisterHistoryDataRequestV1,
   GatewayConfigurationV1,
   AuthInfoV1,
   GetLineageRequestV1,
@@ -28,19 +31,13 @@ import {
   GetLineageResponseV1,
   SearchLineageRequestV1,
   SearchLineageResponseV1,
+  RegisterHistoryDataV1Response,
 } from "./generated/openapi/typescript-axios";
-
-import { RegisterHistoryDataEndpoint } from "./web-services/register-history-data-v1-endpoint";
-import { GetLineageDataEndpoint } from "./web-services/get-lineage-v1-endpoint";
-import { SearchLineageByHeaderEndpoint } from "./web-services/search-lineage-by-header-v1-endpoint";
-import { SearchLineageByGlobalDataEndpoint } from "./web-services/search-lineage-by-globaldata-v1-endpoint";
-
 import {
   HTTP_HEADER_SUBSCRIPTION_KEY,
   getAuthorizationHeaders,
 } from "./type-defs";
 import { CDLGateway } from "./cdl-gateway";
-import sanitizeHtml from "sanitize-html";
 
 export interface IPluginLedgerConnectorCDLOptions extends ICactusPluginOptions {
   logLevel?: LogLevelDesc;
@@ -48,6 +45,9 @@ export interface IPluginLedgerConnectorCDLOptions extends ICactusPluginOptions {
   cdlApiSubscriptionGateway?: GatewayConfigurationV1;
 }
 
+/**
+ * Connector plugin for interacting with Fujitsu CDL service.
+ */
 export class PluginLedgerConnectorCDL
   implements ICactusPlugin, IPluginWebService
 {
@@ -57,10 +57,8 @@ export class PluginLedgerConnectorCDL
   private cdlApiGateway: CDLGateway | undefined;
   private cdlApiSubscriptionGateway: CDLGateway | undefined;
 
-  public static readonly CLASS_NAME = "PluginLedgerConnectorCDL";
-
   public get className(): string {
-    return PluginLedgerConnectorCDL.CLASS_NAME;
+    return "PluginLedgerConnectorCDL";
   }
 
   constructor(public readonly options: IPluginLedgerConnectorCDLOptions) {
@@ -184,6 +182,14 @@ export class PluginLedgerConnectorCDL
     }
   }
 
+  /**
+   * Get correct gateway based on authInfo.
+   * Can return either gateway for regular users (i.e. access token one) or for apps (subscriptionId one).
+   * Will throw an error if valid gateway could not be found / wrong configuration provided.
+   *
+   * @param authInfo authentication info
+   * @returns `CDLGateway`
+   */
   private getGatewayByAuthInfo(authInfo: AuthInfoV1): CDLGateway {
     const headers = getAuthorizationHeaders(authInfo);
 
@@ -209,11 +215,42 @@ export class PluginLedgerConnectorCDL
   }
 
   /**
+   * Common logic for sending trail search requests
+   */
+  private async searchRequest(
+    searchEndpoint: string,
+    args: SearchLineageRequestV1,
+  ): Promise<SearchLineageResponseV1> {
+    Checks.truthy(searchEndpoint, "searchRequest() searchEndpoint");
+    Checks.truthy(args.searchType, "searchRequest() args.searchType");
+    Checks.truthy(args.fields, "searchRequest() args.fields");
+
+    const gateway = this.getGatewayByAuthInfo(args.authInfo);
+    const responseData = await gateway.request(
+      searchEndpoint,
+      args.authInfo,
+      {},
+      {
+        searchType: args.searchType,
+        body: args.fields,
+      },
+    );
+
+    if (responseData.result !== "OK") {
+      throw new Error(JSON.stringify(responseData));
+    }
+
+    this.log.debug(`searchRequest ${searchEndpoint} results:`, responseData);
+
+    return responseData as SearchLineageResponseV1;
+  }
+
+  /**
    * Send request to `trail_registration` CDL endpoint.
    */
   async registerHistoryData(
-    args: RegisterHistoryDataV1Request,
-  ): Promise<RegisterHistoryDataV1Request> {
+    args: RegisterHistoryDataRequestV1,
+  ): Promise<RegisterHistoryDataV1Response> {
     this.log.debug("registerHistoryData() args:", JSON.stringify(args));
 
     // Check args
@@ -234,11 +271,11 @@ export class PluginLedgerConnectorCDL
     );
 
     if (responseData.result !== "OK") {
-      throw new Error(responseData);
+      throw new Error(JSON.stringify(responseData));
     }
 
     this.log.debug("registerHistoryData results:", responseData);
-    return responseData;
+    return responseData as RegisterHistoryDataV1Response;
   }
 
   /**
@@ -271,43 +308,12 @@ export class PluginLedgerConnectorCDL
     );
 
     if (responseData.result !== "OK") {
-      throw new Error(responseData);
+      throw new Error(JSON.stringify(responseData));
     }
 
     this.log.debug("getLineage results:", responseData);
 
-    return responseData;
-  }
-
-  /**
-   * Common logic for sending trail search requests
-   */
-  private async searchRequest(
-    searchEndpoint: string,
-    args: SearchLineageRequestV1,
-  ): Promise<SearchLineageResponseV1> {
-    Checks.truthy(searchEndpoint, "searchRequest() searchEndpoint");
-    Checks.truthy(args.searchType, "searchRequest() args.searchType");
-    Checks.truthy(args.fields, "searchRequest() args.fields");
-
-    const gateway = this.getGatewayByAuthInfo(args.authInfo);
-    const responseData = await gateway.request(
-      searchEndpoint,
-      args.authInfo,
-      {},
-      {
-        searchType: args.searchType,
-        body: args.fields,
-      },
-    );
-
-    if (responseData.result !== "OK") {
-      throw new Error(responseData);
-    }
-
-    this.log.debug(`searchRequest ${searchEndpoint} results:`, responseData);
-
-    return responseData;
+    return responseData as GetLineageResponseV1;
   }
 
   /**

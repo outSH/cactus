@@ -1,17 +1,24 @@
-import { getAuthorizationHeaders } from "./type-defs";
 import axios from "axios";
-import https from "https";
-import { readFileSync } from "fs";
-import { AuthInfoV1, GatewayConfigurationV1 } from "./public-api";
+import https from "node:https";
+import { readFileSync } from "node:fs";
 import {
   Checks,
   Logger,
   LoggerProvider,
   LogLevelDesc,
 } from "@hyperledger/cactus-common";
+import { getAuthorizationHeaders } from "./type-defs";
+import {
+  AuthInfoV1,
+  CDLCommonResponseV1,
+  GatewayConfigurationV1,
+} from "./public-api";
 
 const DEFAULT_USER_AGENT = "CactiCDLConnector";
 
+/**
+ * Helper class for sending requests to CDL Node.
+ */
 export class CDLGateway {
   private readonly log: Logger;
   private readonly baseURL: string;
@@ -22,6 +29,10 @@ export class CDLGateway {
     return "CDLGateway";
   }
 
+  /**
+   * @param gatewayConfig gateway configuration (URL, certficiates, etc...)
+   * @param logLevel log level for gateway
+   */
   constructor(
     gatewayConfig: GatewayConfigurationV1,
     logLevel: LogLevelDesc = "INFO",
@@ -61,12 +72,23 @@ export class CDLGateway {
     this.httpsAgent = new https.Agent(agentOptions);
   }
 
+  /**
+   * Send request to CDL node.
+   * HTTP method is determined based on presence of arguments (i.e. dataPayload triggers POST request).
+   * Headers are set according to authInfo argument.
+   *
+   * @param url endpoint path to call (without base URL)
+   * @param authInfo authentication info
+   * @param queryParams query parameters (passed in URL)
+   * @param dataPayload post body
+   * @returns response from CDL
+   */
   public async request(
     url: string,
     authInfo: AuthInfoV1,
     queryParams?: Record<string, string | number>,
     dataPayload?: Record<string, string | number>,
-  ): Promise<any> {
+  ): Promise<CDLCommonResponseV1> {
     const { httpsAgent, baseURL, userAgent } = this;
 
     let httpMethod = "get";

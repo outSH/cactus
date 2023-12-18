@@ -18,15 +18,6 @@
     },
     {
       "path": "../cactus-core-api/tsconfig.json"
-    },
-    {
-      "path": "../cactus-plugin-keychain-memory/tsconfig.json"
-    },
-    {
-      "path": "../cactus-test-tooling/tsconfig.json"
-    },
-    {
-      "path": "../cactus-test-geth-ledger/tsconfig.json"
     }
   ]
 }

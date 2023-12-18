@@ -162,11 +162,7 @@
       "TrailEventDetailsV1": {
         "type": "object",
         "description": "Details of newly created CDL event.",
-        "required": [
-          "cdl:Lineage",
-          "cdl:Tags",
-          "cdl:Verification"
-        ],
+        "required": ["cdl:Lineage", "cdl:Tags", "cdl:Verification"],
         "properties": {
           "cdl:Event": {
             "nullable": false
@@ -183,7 +179,20 @@
           }
         }
       },
-      "RegisterHistoryDataV1Request": {
+      "CDLCommonResponseV1": {
+        "type": "object",
+        "required": ["result"],
+        "properties": {
+          "detail": {
+            "nullable": false
+          },
+          "result": {
+            "type": " string",
+            "nullable": false
+          }
+        }
+      },
+      "RegisterHistoryDataRequestV1": {
         "type": "object",
         "required": ["authInfo"],
         "properties": {
@@ -331,7 +340,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/RegisterHistoryDataV1Request"
+                "$ref": "#/components/schemas/RegisterHistoryDataRequestV1"
               }
             }
           }
