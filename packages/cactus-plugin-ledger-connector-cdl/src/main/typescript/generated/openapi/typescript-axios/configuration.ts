@@ -1,8 +1,8 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * Hyperledger Cacti Plugin - Connector Ethereum
- * Can perform basic tasks on a Ethereum ledger
+ * Hyperledger Cacti Plugin - Connector CDL
+ * Can perform basic tasks on Fujitsu CDL service.
  *
  * The version of the OpenAPI document: v2.0.0-alpha.2
  * 

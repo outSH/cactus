@@ -11,6 +11,16 @@
   },
   "components": {
     "schemas": {
+      "GetLineageOptionDirectionV1": {
+        "type": "string",
+        "enum": ["backward", "forward", "both"],
+        "x-enum-varnames": ["Backward", "Forward", "Both"]
+      },
+      "SearchLineageTypeV1": {
+        "type": "string",
+        "enum": ["exactmatch", "partialmatch", "regexpmatch"],
+        "x-enum-varnames": ["ExactMatch", "PartialMatch", "RegexMatch"]
+      },
       "GatewayConfigurationV1": {
         "type": "object",
         "required": ["url"],
@@ -100,6 +110,79 @@
           }
         ]
       },
+      "EventLineageV1": {
+        "type": "object",
+        "description": "CDL event linage information (used to identify related events)",
+        "required": [
+          "cdl:EventId",
+          "cdl:LineageId",
+          "cdl:DataModelMode",
+          "cdl:DataModelVersion",
+          "cdl:DataRegistrationTimeStamp",
+          "cdl:NextEventIdList",
+          "cdl:PreviousEventIdList"
+        ],
+        "properties": {
+          "cdl:EventId": {
+            "nullable": false,
+            "type": " string"
+          },
+          "cdl:LineageId": {
+            "nullable": false,
+            "type": " string"
+          },
+          "cdl:DataModelMode": {
+            "nullable": false,
+            "type": " string"
+          },
+          "cdl:DataModelVersion": {
+            "nullable": false,
+            "type": " string"
+          },
+          "cdl:DataRegistrationTimeStamp": {
+            "nullable": false,
+            "type": " string"
+          },
+          "cdl:NextEventIdList": {
+            "type": "array",
+            "items": {
+              "nullable": false,
+              "type": " string"
+            }
+          },
+          "cdl:PreviousEventIdList": {
+            "type": "array",
+            "items": {
+              "nullable": false,
+              "type": " string"
+            }
+          }
+        }
+      },
+      "TrailEventDetailsV1": {
+        "type": "object",
+        "description": "Details of newly created CDL event.",
+        "required": [
+          "cdl:Lineage",
+          "cdl:Tags",
+          "cdl:Verification"
+        ],
+        "properties": {
+          "cdl:Event": {
+            "nullable": false
+          },
+          "cdl:Lineage": {
+            "$ref": "#/components/schemas/EventLineageV1",
+            "nullable": false
+          },
+          "cdl:Tags": {
+            "nullable": false
+          },
+          "cdl:Verification": {
+            "nullable": false
+          }
+        }
+      },
       "RegisterHistoryDataV1Request": {
         "type": "object",
         "required": ["authInfo"],
@@ -125,7 +208,93 @@
         }
       },
       "RegisterHistoryDataV1Response": {
-        "description": "TODO"
+        "type": "object",
+        "required": ["detail", "result"],
+        "properties": {
+          "detail": {
+            "$ref": "#/components/schemas/TrailEventDetailsV1",
+            "nullable": false
+          },
+          "result": {
+            "type": " string",
+            "nullable": false
+          }
+        }
+      },
+      "GetLineageRequestV1": {
+        "type": "object",
+        "required": ["authInfo", "eventId"],
+        "properties": {
+          "authInfo": {
+            "$ref": "#/components/schemas/AuthInfoV1",
+            "nullable": false
+          },
+          "eventId": {
+            "type": "string",
+            "nullable": false
+          },
+          "direction": {
+            "$ref": "#/components/schemas/GetLineageOptionDirectionV1",
+            "default": "backward",
+            "nullable": false
+          },
+          "depth": {
+            "type": "string",
+            "default": "-1",
+            "nullable": false
+          }
+        }
+      },
+      "GetLineageResponseV1": {
+        "type": "object",
+        "required": ["detail", "result"],
+        "properties": {
+          "detail": {
+            "type": "array",
+            "items": {
+              "nullable": false,
+              "$ref": "#/components/schemas/TrailEventDetailsV1"
+            }
+          },
+          "result": {
+            "type": " string",
+            "nullable": false
+          }
+        }
+      },
+      "SearchLineageRequestV1": {
+        "type": "object",
+        "required": ["authInfo", "searchType", "fields"],
+        "properties": {
+          "authInfo": {
+            "$ref": "#/components/schemas/AuthInfoV1",
+            "nullable": false
+          },
+          "searchType": {
+            "$ref": "#/components/schemas/SearchLineageTypeV1",
+            "nullable": false
+          },
+          "fields": {
+            "nullable": false
+          }
+        }
+      },
+      "SearchLineageResponseV1": {
+        "type": "object",
+        "required": ["detail", "result"],
+        "properties": {
+          "detail": {
+            "type": "array",
+            "items": {
+              "nullable": false,
+              "$ref": "#/components/schemas/TrailEventDetailsV1"
+            }
+          },
+          "result": {
+            "type": " string",
+            "nullable": false
+          }
+        }
       },
       "ErrorExceptionResponseV1": {
         "type": "object",
@@ -174,6 +343,138 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RegisterHistoryDataV1Response"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorExceptionResponseV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/plugins/@hyperledger/cactus-plugin-ledger-connector-cdl/get-lineage": {
+      "post": {
+        "x-hyperledger-cacti": {
+          "http": {
+            "verbLowerCase": "post",
+            "path": "/api/v1/plugins/@hyperledger/cactus-plugin-ledger-connector-cdl/get-lineage"
+          }
+        },
+        "operationId": "getLineageV1",
+        "summary": "Get lineage trail from CDL.",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetLineageRequestV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetLineageResponseV1"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorExceptionResponseV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/plugins/@hyperledger/cactus-plugin-ledger-connector-cdl/search-lineage-by-header": {
+      "post": {
+        "x-hyperledger-cacti": {
+          "http": {
+            "verbLowerCase": "post",
+            "path": "/api/v1/plugins/@hyperledger/cactus-plugin-ledger-connector-cdl/search-lineage-by-header"
+          }
+        },
+        "operationId": "searchLineageByHeader",
+        "summary": "Search lineage using header fields.",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchLineageRequestV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchLineageResponseV1"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorExceptionResponseV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/plugins/@hyperledger/cactus-plugin-ledger-connector-cdl/search-lineage-by-globaldata": {
+      "post": {
+        "x-hyperledger-cacti": {
+          "http": {
+            "verbLowerCase": "post",
+            "path": "/api/v1/plugins/@hyperledger/cactus-plugin-ledger-connector-cdl/search-lineage-by-globaldata"
+          }
+        },
+        "operationId": "searchLineageByGlobalData",
+        "summary": "Search lineage using global data fields.",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchLineageRequestV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchLineageResponseV1"
                 }
               }
             }

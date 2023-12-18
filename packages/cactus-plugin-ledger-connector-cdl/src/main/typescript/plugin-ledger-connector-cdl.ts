@@ -23,15 +23,24 @@ import {
   RegisterHistoryDataV1Request,
   GatewayConfigurationV1,
   AuthInfoV1,
+  GetLineageRequestV1,
+  GetLineageOptionDirectionV1,
+  GetLineageResponseV1,
+  SearchLineageRequestV1,
+  SearchLineageResponseV1,
 } from "./generated/openapi/typescript-axios";
 
 import { RegisterHistoryDataEndpoint } from "./web-services/register-history-data-v1-endpoint";
+import { GetLineageDataEndpoint } from "./web-services/get-lineage-v1-endpoint";
+import { SearchLineageByHeaderEndpoint } from "./web-services/search-lineage-by-header-v1-endpoint";
+import { SearchLineageByGlobalDataEndpoint } from "./web-services/search-lineage-by-globaldata-v1-endpoint";
 
 import {
   HTTP_HEADER_SUBSCRIPTION_KEY,
   getAuthorizationHeaders,
 } from "./type-defs";
 import { CDLGateway } from "./cdl-gateway";
+import sanitizeHtml from "sanitize-html";
 
 export interface IPluginLedgerConnectorCDLOptions extends ICactusPluginOptions {
   logLevel?: LogLevelDesc;
@@ -119,6 +128,27 @@ export class PluginLedgerConnectorCDL
       });
       endpoints.push(endpoint);
     }
+    {
+      const endpoint = new GetLineageDataEndpoint({
+        connector: this,
+        logLevel: this.options.logLevel,
+      });
+      endpoints.push(endpoint);
+    }
+    {
+      const endpoint = new SearchLineageByHeaderEndpoint({
+        connector: this,
+        logLevel: this.options.logLevel,
+      });
+      endpoints.push(endpoint);
+    }
+    {
+      const endpoint = new SearchLineageByGlobalDataEndpoint({
+        connector: this,
+        logLevel: this.options.logLevel,
+      });
+      endpoints.push(endpoint);
+    }
 
     this.endpoints = endpoints;
     return endpoints;
@@ -181,11 +211,10 @@ export class PluginLedgerConnectorCDL
   /**
    * Send request to `trail_registration` CDL endpoint.
    */
-  async registerHistoryData(args: RegisterHistoryDataV1Request): Promise<any> {
-    this.log.debug(
-      "ServerPlugin:registerHistoryData() args:",
-      JSON.stringify(args),
-    );
+  async registerHistoryData(
+    args: RegisterHistoryDataV1Request,
+  ): Promise<RegisterHistoryDataV1Request> {
+    this.log.debug("registerHistoryData() args:", JSON.stringify(args));
 
     // Check args
     this.checkPropertyNames(args.tags);
@@ -210,5 +239,94 @@ export class PluginLedgerConnectorCDL
 
     this.log.debug("registerHistoryData results:", responseData);
     return responseData;
+  }
+
+  /**
+   * Get data from `trail_acquisition` CDL endpoint.
+   */
+  async getLineage(args: GetLineageRequestV1): Promise<GetLineageResponseV1> {
+    this.log.debug("getLineage() args:", JSON.stringify(args));
+    Checks.truthy(args.eventId, "getLineage() args.eventId");
+
+    const direction = (
+      args.direction ?? GetLineageOptionDirectionV1.Backward
+    ).toUpperCase();
+    let depth = parseInt(args.depth ?? "-1", 10);
+    if (isNaN(depth)) {
+      this.log.warn(
+        "Could not parse depth from the argument, using default (-1). Wrong input:",
+        args.depth,
+      );
+      depth = -1;
+    }
+
+    const gateway = this.getGatewayByAuthInfo(args.authInfo);
+    const responseData = await gateway.request(
+      `trail_acquisition/${sanitizeHtml(args.eventId)}`,
+      args.authInfo,
+      {
+        direction,
+        depth,
+      },
+    );
+
+    if (responseData.result !== "OK") {
+      throw new Error(responseData);
+    }
+
+    this.log.debug("getLineage results:", responseData);
+
+    return responseData;
+  }
+
+  /**
+   * Common logic for sending trail search requests
+   */
+  private async searchRequest(
+    searchEndpoint: string,
+    args: SearchLineageRequestV1,
+  ): Promise<SearchLineageResponseV1> {
+    Checks.truthy(searchEndpoint, "searchRequest() searchEndpoint");
+    Checks.truthy(args.searchType, "searchRequest() args.searchType");
+    Checks.truthy(args.fields, "searchRequest() args.fields");
+
+    const gateway = this.getGatewayByAuthInfo(args.authInfo);
+    const responseData = await gateway.request(
+      searchEndpoint,
+      args.authInfo,
+      {},
+      {
+        searchType: args.searchType,
+        body: args.fields,
+      },
+    );
+
+    if (responseData.result !== "OK") {
+      throw new Error(responseData);
+    }
+
+    this.log.debug(`searchRequest ${searchEndpoint} results:`, responseData);
+
+    return responseData;
+  }
+
+  /**
+   * Search data using `trail_search_headers` CDL endpoint.
+   */
+  async searchLineageByHeader(
+    args: SearchLineageRequestV1,
+  ): Promise<SearchLineageResponseV1> {
+    this.log.debug("searchByHeader() args:", JSON.stringify(args));
+    return this.searchRequest("trail_search_headers", args);
+  }
+
+  /**
+   * Search data using `trail_search_globaldata` CDL endpoint.
+   */
+  async searchLineageByGlobalData(
+    args: SearchLineageRequestV1,
+  ): Promise<SearchLineageResponseV1> {
+    this.log.debug("searchByGlobalData() args:", JSON.stringify(args));
+    return this.searchRequest("trail_search_globaldata", args);
   }
 }

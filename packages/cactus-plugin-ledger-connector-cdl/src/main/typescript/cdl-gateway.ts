@@ -64,8 +64,8 @@ export class CDLGateway {
   public async request(
     url: string,
     authInfo: AuthInfoV1,
-    queryParams?: Record<string, string>,
-    dataPayload?: Record<string, string>,
+    queryParams?: Record<string, string | number>,
+    dataPayload?: Record<string, string | number>,
   ): Promise<any> {
     const { httpsAgent, baseURL, userAgent } = this;
 

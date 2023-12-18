@@ -1,8 +1,8 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * Hyperledger Cacti Plugin - Connector Ethereum
- * Can perform basic tasks on a Ethereum ledger
+ * Hyperledger Cacti Plugin - Connector CDL
+ * Can perform basic tasks on Fujitsu CDL service.
  *
  * The version of the OpenAPI document: v2.0.0-alpha.2
  * 
@@ -105,6 +105,55 @@ export interface ErrorExceptionResponseV1 {
     'error': string;
 }
 /**
+ * CDL event linage information (used to identify related events)
+ * @export
+ * @interface EventLineageV1
+ */
+export interface EventLineageV1 {
+    /**
+     * 
+     * @type { String}
+     * @memberof EventLineageV1
+     */
+    'cdl:EventId':  String;
+    /**
+     * 
+     * @type { String}
+     * @memberof EventLineageV1
+     */
+    'cdl:LineageId':  String;
+    /**
+     * 
+     * @type { String}
+     * @memberof EventLineageV1
+     */
+    'cdl:DataModelMode':  String;
+    /**
+     * 
+     * @type { String}
+     * @memberof EventLineageV1
+     */
+    'cdl:DataModelVersion':  String;
+    /**
+     * 
+     * @type { String}
+     * @memberof EventLineageV1
+     */
+    'cdl:DataRegistrationTimeStamp':  String;
+    /**
+     * 
+     * @type {Array< String>}
+     * @memberof EventLineageV1
+     */
+    'cdl:NextEventIdList': Array< String>;
+    /**
+     * 
+     * @type {Array< String>}
+     * @memberof EventLineageV1
+     */
+    'cdl:PreviousEventIdList': Array< String>;
+}
+/**
  * 
  * @export
  * @interface GatewayConfigurationV1
@@ -144,6 +193,73 @@ export interface GatewayConfigurationV1 {
 /**
  * 
  * @export
+ * @enum {string}
+ */
+
+export const GetLineageOptionDirectionV1 = {
+    Backward: 'backward',
+    Forward: 'forward',
+    Both: 'both'
+} as const;
+
+export type GetLineageOptionDirectionV1 = typeof GetLineageOptionDirectionV1[keyof typeof GetLineageOptionDirectionV1];
+
+
+/**
+ * 
+ * @export
+ * @interface GetLineageRequestV1
+ */
+export interface GetLineageRequestV1 {
+    /**
+     * 
+     * @type {AuthInfoV1}
+     * @memberof GetLineageRequestV1
+     */
+    'authInfo': AuthInfoV1;
+    /**
+     * 
+     * @type {string}
+     * @memberof GetLineageRequestV1
+     */
+    'eventId': string;
+    /**
+     * 
+     * @type {GetLineageOptionDirectionV1}
+     * @memberof GetLineageRequestV1
+     */
+    'direction'?: GetLineageOptionDirectionV1;
+    /**
+     * 
+     * @type {string}
+     * @memberof GetLineageRequestV1
+     */
+    'depth'?: string;
+}
+
+
+/**
+ * 
+ * @export
+ * @interface GetLineageResponseV1
+ */
+export interface GetLineageResponseV1 {
+    /**
+     * 
+     * @type {Array<TrailEventDetailsV1>}
+     * @memberof GetLineageResponseV1
+     */
+    'detail': Array<TrailEventDetailsV1>;
+    /**
+     * 
+     * @type { String}
+     * @memberof GetLineageResponseV1
+     */
+    'result':  String;
+}
+/**
+ * 
+ * @export
  * @interface RegisterHistoryDataV1Request
  */
 export interface RegisterHistoryDataV1Request {
@@ -178,6 +294,117 @@ export interface RegisterHistoryDataV1Request {
      */
     'properties'?: any;
 }
+/**
+ * 
+ * @export
+ * @interface RegisterHistoryDataV1Response
+ */
+export interface RegisterHistoryDataV1Response {
+    /**
+     * 
+     * @type {TrailEventDetailsV1}
+     * @memberof RegisterHistoryDataV1Response
+     */
+    'detail': TrailEventDetailsV1;
+    /**
+     * 
+     * @type { String}
+     * @memberof RegisterHistoryDataV1Response
+     */
+    'result':  String;
+}
+/**
+ * 
+ * @export
+ * @interface SearchLineageRequestV1
+ */
+export interface SearchLineageRequestV1 {
+    /**
+     * 
+     * @type {AuthInfoV1}
+     * @memberof SearchLineageRequestV1
+     */
+    'authInfo': AuthInfoV1;
+    /**
+     * 
+     * @type {SearchLineageTypeV1}
+     * @memberof SearchLineageRequestV1
+     */
+    'searchType': SearchLineageTypeV1;
+    /**
+     * 
+     * @type {any}
+     * @memberof SearchLineageRequestV1
+     */
+    'fields': any;
+}
+
+
+/**
+ * 
+ * @export
+ * @interface SearchLineageResponseV1
+ */
+export interface SearchLineageResponseV1 {
+    /**
+     * 
+     * @type {Array<TrailEventDetailsV1>}
+     * @memberof SearchLineageResponseV1
+     */
+    'detail': Array<TrailEventDetailsV1>;
+    /**
+     * 
+     * @type { String}
+     * @memberof SearchLineageResponseV1
+     */
+    'result':  String;
+}
+/**
+ * 
+ * @export
+ * @enum {string}
+ */
+
+export const SearchLineageTypeV1 = {
+    ExactMatch: 'exactmatch',
+    PartialMatch: 'partialmatch',
+    RegexMatch: 'regexpmatch'
+} as const;
+
+export type SearchLineageTypeV1 = typeof SearchLineageTypeV1[keyof typeof SearchLineageTypeV1];
+
+
+/**
+ * Details of newly created CDL event.
+ * @export
+ * @interface TrailEventDetailsV1
+ */
+export interface TrailEventDetailsV1 {
+    /**
+     * 
+     * @type {any}
+     * @memberof TrailEventDetailsV1
+     */
+    'cdl:Event'?: any;
+    /**
+     * 
+     * @type {EventLineageV1}
+     * @memberof TrailEventDetailsV1
+     */
+    'cdl:Lineage': EventLineageV1;
+    /**
+     * 
+     * @type {any}
+     * @memberof TrailEventDetailsV1
+     */
+    'cdl:Tags': any;
+    /**
+     * 
+     * @type {any}
+     * @memberof TrailEventDetailsV1
+     */
+    'cdl:Verification': any;
+}
 
 /**
  * DefaultApi - axios parameter creator
@@ -185,6 +412,40 @@ export interface RegisterHistoryDataV1Request {
  */
 export const DefaultApiAxiosParamCreator = function (configuration?: Configuration) {
     return {
+        /**
+         * 
+         * @summary Get lineage trail from CDL.
+         * @param {GetLineageRequestV1} [getLineageRequestV1] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getLineageV1: async (getLineageRequestV1?: GetLineageRequestV1, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/v1/plugins/@hyperledger/cactus-plugin-ledger-connector-cdl/get-lineage`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(getLineageRequestV1, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
         /**
          * 
          * @summary Register new data trail on CDL
@@ -219,6 +480,74 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
                 options: localVarRequestOptions,
             };
         },
+        /**
+         * 
+         * @summary Search lineage using global data fields.
+         * @param {SearchLineageRequestV1} [searchLineageRequestV1] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        searchLineageByGlobalData: async (searchLineageRequestV1?: SearchLineageRequestV1, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/v1/plugins/@hyperledger/cactus-plugin-ledger-connector-cdl/search-lineage-by-globaldata`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(searchLineageRequestV1, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Search lineage using header fields.
+         * @param {SearchLineageRequestV1} [searchLineageRequestV1] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        searchLineageByHeader: async (searchLineageRequestV1?: SearchLineageRequestV1, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/v1/plugins/@hyperledger/cactus-plugin-ledger-connector-cdl/search-lineage-by-header`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(searchLineageRequestV1, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
     }
 };
 
@@ -231,13 +560,46 @@ export const DefaultApiFp = function(configuration?: Configuration) {
     return {
         /**
          * 
+         * @summary Get lineage trail from CDL.
+         * @param {GetLineageRequestV1} [getLineageRequestV1] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getLineageV1(getLineageRequestV1?: GetLineageRequestV1, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GetLineageResponseV1>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getLineageV1(getLineageRequestV1, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
          * @summary Register new data trail on CDL
          * @param {RegisterHistoryDataV1Request} [registerHistoryDataV1Request] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async registerHistoryDataV1(registerHistoryDataV1Request?: RegisterHistoryDataV1Request, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+        async registerHistoryDataV1(registerHistoryDataV1Request?: RegisterHistoryDataV1Request, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<RegisterHistoryDataV1Response>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.registerHistoryDataV1(registerHistoryDataV1Request, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
+         * @summary Search lineage using global data fields.
+         * @param {SearchLineageRequestV1} [searchLineageRequestV1] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async searchLineageByGlobalData(searchLineageRequestV1?: SearchLineageRequestV1, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SearchLineageResponseV1>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.searchLineageByGlobalData(searchLineageRequestV1, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
+         * @summary Search lineage using header fields.
+         * @param {SearchLineageRequestV1} [searchLineageRequestV1] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async searchLineageByHeader(searchLineageRequestV1?: SearchLineageRequestV1, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SearchLineageResponseV1>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.searchLineageByHeader(searchLineageRequestV1, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
     }
@@ -252,13 +614,43 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
     return {
         /**
          * 
+         * @summary Get lineage trail from CDL.
+         * @param {GetLineageRequestV1} [getLineageRequestV1] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getLineageV1(getLineageRequestV1?: GetLineageRequestV1, options?: any): AxiosPromise<GetLineageResponseV1> {
+            return localVarFp.getLineageV1(getLineageRequestV1, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
          * @summary Register new data trail on CDL
          * @param {RegisterHistoryDataV1Request} [registerHistoryDataV1Request] 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        registerHistoryDataV1(registerHistoryDataV1Request?: RegisterHistoryDataV1Request, options?: any): AxiosPromise<any> {
+        registerHistoryDataV1(registerHistoryDataV1Request?: RegisterHistoryDataV1Request, options?: any): AxiosPromise<RegisterHistoryDataV1Response> {
             return localVarFp.registerHistoryDataV1(registerHistoryDataV1Request, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Search lineage using global data fields.
+         * @param {SearchLineageRequestV1} [searchLineageRequestV1] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        searchLineageByGlobalData(searchLineageRequestV1?: SearchLineageRequestV1, options?: any): AxiosPromise<SearchLineageResponseV1> {
+            return localVarFp.searchLineageByGlobalData(searchLineageRequestV1, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Search lineage using header fields.
+         * @param {SearchLineageRequestV1} [searchLineageRequestV1] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        searchLineageByHeader(searchLineageRequestV1?: SearchLineageRequestV1, options?: any): AxiosPromise<SearchLineageResponseV1> {
+            return localVarFp.searchLineageByHeader(searchLineageRequestV1, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -272,6 +664,18 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
 export class DefaultApi extends BaseAPI {
     /**
      * 
+     * @summary Get lineage trail from CDL.
+     * @param {GetLineageRequestV1} [getLineageRequestV1] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public getLineageV1(getLineageRequestV1?: GetLineageRequestV1, options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).getLineageV1(getLineageRequestV1, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
      * @summary Register new data trail on CDL
      * @param {RegisterHistoryDataV1Request} [registerHistoryDataV1Request] 
      * @param {*} [options] Override http request option.
@@ -280,6 +684,30 @@ export class DefaultApi extends BaseAPI {
      */
     public registerHistoryDataV1(registerHistoryDataV1Request?: RegisterHistoryDataV1Request, options?: AxiosRequestConfig) {
         return DefaultApiFp(this.configuration).registerHistoryDataV1(registerHistoryDataV1Request, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Search lineage using global data fields.
+     * @param {SearchLineageRequestV1} [searchLineageRequestV1] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public searchLineageByGlobalData(searchLineageRequestV1?: SearchLineageRequestV1, options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).searchLineageByGlobalData(searchLineageRequestV1, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Search lineage using header fields.
+     * @param {SearchLineageRequestV1} [searchLineageRequestV1] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public searchLineageByHeader(searchLineageRequestV1?: SearchLineageRequestV1, options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).searchLineageByHeader(searchLineageRequestV1, options).then((request) => request(this.axios, this.basePath));
     }
 }
 
