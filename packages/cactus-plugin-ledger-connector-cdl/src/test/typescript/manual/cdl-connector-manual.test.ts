@@ -127,7 +127,7 @@ describe("CDL Connector manual tests", () => {
   async function searchByHeaderOnCDL(
     request: SearchLineageRequestV1,
   ): Promise<TrailEventDetailsV1[]> {
-    const response = await apiClient.searchLineageByHeader(request);
+    const response = await apiClient.searchLineageByHeaderV1(request);
 
     const status = response.status;
     log.info("searchByHeaderOnCDL done. Status", status, response.statusText);
@@ -145,7 +145,7 @@ describe("CDL Connector manual tests", () => {
   async function searchByGlobalDataOnCDL(
     request: SearchLineageRequestV1,
   ): Promise<TrailEventDetailsV1[]> {
-    const response = await apiClient.searchLineageByGlobalData(request);
+    const response = await apiClient.searchLineageByGlobalDataV1(request);
 
     const status = response.status;
     log.info(

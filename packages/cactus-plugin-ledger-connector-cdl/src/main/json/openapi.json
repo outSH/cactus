@@ -421,7 +421,7 @@
             "path": "/api/v1/plugins/@hyperledger/cactus-plugin-ledger-connector-cdl/search-lineage-by-header"
           }
         },
-        "operationId": "searchLineageByHeader",
+        "operationId": "searchLineageByHeaderV1",
         "summary": "Search lineage using header fields.",
         "parameters": [],
         "requestBody": {
@@ -465,7 +465,7 @@
             "path": "/api/v1/plugins/@hyperledger/cactus-plugin-ledger-connector-cdl/search-lineage-by-globaldata"
           }
         },
-        "operationId": "searchLineageByGlobalData",
+        "operationId": "searchLineageByGlobalDataV1",
         "summary": "Search lineage using global data fields.",
         "parameters": [],
         "requestBody": {
