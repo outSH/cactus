@@ -1,7 +1,9 @@
 /**
  * Manual tests for CDL connector.
- * Must be exectued with access to CDL service.
+ * Must be executed with access to CDL service.
  * Check out CDL connector readme for instructions on how to run these tests.
+ * To run:
+ * npx jest dist/lib/test/typescript/manual/cdl-connector-manual.test.js
  */
 
 //////////////////////////////////

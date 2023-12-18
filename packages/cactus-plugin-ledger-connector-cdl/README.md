@@ -114,7 +114,7 @@ npx jest cactus-plugin-ledger-connector-cdl
 - Script can be used as a quick reference for using this connector plugin.
 - Since script is not part of project jest suite, to run in execute the following commands from a package dir:
   - `npx tsc`
-  - `npx jest dist/lib/test/typescript/integration/cdl-connector-manual.test.js`
+  - `npx jest dist/lib/test/typescript/manual/cdl-connector-manual.test.js`
 
 ### Building/running the container image locally
 

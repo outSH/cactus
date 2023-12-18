@@ -30,7 +30,7 @@ export class CDLGateway {
   }
 
   /**
-   * @param gatewayConfig gateway configuration (URL, certficiates, etc...)
+   * @param gatewayConfig gateway configuration (URL, certificates, etc...)
    * @param logLevel log level for gateway
    */
   constructor(
