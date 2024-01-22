@@ -108,8 +108,9 @@ export abstract class WatchBlocksV1Endpoint {
     this.web3 = config.web3;
     this.socket = config.socket;
     this.isGetBlockData = config.options?.getBlockData === true;
-    this.lastSeenBlock =
-      config.options?.lastSeenBlock ?? LAST_SEEN_LATEST_BLOCK;
+    this.lastSeenBlock = Number(
+      config.options?.lastSeenBlock ?? LAST_SEEN_LATEST_BLOCK,
+    );
 
     const level = this.config.logLevel || "INFO";
     const label = this.className;
@@ -210,6 +211,9 @@ export abstract class WatchBlocksV1Endpoint {
           number: FMT_NUMBER.STR,
           bytes: FMT_BYTES.HEX,
         });
+        if (!web3BlockData) {
+          throw new Error(`Could not read block #${blockNumber}`);
+        }
         next = await this.headerDataToBlockProgress({
           ...web3BlockData,
           sha3Uncles: web3BlockData.sha3Uncles as any,
