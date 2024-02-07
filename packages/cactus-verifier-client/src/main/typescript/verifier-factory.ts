@@ -5,7 +5,7 @@
  * verifier-factory.ts
  */
 
-import { Verifier } from "./verifier";
+import { Verifier } from "./verifier.js";
 
 import {
   Checks,

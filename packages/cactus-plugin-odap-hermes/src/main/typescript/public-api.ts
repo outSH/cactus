@@ -8,8 +8,8 @@ export {
 } from "./gateway/plugin-odap-gateway";
 
 import { IPluginFactoryOptions } from "@hyperledger/cactus-core-api";
-import { PluginFactoryFabricOdapGateway } from "./gateway/plugin-factory-fabric-odap-gateway";
-import { PluginFactoryBesuOdapGateway } from "./gateway/plugin-factory-besu-odap-gateway";
+import { PluginFactoryFabricOdapGateway } from "./gateway/plugin-factory-fabric-odap-gateway.js";
+import { PluginFactoryBesuOdapGateway } from "./gateway/plugin-factory-besu-odap-gateway.js";
 
 export async function createFabricPluginFactory(
   pluginFactoryOptions: IPluginFactoryOptions,

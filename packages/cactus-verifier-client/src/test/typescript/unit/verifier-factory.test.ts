@@ -2,7 +2,7 @@
 
 import "jest-extended";
 
-import { Verifier } from "../../../main/typescript/verifier";
+import { Verifier } from "../../../main/typescript/verifier.js";
 import { SocketIOApiClient } from "@hyperledger/cactus-api-client";
 import {
   VerifierFactory,

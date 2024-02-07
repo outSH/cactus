@@ -22,7 +22,7 @@ import {
   SetKeychainEntryRequestV1,
 } from "../../../../main/typescript/public-api";
 
-import { SecretManagerServiceClientMock } from "../../mock/plugin-keychain-google-sm-mock";
+import { SecretManagerServiceClientMock } from "../../mock/plugin-keychain-google-sm-mock.js";
 
 import { installOpenapiValidationMiddleware } from "@hyperledger/cactus-core";
 import OAS from "../../../../main/json/openapi.json";

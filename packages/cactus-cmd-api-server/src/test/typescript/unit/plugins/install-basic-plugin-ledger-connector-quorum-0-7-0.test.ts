@@ -16,9 +16,9 @@ import {
   ConfigService,
 } from "../../../../main/typescript/public-api";
 
-import { K_CACTUS_API_SERVER_TOTAL_PLUGIN_IMPORTS } from "../../../../main/typescript/prometheus-exporter/metrics";
+import { K_CACTUS_API_SERVER_TOTAL_PLUGIN_IMPORTS } from "../../../../main/typescript/prometheus-exporter/metrics.js";
 
-import { DefaultApi as ApiServerApi } from "../../../../main/typescript/public-api";
+import { DefaultApi as ApiServerApi } from "../../../../main/typescript/public-api.js";
 
 const logLevel: LogLevelDesc = "TRACE";
 

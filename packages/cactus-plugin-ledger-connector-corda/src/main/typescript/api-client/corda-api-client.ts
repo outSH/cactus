@@ -11,7 +11,7 @@ import {
   DefaultApi,
   GetMonitorTransactionsV1ResponseTxInner,
 } from "../generated/openapi/typescript-axios";
-import { Configuration } from "../generated/openapi/typescript-axios/configuration";
+import { Configuration } from "../generated/openapi/typescript-axios/configuration.js";
 
 const DEFAULT_POLL_RATE_MS = 5000;
 

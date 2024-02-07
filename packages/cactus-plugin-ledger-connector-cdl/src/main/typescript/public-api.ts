@@ -8,7 +8,7 @@ export {
 export { PluginFactoryLedgerConnector } from "./plugin-factory-ledger-connector";
 
 import { IPluginFactoryOptions } from "@hyperledger/cactus-core-api";
-import { PluginFactoryLedgerConnector } from "./plugin-factory-ledger-connector";
+import { PluginFactoryLedgerConnector } from "./plugin-factory-ledger-connector.js";
 
 export * from "./generated/openapi/typescript-axios/api";
 

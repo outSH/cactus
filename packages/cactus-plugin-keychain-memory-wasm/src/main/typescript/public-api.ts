@@ -1,4 +1,4 @@
-import { PluginFactoryKeychain } from "./plugin-factory-keychain";
+import { PluginFactoryKeychain } from "./plugin-factory-keychain.js";
 import * as OpenApiJson from "../json/openapi.json";
 import { IPluginFactoryOptions } from "@hyperledger/cactus-core-api";
 

@@ -6,9 +6,9 @@ import { GatewayOptions as FabricGatewayOptions } from "fabric-network";
 import { Checks, LoggerProvider } from "@hyperledger/cactus-common";
 import { LogLevelDesc } from "@hyperledger/cactus-common";
 import { PluginRegistry } from "@hyperledger/cactus-core";
-import { ConnectionProfile } from "../generated/openapi/typescript-axios/index";
-import { GatewayDiscoveryOptions } from "../generated/openapi/typescript-axios/index";
-import { GatewayEventHandlerOptions } from "../generated/openapi/typescript-axios/index";
+import { ConnectionProfile } from "../generated/openapi/typescript-axios/index.js";
+import { GatewayDiscoveryOptions } from "../generated/openapi/typescript-axios/index.js";
+import { GatewayEventHandlerOptions } from "../generated/openapi/typescript-axios/index.js";
 import {
   GatewayOptions,
   FabricSigningCredentialType,

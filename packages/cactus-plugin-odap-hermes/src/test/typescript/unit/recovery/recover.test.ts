@@ -20,14 +20,14 @@ import {
 } from "../../../../main/typescript/gateway/plugin-odap-gateway";
 import { GoIpfsTestContainer } from "@hyperledger/cactus-test-tooling";
 
-import { RecoverV1Message } from "../../../../main/typescript/public-api";
+import { RecoverV1Message } from "../../../../main/typescript/public-api.js";
 import { randomInt } from "crypto";
-import { checkValidRecoverMessage } from "../../../../main/typescript/gateway/recovery/recover";
+import { checkValidRecoverMessage } from "../../../../main/typescript/gateway/recovery/recover.js";
 
-import { BesuOdapGateway } from "../../../../main/typescript/gateway/besu-odap-gateway";
-import { FabricOdapGateway } from "../../../../main/typescript/gateway/fabric-odap-gateway";
-import { ClientGatewayHelper } from "../../../../main/typescript/gateway/client/client-helper";
-import { ServerGatewayHelper } from "../../../../main/typescript/gateway/server/server-helper";
+import { BesuOdapGateway } from "../../../../main/typescript/gateway/besu-odap-gateway.js";
+import { FabricOdapGateway } from "../../../../main/typescript/gateway/fabric-odap-gateway.js";
+import { ClientGatewayHelper } from "../../../../main/typescript/gateway/client/client-helper.js";
+import { ServerGatewayHelper } from "../../../../main/typescript/gateway/server/server-helper.js";
 
 import { knexClientConnection, knexServerConnection } from "../../knex.config";
 

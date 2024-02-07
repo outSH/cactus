@@ -7,10 +7,10 @@ import {
   FabricSigningCredential,
   RunTransactionRequest as FabricRunTransactionRequest,
 } from "@hyperledger/cactus-plugin-ledger-connector-fabric";
-import { IOdapPluginKeyPair, PluginOdapGateway } from "./plugin-odap-gateway";
-import { SessionDataRollbackActionsPerformedEnum } from "../generated/openapi/typescript-axios";
-import { ClientGatewayHelper } from "./client/client-helper";
-import { ServerGatewayHelper } from "./server/server-helper";
+import { IOdapPluginKeyPair, PluginOdapGateway } from "./plugin-odap-gateway.js";
+import { SessionDataRollbackActionsPerformedEnum } from "../generated/openapi/typescript-axios.js";
+import { ClientGatewayHelper } from "./client/client-helper.js";
+import { ServerGatewayHelper } from "./server/server-helper.js";
 
 export interface IFabricOdapGatewayConstructorOptions {
   name: string;

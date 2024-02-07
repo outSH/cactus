@@ -4,7 +4,7 @@ import {
   PluginImportType,
 } from "@hyperledger/cactus-core-api";
 import test, { Test } from "tape-promise/tape";
-import { PluginFactoryKeychain } from "../../../main/typescript/plugin-factory-keychain";
+import { PluginFactoryKeychain } from "../../../main/typescript/plugin-factory-keychain.js";
 import {
   AwsCredentialType,
   PluginKeychainAwsSm,

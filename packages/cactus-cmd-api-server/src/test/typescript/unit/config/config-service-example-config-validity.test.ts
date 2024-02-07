@@ -8,8 +8,8 @@ import {
   IAuthorizationConfig,
   ICactusApiServerOptions,
 } from "../../../../main/typescript/public-api";
-import { ApiServer } from "../../../../main/typescript/public-api";
-import { ConfigService } from "../../../../main/typescript/public-api";
+import { ApiServer } from "../../../../main/typescript/public-api.js";
+import { ConfigService } from "../../../../main/typescript/public-api.js";
 
 const testcase = "";
 

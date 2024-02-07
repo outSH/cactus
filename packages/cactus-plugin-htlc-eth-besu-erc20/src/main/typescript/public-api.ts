@@ -2,7 +2,7 @@ export * from "./generated/openapi/typescript-axios/index";
 
 import { IPluginFactoryOptions } from "@hyperledger/cactus-core-api";
 
-import { PluginFactoryHtlcEthBesuErc20 } from "./plugin-factory-htlc-eth-besu-erc20";
+import { PluginFactoryHtlcEthBesuErc20 } from "./plugin-factory-htlc-eth-besu-erc20.js";
 export {
   PluginHtlcEthBesuErc20,
   IPluginHtlcEthBesuErc20Options,

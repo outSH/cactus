@@ -21,9 +21,9 @@ import type {
 
 import OAS from "../json/openapi.json";
 
-import { GetObjectEndpointV1 } from "./web-services/get-object-endpoint-v1";
-import { SetObjectEndpointV1 } from "./web-services/set-object-endpoint-v1";
-import { HasObjectEndpointV1 } from "./web-services/has-object-endpoint-v1";
+import { GetObjectEndpointV1 } from "./web-services/get-object-endpoint-v1.js";
+import { SetObjectEndpointV1 } from "./web-services/set-object-endpoint-v1.js";
+import { HasObjectEndpointV1 } from "./web-services/has-object-endpoint-v1.js";
 import {
   LikeIpfsHttpClient,
   isLikeIpfsHttpClient,

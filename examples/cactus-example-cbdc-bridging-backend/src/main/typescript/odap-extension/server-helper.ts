@@ -9,7 +9,7 @@ import {
 } from "@hyperledger/cactus-plugin-odap-hermes";
 import { ServerGatewayHelper } from "@hyperledger/cactus-plugin-odap-hermes";
 
-import { FabricOdapGateway } from "./fabric-odap-gateway";
+import { FabricOdapGateway } from "./fabric-odap-gateway.js";
 import { LogLevelDesc } from "@hyperledger/cactus-common";
 
 export interface IServerHelperOptions {

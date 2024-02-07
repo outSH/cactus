@@ -6,7 +6,7 @@ export {
 } from "./plugin-htlc-coordinator-besu";
 
 export { PluginFactoryHTLCCoordinatorBesu } from "./plugin-factory-htlc-coordinator-besu";
-import { PluginFactoryHTLCCoordinatorBesu } from "./plugin-factory-htlc-coordinator-besu";
+import { PluginFactoryHTLCCoordinatorBesu } from "./plugin-factory-htlc-coordinator-besu.js";
 
 export * from "./generated/openapi/typescript-axios/index";
 

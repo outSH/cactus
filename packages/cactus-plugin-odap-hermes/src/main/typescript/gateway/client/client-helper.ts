@@ -13,7 +13,7 @@ import {
   CommitFinalV1Response,
   TransferCompleteV1Request,
 } from "../../public-api";
-import { OdapMessageType, PluginOdapGateway } from "../plugin-odap-gateway";
+import { OdapMessageType, PluginOdapGateway } from "../plugin-odap-gateway.js";
 
 export class ClientGatewayHelper {
   public static readonly CLASS_NAME = "ClientGatewayHelper";

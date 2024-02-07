@@ -18,7 +18,7 @@ import {
   WatchBlocksCactusTransactionsResponseV1,
   WatchBlocksCactusTransactionsEventV1,
 } from "../generated/openapi/typescript-axios";
-import { Configuration } from "../generated/openapi/typescript-axios/configuration";
+import { Configuration } from "../generated/openapi/typescript-axios/configuration.js";
 
 /**
  * Configuration for FabricApiClient

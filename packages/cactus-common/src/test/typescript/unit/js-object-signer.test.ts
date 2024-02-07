@@ -4,7 +4,7 @@ import {
   IJsObjectSignerOptions,
 } from "../../../main/typescript/js-object-signer";
 
-import { Secp256k1Keys } from "../../../main/typescript/secp256k1-keys";
+import { Secp256k1Keys } from "../../../main/typescript/secp256k1-keys.js";
 
 import crypto from "crypto";
 import secp256k1 from "secp256k1";

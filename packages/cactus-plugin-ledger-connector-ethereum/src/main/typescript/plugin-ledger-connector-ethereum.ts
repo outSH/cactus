@@ -38,7 +38,7 @@ import {
   LogLevelDesc,
 } from "@hyperledger/cactus-common";
 
-import { DeployContractEndpoint } from "./web-services/deploy-contract-v1-endpoint";
+import { DeployContractEndpoint } from "./web-services/deploy-contract-v1-endpoint.js";
 
 import {
   DeployContractV1Request,
@@ -62,15 +62,15 @@ import {
   ContractJSON,
 } from "./generated/openapi/typescript-axios";
 
-import { RunTransactionEndpoint } from "./web-services/run-transaction-v1-endpoint";
-import { InvokeContractEndpoint } from "./web-services/invoke-contract-v1-endpoint";
+import { RunTransactionEndpoint } from "./web-services/run-transaction-v1-endpoint.js";
+import { InvokeContractEndpoint } from "./web-services/invoke-contract-v1-endpoint.js";
 import {
   createWatchBlocksV1Endpoint,
   WatchBlocksV1Endpoint,
 } from "./web-services/watch-blocks-v1-endpoint";
-import { GetPrometheusExporterMetricsEndpointV1 } from "./web-services/get-prometheus-exporter-metrics-v1-endpoint";
-import { InvokeRawWeb3EthMethodEndpoint } from "./web-services/invoke-raw-web3eth-method-v1-endpoint";
-import { InvokeRawWeb3EthContractEndpoint } from "./web-services/invoke-raw-web3eth-contract-v1-endpoint";
+import { GetPrometheusExporterMetricsEndpointV1 } from "./web-services/get-prometheus-exporter-metrics-v1-endpoint.js";
+import { InvokeRawWeb3EthMethodEndpoint } from "./web-services/invoke-raw-web3eth-method-v1-endpoint.js";
+import { InvokeRawWeb3EthContractEndpoint } from "./web-services/invoke-raw-web3eth-contract-v1-endpoint.js";
 
 import {
   isContractJsonDefinition,
@@ -80,7 +80,7 @@ import {
   isGasTransactionConfigLegacy,
   isWeb3SigningCredentialNone,
 } from "./types/model-type-guards";
-import { PrometheusExporter } from "./prometheus-exporter/prometheus-exporter";
+import { PrometheusExporter } from "./prometheus-exporter/prometheus-exporter.js";
 import { RuntimeError } from "run-time-error-cjs";
 import { createProxyMiddleware, fixRequestBody } from "http-proxy-middleware";
 

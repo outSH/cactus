@@ -3,7 +3,7 @@
 */
 
 import { ChaincodeStub, Iterators } from "fabric-shim";
-import { State } from "./state";
+import { State } from "./state.js";
 import {
   ErrStateNotFound,
   ErrInvalidQueryString,

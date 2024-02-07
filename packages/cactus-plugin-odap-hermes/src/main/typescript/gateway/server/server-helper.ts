@@ -14,7 +14,7 @@ import {
   CommitFinalV1Request,
   TransferCompleteV1Request,
 } from "../../public-api";
-import { OdapMessageType, PluginOdapGateway } from "../plugin-odap-gateway";
+import { OdapMessageType, PluginOdapGateway } from "../plugin-odap-gateway.js";
 
 export class ServerGatewayHelper {
   public static readonly CLASS_NAME: string = "ServerGatewayHelper";

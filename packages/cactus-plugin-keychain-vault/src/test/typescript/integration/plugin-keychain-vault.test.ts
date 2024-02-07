@@ -27,9 +27,9 @@ import {
   PluginKeychainVault,
 } from "../../../main/typescript/public-api";
 
-import { K_CACTUS_KEYCHAIN_VAULT_MANAGED_KEY_COUNT } from "../../../main/typescript/prometheus-exporter/metrics";
+import { K_CACTUS_KEYCHAIN_VAULT_MANAGED_KEY_COUNT } from "../../../main/typescript/prometheus-exporter/metrics.js";
 
-import { DefaultApi as KeychainVaultApi } from "../../../main/typescript/public-api";
+import { DefaultApi as KeychainVaultApi } from "../../../main/typescript/public-api.js";
 
 const logLevel: LogLevelDesc = "TRACE";
 

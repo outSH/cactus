@@ -25,10 +25,10 @@ import {
   WatchBlocksV1,
   WatchBlocksV1Options,
 } from "./generated/openapi/typescript-axios";
-import { WatchBlocksV1Endpoint } from "./web-services/watch-blocks-v1-endpoint";
-import { StatusEndpointV1 } from "./web-services/status-endpoint-v1";
+import { WatchBlocksV1Endpoint } from "./web-services/watch-blocks-v1-endpoint.js";
+import { StatusEndpointV1 } from "./web-services/status-endpoint-v1.js";
 import OAS from "../json/openapi.json";
-import { Configuration, DefaultApi as SawtoothRestApi } from "./sawtooth-api";
+import { Configuration, DefaultApi as SawtoothRestApi } from "./sawtooth-api.js";
 
 export interface IPluginLedgerConnectorSawtoothOptions
   extends ICactusPluginOptions {

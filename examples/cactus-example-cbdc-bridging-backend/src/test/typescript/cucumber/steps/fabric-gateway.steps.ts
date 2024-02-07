@@ -2,7 +2,7 @@ import { Given, When, Then, Before, After } from "cucumber";
 import { expect } from "chai";
 import axios from "axios";
 import CryptoMaterial from "../../../../crypto-material/crypto-material.json";
-import { getEthAddress, getFabricId, getUserFromPseudonim } from "./common";
+import { getEthAddress, getFabricId, getUserFromPseudonim } from "./common.js";
 import {
   deleteFabricAssetReference,
   fabricAssetReferenceExists,

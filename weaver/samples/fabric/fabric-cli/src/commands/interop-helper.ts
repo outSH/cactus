@@ -19,7 +19,7 @@ import {
 } from '../helpers/helpers'
 import { v4 as uuidv4 } from 'uuid'
 
-import logger from '../helpers/logger'
+import logger from "../helpers/logger.js"
 import * as path from 'path'
 import * as dotenv from 'dotenv'
 dotenv.config({ path: path.resolve(__dirname, '../../.env') })

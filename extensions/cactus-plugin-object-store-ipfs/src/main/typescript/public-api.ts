@@ -11,7 +11,7 @@ export {
 } from "./plugin-object-store-ipfs";
 export { PluginFactoryObjectStore } from "./plugin-factory-object-store";
 
-import { PluginFactoryObjectStore } from "./plugin-factory-object-store";
+import { PluginFactoryObjectStore } from "./plugin-factory-object-store.js";
 
 export async function createPluginFactory(
   pluginFactoryOptions: IPluginFactoryOptions,

@@ -19,7 +19,7 @@ import {
   AssetProfile,
   ClientV1Request,
 } from "../../../main/typescript/public-api";
-import { makeSessionDataChecks } from "../make-checks";
+import { makeSessionDataChecks } from "../make-checks.js";
 import {
   IFabricOdapGatewayConstructorOptions,
   FabricOdapGateway,
@@ -28,8 +28,8 @@ import {
   IBesuOdapGatewayConstructorOptions,
   BesuOdapGateway,
 } from "../../../main/typescript/gateway/besu-odap-gateway";
-import { ClientGatewayHelper } from "../../../main/typescript/gateway/client/client-helper";
-import { ServerGatewayHelper } from "../../../main/typescript/gateway/server/server-helper";
+import { ClientGatewayHelper } from "../../../main/typescript/gateway/client/client-helper.js";
+import { ServerGatewayHelper } from "../../../main/typescript/gateway/server/server-helper.js";
 
 import { knexClientConnection } from "../knex.config";
 

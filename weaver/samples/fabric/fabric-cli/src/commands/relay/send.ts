@@ -14,7 +14,7 @@ import {
   getNetworkConfig,
   signMessage
 } from '../../helpers/helpers'
-import logger from '../../helpers/logger'
+import logger from "../../helpers/logger.js"
 import {
   fabricHelper,
   getKeyAndCertForRemoteRequestbyUserName

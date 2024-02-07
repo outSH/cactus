@@ -31,7 +31,7 @@ import express from "express";
 import bodyParser from "body-parser";
 import http from "http";
 import { AddressInfo } from "net";
-import { K_CACTUS_XDAI_TOTAL_TX_COUNT } from "../../../main/typescript/prometheus-exporter/metrics";
+import { K_CACTUS_XDAI_TOTAL_TX_COUNT } from "../../../main/typescript/prometheus-exporter/metrics.js";
 
 const testCase = "deploys contract via .json file";
 describe(testCase, () => {

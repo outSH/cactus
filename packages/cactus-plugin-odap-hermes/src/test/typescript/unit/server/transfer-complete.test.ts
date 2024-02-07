@@ -10,10 +10,10 @@ import {
 import { v4 as uuidV4 } from "uuid";
 import { SHA256 } from "crypto-js";
 import { randomInt } from "crypto";
-import { BesuOdapGateway } from "../../../../main/typescript/gateway/besu-odap-gateway";
-import { FabricOdapGateway } from "../../../../main/typescript/gateway/fabric-odap-gateway";
-import { ClientGatewayHelper } from "../../../../main/typescript/gateway/client/client-helper";
-import { ServerGatewayHelper } from "../../../../main/typescript/gateway/server/server-helper";
+import { BesuOdapGateway } from "../../../../main/typescript/gateway/besu-odap-gateway.js";
+import { FabricOdapGateway } from "../../../../main/typescript/gateway/fabric-odap-gateway.js";
+import { ClientGatewayHelper } from "../../../../main/typescript/gateway/client/client-helper.js";
+import { ServerGatewayHelper } from "../../../../main/typescript/gateway/server/server-helper.js";
 
 let sourceGatewayConstructor: IPluginOdapGatewayConstructorOptions;
 let recipientGatewayConstructor: IPluginOdapGatewayConstructorOptions;

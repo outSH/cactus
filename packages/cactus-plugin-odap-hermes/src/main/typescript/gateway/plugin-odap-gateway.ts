@@ -43,20 +43,20 @@ import {
   RollbackV1Message,
   RollbackAckV1Message,
 } from "../generated/openapi/typescript-axios";
-import { CommitFinalRequestEndpointV1 } from "../web-services/server-side/commit-final-request-endpoint";
-import { CommitFinalResponseEndpointV1 } from "../web-services/client-side/commit-final-response-endpoint";
-import { CommitPreparationResponseEndpointV1 } from "../web-services/client-side/commit-prepare-response-endpoint";
-import { LockEvidenceResponseEndpointV1 } from "../web-services/client-side/lock-evidence-response-endpoint";
-import { TransferCommenceResponseEndpointV1 } from "../web-services/client-side/transfer-commence-response-endpoint";
-import { TransferInitiationResponseEndpointV1 } from "../web-services/client-side/transfer-initiation-response-endpoint";
-import { LockEvidenceRequestEndpointV1 } from "../web-services/server-side/lock-evidence-request-endpoint";
-import { TransferCommenceRequestEndpointV1 } from "../web-services/server-side/transfer-commence-request-endpoint";
-import { TransferCompleteRequestEndpointV1 } from "../web-services/server-side/transfer-complete-request-endpoint";
-import { TransferInitiationRequestEndpointV1 } from "../web-services/server-side/transfer-initiation-request-endpoint";
-import { CommitPreparationRequestEndpointV1 } from "../web-services/server-side/commite-prepare-request-endpoint";
+import { CommitFinalRequestEndpointV1 } from "../web-services/server-side/commit-final-request-endpoint.js";
+import { CommitFinalResponseEndpointV1 } from "../web-services/client-side/commit-final-response-endpoint.js";
+import { CommitPreparationResponseEndpointV1 } from "../web-services/client-side/commit-prepare-response-endpoint.js";
+import { LockEvidenceResponseEndpointV1 } from "../web-services/client-side/lock-evidence-response-endpoint.js";
+import { TransferCommenceResponseEndpointV1 } from "../web-services/client-side/transfer-commence-response-endpoint.js";
+import { TransferInitiationResponseEndpointV1 } from "../web-services/client-side/transfer-initiation-response-endpoint.js";
+import { LockEvidenceRequestEndpointV1 } from "../web-services/server-side/lock-evidence-request-endpoint.js";
+import { TransferCommenceRequestEndpointV1 } from "../web-services/server-side/transfer-commence-request-endpoint.js";
+import { TransferCompleteRequestEndpointV1 } from "../web-services/server-side/transfer-complete-request-endpoint.js";
+import { TransferInitiationRequestEndpointV1 } from "../web-services/server-side/transfer-initiation-request-endpoint.js";
+import { CommitPreparationRequestEndpointV1 } from "../web-services/server-side/commite-prepare-request-endpoint.js";
 import { randomInt } from "crypto";
-import { ClientGatewayHelper } from "./client/client-helper";
-import { ServerGatewayHelper } from "./server/server-helper";
+import { ClientGatewayHelper } from "./client/client-helper.js";
+import { ServerGatewayHelper } from "./server/server-helper.js";
 import {
   checkValidRecoverMessage,
   sendRecoverMessage,
@@ -74,11 +74,11 @@ import {
   sendRecoverSuccessMessage,
 } from "./recovery/recover-success";
 import { SHA256 } from "crypto-js";
-import { RecoverMessageEndpointV1 } from "../web-services/recovery/recover-message-endpoint";
-import { RecoverUpdateMessageEndpointV1 } from "../web-services/recovery/recover-update-message-endpoint";
-import { RecoverUpdateAckMessageEndpointV1 } from "../web-services/recovery/recover-update-ack-message-endpoint";
-import { RecoverSuccessMessageEndpointV1 } from "../web-services/recovery/recover-success-message-endpoint";
-import { RollbackMessageEndpointV1 } from "../web-services/recovery/rollback-message-endpoint";
+import { RecoverMessageEndpointV1 } from "../web-services/recovery/recover-message-endpoint.js";
+import { RecoverUpdateMessageEndpointV1 } from "../web-services/recovery/recover-update-message-endpoint.js";
+import { RecoverUpdateAckMessageEndpointV1 } from "../web-services/recovery/recover-update-ack-message-endpoint.js";
+import { RecoverSuccessMessageEndpointV1 } from "../web-services/recovery/recover-success-message-endpoint.js";
+import { RollbackMessageEndpointV1 } from "../web-services/recovery/rollback-message-endpoint.js";
 import {
   checkValidRollbackMessage,
   sendRollbackMessage,
@@ -88,8 +88,8 @@ import {
   checkValidRollbackAckMessage,
   sendRollbackAckMessage,
 } from "./recovery/rollback-ack";
-import { ClientRequestEndpointV1 } from "../web-services/client-side/client-request-endpoint";
-import { RollbackAckMessageEndpointV1 } from "../web-services/recovery/rollback-ack-message-endpoint";
+import { ClientRequestEndpointV1 } from "../web-services/client-side/client-request-endpoint.js";
+import { RollbackAckMessageEndpointV1 } from "../web-services/recovery/rollback-ack-message-endpoint.js";
 
 export enum OdapMessageType {
   InitializationRequest = "urn:ietf:odap:msgtype:init-transfer-msg",

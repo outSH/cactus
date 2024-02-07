@@ -15,7 +15,7 @@ import {
   PluginKeychainVault,
 } from "./plugin-keychain-vault";
 
-import { PluginKeychainVaultRemoteAdapter } from "./plugin-keychain-vault-remote-adapter";
+import { PluginKeychainVaultRemoteAdapter } from "./plugin-keychain-vault-remote-adapter.js";
 
 export class PluginFactoryKeychain extends PluginFactory<
   IPluginKeychain,

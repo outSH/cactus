@@ -33,7 +33,7 @@ import {
   IrohaV2TestEnv,
   generateTestIrohaCredentials,
 } from "../test-helpers/iroha2-env-setup";
-import { addRandomSuffix } from "../test-helpers/utils";
+import { addRandomSuffix } from "../test-helpers/utils.js";
 
 setCrypto(crypto);
 

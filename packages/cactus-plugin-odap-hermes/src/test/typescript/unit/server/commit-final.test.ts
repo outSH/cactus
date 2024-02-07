@@ -25,10 +25,10 @@ import { GoIpfsTestContainer } from "@hyperledger/cactus-test-tooling";
 import express from "express";
 import { AddressInfo } from "net";
 
-import { BesuOdapGateway } from "../../../../main/typescript/gateway/besu-odap-gateway";
-import { FabricOdapGateway } from "../../../../main/typescript/gateway/fabric-odap-gateway";
-import { ServerGatewayHelper } from "../../../../main/typescript/gateway/server/server-helper";
-import { ClientGatewayHelper } from "../../../../main/typescript/gateway/client/client-helper";
+import { BesuOdapGateway } from "../../../../main/typescript/gateway/besu-odap-gateway.js";
+import { FabricOdapGateway } from "../../../../main/typescript/gateway/fabric-odap-gateway.js";
+import { ServerGatewayHelper } from "../../../../main/typescript/gateway/server/server-helper.js";
+import { ClientGatewayHelper } from "../../../../main/typescript/gateway/client/client-helper.js";
 
 const MAX_RETRIES = 5;
 const MAX_TIMEOUT = 5000;

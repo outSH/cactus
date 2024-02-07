@@ -15,7 +15,7 @@ import {
 
 import { registerWebServiceEndpoint } from "@hyperledger/cactus-core";
 
-import { PluginOdapGateway } from "../../gateway/plugin-odap-gateway";
+import { PluginOdapGateway } from "../../gateway/plugin-odap-gateway.js";
 import OAS from "../../../json/openapi.json";
 
 export interface ITransferCompleteRequestEndpointOptions {

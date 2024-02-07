@@ -16,8 +16,8 @@ import {
   IAuthorizationConfig,
 } from "../../../main/typescript/public-api";
 
-import { PluginLedgerConnectorStub } from "../fixtures/plugin-ledger-connector-stub/plugin-ledger-connector-stub";
-import { UnprotectedActionEndpoint } from "../fixtures/plugin-ledger-connector-stub/web-services/unprotected-action-endpoint";
+import { PluginLedgerConnectorStub } from "../fixtures/plugin-ledger-connector-stub/plugin-ledger-connector-stub.js";
+import { UnprotectedActionEndpoint } from "../fixtures/plugin-ledger-connector-stub/web-services/unprotected-action-endpoint.js";
 
 const testCase =
   "API server enforces scope requirements on top of generic authz";

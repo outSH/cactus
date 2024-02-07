@@ -23,10 +23,10 @@ import {
   LoggerProvider,
   LogLevelDesc,
 } from "@hyperledger/cactus-common";
-import { GetConsortiumEndpointV1 } from "./consortium/get-consortium-jws-endpoint-v1";
-import { GetNodeJwsEndpoint } from "./consortium/get-node-jws-endpoint-v1";
+import { GetConsortiumEndpointV1 } from "./consortium/get-consortium-jws-endpoint-v1.js";
+import { GetNodeJwsEndpoint } from "./consortium/get-node-jws-endpoint-v1.js";
 
-import { PrometheusExporter } from "./prometheus-exporter/prometheus-exporter";
+import { PrometheusExporter } from "./prometheus-exporter/prometheus-exporter.js";
 
 import {
   IGetPrometheusExporterMetricsEndpointV1Options,

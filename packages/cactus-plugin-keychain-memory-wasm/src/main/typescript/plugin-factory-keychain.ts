@@ -8,7 +8,7 @@ import {
   PluginKeychainMemoryWasm,
 } from "./plugin-keychain-memory-wasm";
 
-import { createPluginFactory } from "./generated/wasm-pack/cactus_plugin_keychain_memory_wasm";
+import { createPluginFactory } from "./generated/wasm-pack/cactus_plugin_keychain_memory_wasm.js";
 
 export class PluginFactoryKeychain extends PluginFactory<
   PluginKeychainMemoryWasm,

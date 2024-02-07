@@ -8,7 +8,7 @@ import { PluginObjectStoreIpfs } from "@hyperledger/cactus-plugin-object-store-i
 import bodyParser from "body-parser";
 import express from "express";
 import { DefaultApi as ObjectStoreIpfsApi } from "@hyperledger/cactus-plugin-object-store-ipfs";
-import { AssetProfile } from "../../../main/typescript/generated/openapi/typescript-axios";
+import { AssetProfile } from "../../../main/typescript/generated/openapi/typescript-axios.js";
 import {
   IListenOptions,
   LoggerProvider,
@@ -28,7 +28,7 @@ import {
   DEFAULT_FABRIC_2_AIO_FABRIC_VERSION,
 } from "@hyperledger/cactus-test-tooling";
 import { PluginKeychainMemory } from "@hyperledger/cactus-plugin-keychain-memory";
-import { ClientV1Request } from "../../../main/typescript/public-api";
+import { ClientV1Request } from "../../../main/typescript/public-api.js";
 import LockAssetContractJson from "../../solidity/lock-asset-contract/LockAsset.json";
 import { PluginRegistry } from "@hyperledger/cactus-core";
 import {
@@ -64,8 +64,8 @@ import {
   IBesuOdapGatewayConstructorOptions,
   BesuOdapGateway,
 } from "../../../main/typescript/gateway/besu-odap-gateway";
-import { ClientGatewayHelper } from "../../../main/typescript/gateway/client/client-helper";
-import { ServerGatewayHelper } from "../../../main/typescript/gateway/server/server-helper";
+import { ClientGatewayHelper } from "../../../main/typescript/gateway/client/client-helper.js";
+import { ServerGatewayHelper } from "../../../main/typescript/gateway/server/server-helper.js";
 
 /**
  * Use this to debug issues with the fabric node SDK

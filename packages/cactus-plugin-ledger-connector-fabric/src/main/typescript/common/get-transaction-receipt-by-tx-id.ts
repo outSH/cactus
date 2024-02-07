@@ -7,7 +7,7 @@ import {
   TransactReceiptBlockMetaData,
 } from "../generated/openapi/typescript-axios";
 import { common } from "fabric-protos";
-import { querySystemChainCode } from "./query-system-chain-code";
+import { querySystemChainCode } from "./query-system-chain-code.js";
 
 export interface IGetTransactionReceiptByTxIDOptions {
   readonly logLevel?: LogLevelDesc;

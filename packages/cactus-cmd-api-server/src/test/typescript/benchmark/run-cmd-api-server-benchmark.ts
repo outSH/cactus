@@ -25,7 +25,7 @@ import {
   IAuthorizationConfig,
 } from "../../../main/typescript/public-api";
 
-import { default_service, empty } from "../../../main/typescript/public-api";
+import { default_service, empty } from "../../../main/typescript/public-api.js";
 
 const LOG_TAG =
   "[packages/cactus-cmd-api-server/src/test/typescript/benchmark/run-cmd-api-server-benchmark.ts]";

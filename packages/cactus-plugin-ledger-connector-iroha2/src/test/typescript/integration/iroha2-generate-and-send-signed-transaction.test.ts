@@ -26,11 +26,11 @@ import {
   generateTestIrohaCredentials,
   IrohaV2TestEnv,
 } from "../test-helpers/iroha2-env-setup";
-import { addRandomSuffix } from "../test-helpers/utils";
+import { addRandomSuffix } from "../test-helpers/utils.js";
 
 import "jest-extended";
 import { TransactionPayload } from "@iroha2/data-model";
-import { signIrohaV2Query } from "../../../main/typescript/iroha-sign-utils";
+import { signIrohaV2Query } from "../../../main/typescript/iroha-sign-utils.js";
 
 // Logger setup
 const log: Logger = LoggerProvider.getOrCreate({

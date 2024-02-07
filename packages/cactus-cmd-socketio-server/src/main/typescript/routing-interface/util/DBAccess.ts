@@ -5,7 +5,7 @@
  * DBAccess.ts
  */
 
-import { ConfigUtil } from "../util/ConfigUtil";
+import { ConfigUtil } from "../util/ConfigUtil.js";
 import {
   ValidatorRegistry,
   LedgerPluginInfo,

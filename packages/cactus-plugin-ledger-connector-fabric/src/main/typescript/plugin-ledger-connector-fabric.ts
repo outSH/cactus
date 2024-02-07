@@ -74,7 +74,7 @@ import {
   GetPrometheusExporterMetricsEndpointV1,
 } from "./get-prometheus-exporter-metrics/get-prometheus-exporter-metrics-endpoint-v1";
 
-import { WatchBlocksV1Endpoint } from "./watch-blocks/watch-blocks-v1-endpoint";
+import { WatchBlocksV1Endpoint } from "./watch-blocks/watch-blocks-v1-endpoint.js";
 
 import {
   ConnectionProfile,
@@ -108,19 +108,19 @@ import {
   IDeployContractGoSourceEndpointV1Options,
 } from "./deploy-contract-go-source/deploy-contract-go-source-endpoint-v1";
 
-import { PrometheusExporter } from "./prometheus-exporter/prometheus-exporter";
-import { IQueryInstalledResponse } from "./peer/i-query-installed-response";
-import { IQueryCommittedResponse } from "./peer/i-query-committed-response";
+import { PrometheusExporter } from "./prometheus-exporter/prometheus-exporter.js";
+import { IQueryInstalledResponse } from "./peer/i-query-installed-response.js";
+import { IQueryCommittedResponse } from "./peer/i-query-committed-response.js";
 import {
   DeployContractEndpointV1,
   IDeployContractEndpointV1Options,
 } from "./deploy-contract/deploy-contract-endpoint-v1";
-import { sourceLangToRuntimeLang } from "./peer/source-lang-to-runtime-lang";
+import { sourceLangToRuntimeLang } from "./peer/source-lang-to-runtime-lang.js";
 import FabricCAServices, {
   IEnrollmentRequest,
   IRegisterRequest,
 } from "fabric-ca-client";
-import { createGateway } from "./common/create-gateway";
+import { createGateway } from "./common/create-gateway.js";
 
 import {
   IVaultConfig,
@@ -132,15 +132,15 @@ import {
   CertDatastore,
   IIdentityData,
 } from "./identity/internal/cert-datastore";
-import { GetTransactionReceiptByTxIDEndpointV1 } from "./get-transaction-receipt/get-transaction-receipt-by-txid-endpoint-v1";
+import { GetTransactionReceiptByTxIDEndpointV1 } from "./get-transaction-receipt/get-transaction-receipt-by-txid-endpoint-v1.js";
 import {
   getTransactionReceiptByTxID,
   IGetTransactionReceiptByTxIDOptions,
 } from "./common/get-transaction-receipt-by-tx-id";
-import { GetBlockEndpointV1 } from "./get-block/get-block-endpoint-v1";
-import { querySystemChainCode } from "./common/query-system-chain-code";
-import { isSshExecOk } from "./common/is-ssh-exec-ok";
-import { asBuffer, assertFabricFunctionIsAvailable } from "./common/utils";
+import { GetBlockEndpointV1 } from "./get-block/get-block-endpoint-v1.js";
+import { querySystemChainCode } from "./common/query-system-chain-code.js";
+import { isSshExecOk } from "./common/is-ssh-exec-ok.js";
+import { asBuffer, assertFabricFunctionIsAvailable } from "./common/utils.js";
 
 const { loadFromConfig } = require("fabric-network/lib/impl/ccp/networkconfig");
 assertFabricFunctionIsAvailable(loadFromConfig, "loadFromConfig");

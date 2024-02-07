@@ -12,7 +12,7 @@ import {
   WatchBlocksV1Options,
   WatchBlocksV1Progress,
 } from "../generated/openapi/typescript-axios";
-import { Configuration } from "../generated/openapi/typescript-axios/configuration";
+import { Configuration } from "../generated/openapi/typescript-axios/configuration.js";
 import { AbiItem } from "web3-utils";
 
 export class QuorumApiClientOptions extends Configuration {

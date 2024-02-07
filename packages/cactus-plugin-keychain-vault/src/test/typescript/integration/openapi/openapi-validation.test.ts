@@ -28,7 +28,7 @@ import {
   SetKeychainEntryRequestV1,
 } from "../../../../main/typescript/public-api";
 
-import { DefaultApi as KeychainVaultApi } from "../../../../main/typescript/public-api";
+import { DefaultApi as KeychainVaultApi } from "../../../../main/typescript/public-api.js";
 
 import { installOpenapiValidationMiddleware } from "@hyperledger/cactus-core";
 import OAS from "../../../../main/json/openapi.json";

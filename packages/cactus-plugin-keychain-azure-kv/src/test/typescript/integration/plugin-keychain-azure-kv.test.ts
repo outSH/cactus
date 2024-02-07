@@ -17,7 +17,7 @@ import {
   PluginKeychainAzureKv,
 } from "../../../main/typescript/public-api";
 
-import { SecretClientMock } from "../mock/plugin-keychain-azure-kv-mock";
+import { SecretClientMock } from "../mock/plugin-keychain-azure-kv-mock.js";
 
 const logLevel: LogLevelDesc = "TRACE";
 

@@ -14,7 +14,7 @@ import {
 } from "@hyperledger/cactus-common";
 import { v4 as uuidV4 } from "uuid";
 import { Configuration } from "@hyperledger/cactus-core-api";
-import { PluginOdapGateway } from "../../../../main/typescript/gateway/plugin-odap-gateway";
+import { PluginOdapGateway } from "../../../../main/typescript/gateway/plugin-odap-gateway.js";
 import { GoIpfsTestContainer } from "@hyperledger/cactus-test-tooling";
 
 import {
@@ -30,8 +30,8 @@ import {
   FabricOdapGateway,
   IFabricOdapGatewayConstructorOptions,
 } from "../../../../main/typescript/gateway/fabric-odap-gateway";
-import { ClientGatewayHelper } from "../../../../main/typescript/gateway/client/client-helper";
-import { ServerGatewayHelper } from "../../../../main/typescript/gateway/server/server-helper";
+import { ClientGatewayHelper } from "../../../../main/typescript/gateway/client/client-helper.js";
+import { ServerGatewayHelper } from "../../../../main/typescript/gateway/server/server-helper.js";
 
 import { knexClientConnection, knexServerConnection } from "../../knex.config";
 

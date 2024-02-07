@@ -21,7 +21,7 @@ import {
   Configuration,
 } from "../../../main/typescript/generated/openapi/typescript-axios/index";
 
-import { SecretManagerServiceClientMock } from "../mock/plugin-keychain-google-sm-mock";
+import { SecretManagerServiceClientMock } from "../mock/plugin-keychain-google-sm-mock.js";
 
 const logLevel: LogLevelDesc = "TRACE";
 

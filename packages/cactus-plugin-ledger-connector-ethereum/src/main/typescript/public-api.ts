@@ -12,7 +12,7 @@ export * from "./types/model-type-guards";
 export { PluginFactoryLedgerConnector } from "./plugin-factory-ledger-connector";
 
 import { IPluginFactoryOptions } from "@hyperledger/cactus-core-api";
-import { PluginFactoryLedgerConnector } from "./plugin-factory-ledger-connector";
+import { PluginFactoryLedgerConnector } from "./plugin-factory-ledger-connector.js";
 
 export {
   EthereumApiClient,

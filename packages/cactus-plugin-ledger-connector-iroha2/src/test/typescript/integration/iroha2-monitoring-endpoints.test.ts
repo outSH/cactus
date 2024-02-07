@@ -27,7 +27,7 @@ import {
   IrohaV2TestEnv,
   waitForCommit,
 } from "../test-helpers/iroha2-env-setup";
-import { addRandomSuffix } from "../test-helpers/utils";
+import { addRandomSuffix } from "../test-helpers/utils.js";
 
 import { VersionedCommittedBlock } from "@iroha2/data-model";
 import "jest-extended";

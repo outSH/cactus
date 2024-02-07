@@ -7,7 +7,7 @@ import {
   LoggerProvider,
   LogLevelDesc,
 } from "@hyperledger/cactus-common";
-import { getAuthorizationHeaders } from "./type-defs";
+import { getAuthorizationHeaders } from "./type-defs.js";
 import {
   AuthInfoV1,
   CDLCommonResponseV1,

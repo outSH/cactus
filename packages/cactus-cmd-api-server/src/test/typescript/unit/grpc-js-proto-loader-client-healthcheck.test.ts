@@ -8,7 +8,7 @@ import {
   ConfigService,
   HealthCheckResponse,
 } from "../../../main/typescript/public-api";
-import { AuthorizationProtocol } from "../../../main/typescript/public-api";
+import { AuthorizationProtocol } from "../../../main/typescript/public-api.js";
 import { ServiceClientConstructor } from "@grpc/grpc-js/build/src/make-client";
 import * as grpc from "@grpc/grpc-js";
 import * as protoLoader from "@grpc/proto-loader";

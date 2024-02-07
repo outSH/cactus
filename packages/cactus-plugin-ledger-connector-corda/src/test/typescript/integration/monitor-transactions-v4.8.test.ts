@@ -44,7 +44,7 @@ import {
   JvmTypeKind,
   PublicKey,
 } from "../../../main/typescript/generated/openapi/typescript-axios/index";
-import { CordaApiClient } from "../../../main/typescript/api-client/corda-api-client";
+import { CordaApiClient } from "../../../main/typescript/api-client/corda-api-client.js";
 import { Configuration } from "@hyperledger/cactus-core-api";
 import { Subscription } from "rxjs";
 

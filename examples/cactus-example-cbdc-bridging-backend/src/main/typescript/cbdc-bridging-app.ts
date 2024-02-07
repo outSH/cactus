@@ -21,12 +21,12 @@ import {
   IOdapPluginKeyPair,
 } from "@hyperledger/cactus-plugin-odap-hermes";
 import { PluginKeychainMemory } from "@hyperledger/cactus-plugin-keychain-memory";
-import { CbdcBridgingAppDummyInfrastructure } from "./infrastructure/cbdc-bridging-app-dummy-infrastructure";
+import { CbdcBridgingAppDummyInfrastructure } from "./infrastructure/cbdc-bridging-app-dummy-infrastructure.js";
 import { DefaultApi as FabricApi } from "@hyperledger/cactus-plugin-ledger-connector-fabric";
 import { DefaultApi as BesuApi } from "@hyperledger/cactus-plugin-ledger-connector-besu";
 import { DefaultApi as IpfsApi } from "@hyperledger/cactus-plugin-object-store-ipfs";
-import { FabricOdapGateway } from "./odap-extension/fabric-odap-gateway";
-import { BesuOdapGateway } from "./odap-extension/besu-odap-gateway";
+import { FabricOdapGateway } from "./odap-extension/fabric-odap-gateway.js";
+import { BesuOdapGateway } from "./odap-extension/besu-odap-gateway.js";
 import CryptoMaterial from "../../crypto-material/crypto-material.json";
 
 export interface ICbdcBridgingApp {

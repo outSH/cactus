@@ -22,12 +22,12 @@ import {
   AssetProfile,
   ClientV1Request,
 } from "../../../main/typescript/public-api";
-import { makeSessionDataChecks } from "../make-checks";
+import { makeSessionDataChecks } from "../make-checks.js";
 
-import { BesuOdapGateway } from "../../../main/typescript/gateway/besu-odap-gateway";
-import { FabricOdapGateway } from "../../../main/typescript/gateway/fabric-odap-gateway";
-import { ServerGatewayHelper } from "../../../main/typescript/gateway/server/server-helper";
-import { ClientGatewayHelper } from "../../../main/typescript/gateway/client/client-helper";
+import { BesuOdapGateway } from "../../../main/typescript/gateway/besu-odap-gateway.js";
+import { FabricOdapGateway } from "../../../main/typescript/gateway/fabric-odap-gateway.js";
+import { ServerGatewayHelper } from "../../../main/typescript/gateway/server/server-helper.js";
+import { ClientGatewayHelper } from "../../../main/typescript/gateway/client/client-helper.js";
 
 import { knexClientConnection, knexServerConnection } from "../knex.config";
 

@@ -5,7 +5,7 @@ export * from "./generated/openapi/typescript-axios/index";
 
 import { IPluginFactoryOptions } from "@hyperledger/cactus-core-api";
 
-import { PluginFactoryHtlcEthBesu } from "./plugin-factory-htlc-eth-besu";
+import { PluginFactoryHtlcEthBesu } from "./plugin-factory-htlc-eth-besu.js";
 export {
   PluginHtlcEthBesu,
   IPluginHtlcEthBesuOptions,

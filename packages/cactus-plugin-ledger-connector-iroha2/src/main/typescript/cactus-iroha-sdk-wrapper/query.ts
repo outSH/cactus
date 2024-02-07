@@ -42,7 +42,7 @@ import {
   createAssetDefinitionId,
   createAssetId,
 } from "./data-factories";
-import { IrohaV2PrerequisitesProvider } from "./prerequisites-provider";
+import { IrohaV2PrerequisitesProvider } from "./prerequisites-provider.js";
 
 /**
  * Action context for specific query.

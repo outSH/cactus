@@ -4,7 +4,7 @@ import {
   EmissionsRecord,
   EmissionsRecordInterface,
 } from "./emissions";
-import { getCO2EmissionFactor } from "./emissions-calc";
+import { getCO2EmissionFactor } from "./emissions-calc.js";
 import {
   UtilityEmissionsFactor,
   UtilityEmissionsFactorInterface,

@@ -74,13 +74,13 @@ import {
   cactiAttributesToAnonCredsRequestedAttributes,
 } from "./aries-types";
 
-import { WatchConnectionStateV1Endpoint } from "./web-services/watch-connection-state-v1-endpoint";
-import { WatchProofStateV1Endpoint } from "./web-services/watch-proof-state-v1-endpoint";
-import { GetAgentsEndpoint } from "./web-services/get-agents-v1-endpoint";
-import { RequestProofEndpoint } from "./web-services/request-proof-v1-endpoint";
-import { GetConnectionsEndpoint } from "./web-services/get-connections-v1-endpoint";
-import { CreateNewConnectionInvitationEndpoint } from "./web-services/create-new-connection-invitation-v1-endpoint";
-import { AcceptInvitationEndpoint } from "./web-services/accept-invitation-v1-endpoint";
+import { WatchConnectionStateV1Endpoint } from "./web-services/watch-connection-state-v1-endpoint.js";
+import { WatchProofStateV1Endpoint } from "./web-services/watch-proof-state-v1-endpoint.js";
+import { GetAgentsEndpoint } from "./web-services/get-agents-v1-endpoint.js";
+import { RequestProofEndpoint } from "./web-services/request-proof-v1-endpoint.js";
+import { GetConnectionsEndpoint } from "./web-services/get-connections-v1-endpoint.js";
+import { CreateNewConnectionInvitationEndpoint } from "./web-services/create-new-connection-invitation-v1-endpoint.js";
+import { AcceptInvitationEndpoint } from "./web-services/accept-invitation-v1-endpoint.js";
 
 const DEFAULT_INVITATION_DOMAIN = "https://example.org";
 const DEFAULT_WALLET_PATH = path.join(

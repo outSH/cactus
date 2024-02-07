@@ -29,7 +29,7 @@ import {
   Configuration,
 } from "../../../main/typescript/generated/openapi/typescript-axios/index";
 
-import { K_CACTUS_KEYCHAIN_AWSSM_MANAGED_KEY_COUNT } from "../../../main/typescript/prometheus-exporter/metrics";
+import { K_CACTUS_KEYCHAIN_AWSSM_MANAGED_KEY_COUNT } from "../../../main/typescript/prometheus-exporter/metrics.js";
 
 import fs from "fs";
 import path from "path";

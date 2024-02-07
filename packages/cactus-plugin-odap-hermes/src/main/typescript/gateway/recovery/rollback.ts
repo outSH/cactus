@@ -1,6 +1,6 @@
-import { RollbackV1Message } from "../../generated/openapi/typescript-axios";
+import { RollbackV1Message } from "../../generated/openapi/typescript-axios.js";
 import { LoggerProvider } from "@hyperledger/cactus-common";
-import { PluginOdapGateway } from "../plugin-odap-gateway";
+import { PluginOdapGateway } from "../plugin-odap-gateway.js";
 // import { SHA256 } from "crypto-js";
 
 const log = LoggerProvider.getOrCreate({

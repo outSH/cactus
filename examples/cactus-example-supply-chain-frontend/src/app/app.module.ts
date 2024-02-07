@@ -17,7 +17,7 @@ import {
   FABRIC_DEMO_LEDGER_ID,
 } from "../constants";
 import { ApiClient } from "@hyperledger/cactus-api-client";
-import { AuthConfig } from "./common/auth-config";
+import { AuthConfig } from "./common/auth-config.js";
 
 LoggerProvider.setLogLevel("TRACE");
 

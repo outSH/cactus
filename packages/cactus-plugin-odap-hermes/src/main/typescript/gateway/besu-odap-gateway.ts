@@ -1,16 +1,16 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import { Knex } from "knex";
 import { Configuration } from "@hyperledger/cactus-core-api";
-import { SessionDataRollbackActionsPerformedEnum } from "../generated/openapi/typescript-axios";
+import { SessionDataRollbackActionsPerformedEnum } from "../generated/openapi/typescript-axios.js";
 import {
   DefaultApi as BesuApi,
   Web3SigningCredential,
   EthContractInvocationType,
   InvokeContractV1Request as BesuInvokeContractV1Request,
 } from "@hyperledger/cactus-plugin-ledger-connector-besu";
-import { IOdapPluginKeyPair, PluginOdapGateway } from "./plugin-odap-gateway";
-import { ClientGatewayHelper } from "./client/client-helper";
-import { ServerGatewayHelper } from "./server/server-helper";
+import { IOdapPluginKeyPair, PluginOdapGateway } from "./plugin-odap-gateway.js";
+import { ClientGatewayHelper } from "./client/client-helper.js";
+import { ServerGatewayHelper } from "./server/server-helper.js";
 
 export interface IBesuOdapGatewayConstructorOptions {
   name: string;

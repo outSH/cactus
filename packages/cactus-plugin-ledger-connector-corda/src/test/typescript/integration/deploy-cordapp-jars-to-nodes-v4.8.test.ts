@@ -31,7 +31,7 @@ import {
   IPluginLedgerConnectorCordaOptions,
   PluginLedgerConnectorCorda,
 } from "../../../main/typescript/plugin-ledger-connector-corda";
-import { K_CACTUS_CORDA_TOTAL_TX_COUNT } from "../../../main/typescript/prometheus-exporter/metrics";
+import { K_CACTUS_CORDA_TOTAL_TX_COUNT } from "../../../main/typescript/prometheus-exporter/metrics.js";
 
 const logLevel: LogLevelDesc = "TRACE";
 

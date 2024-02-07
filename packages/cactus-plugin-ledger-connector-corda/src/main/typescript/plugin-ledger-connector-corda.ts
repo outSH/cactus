@@ -20,14 +20,14 @@ import {
   LogLevelDesc,
 } from "@hyperledger/cactus-common";
 
-import { DeployContractJarsEndpoint } from "./web-services/deploy-contract-jars-endpoint";
+import { DeployContractJarsEndpoint } from "./web-services/deploy-contract-jars-endpoint.js";
 
 import {
   IGetPrometheusExporterMetricsEndpointV1Options,
   GetPrometheusExporterMetricsEndpointV1,
 } from "./web-services/get-prometheus-exporter-metrics-endpoint-v1";
 
-import { PrometheusExporter } from "./prometheus-exporter/prometheus-exporter";
+import { PrometheusExporter } from "./prometheus-exporter/prometheus-exporter.js";
 import {
   IInvokeContractEndpointV1Options,
   InvokeContractEndpointV1,

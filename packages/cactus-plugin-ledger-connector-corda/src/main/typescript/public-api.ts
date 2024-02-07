@@ -13,7 +13,7 @@ export {
 } from "./web-services/deploy-contract-jars-endpoint";
 
 import { IPluginFactoryOptions } from "@hyperledger/cactus-core-api";
-import { PluginFactoryLedgerConnector } from "./plugin-factory-ledger-connector";
+import { PluginFactoryLedgerConnector } from "./plugin-factory-ledger-connector.js";
 
 export async function createPluginFactory(
   pluginFactoryOptions: IPluginFactoryOptions,

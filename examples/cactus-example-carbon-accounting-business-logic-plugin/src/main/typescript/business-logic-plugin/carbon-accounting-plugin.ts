@@ -35,14 +35,14 @@ import {
   ICarbonAccountingXdaiContractDeploymentInfo,
 } from "../i-carbon-accounting-contract-deployment-info";
 
-import { GetAllowanceEndpoint } from "./web-services/dao-token/get-allowance-endpoint";
+import { GetAllowanceEndpoint } from "./web-services/dao-token/get-allowance-endpoint.js";
 
 import {
   EnrollAdminInfo,
   EnrollAdminV1Request,
   EnrollAdminV1Response,
 } from "../generated/openapi/typescript-axios";
-import { EnrollAdminV1Endpoint } from "./web-services/utility-emissions-channel/enroll-admin-v1-endpoint";
+import { EnrollAdminV1Endpoint } from "./web-services/utility-emissions-channel/enroll-admin-v1-endpoint.js";
 
 export interface OrgEnv {
   CORE_PEER_LOCALMSPID: string;

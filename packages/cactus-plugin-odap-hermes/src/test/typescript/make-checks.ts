@@ -1,4 +1,4 @@
-import { PluginOdapGateway } from "../../main/typescript/gateway/plugin-odap-gateway";
+import { PluginOdapGateway } from "../../main/typescript/gateway/plugin-odap-gateway.js";
 
 export async function makeSessionDataChecks(
   pluginSourceGateway: PluginOdapGateway,

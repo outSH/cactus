@@ -63,7 +63,7 @@ import {
 
 import { bytesToHex, hexToBytes } from "hada";
 
-import { CactusIrohaV2QueryClient } from "./query";
+import { CactusIrohaV2QueryClient } from "./query.js";
 import {
   createAccountId,
   createAssetId,
@@ -75,7 +75,7 @@ import {
   TransactionStatusV1,
   Iroha2BaseConfigTorii,
 } from "../generated/openapi/typescript-axios";
-import { IrohaV2PrerequisitesProvider } from "./prerequisites-provider";
+import { IrohaV2PrerequisitesProvider } from "./prerequisites-provider.js";
 
 setCrypto(crypto);
 

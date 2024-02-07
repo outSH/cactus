@@ -5,8 +5,8 @@ import {
   ClientGatewayHelper,
 } from "@hyperledger/cactus-plugin-odap-hermes";
 import { OdapMessageType } from "@hyperledger/cactus-plugin-odap-hermes";
-import { FabricOdapGateway } from "./fabric-odap-gateway";
-import { BesuOdapGateway } from "./besu-odap-gateway";
+import { FabricOdapGateway } from "./fabric-odap-gateway.js";
+import { BesuOdapGateway } from "./besu-odap-gateway.js";
 
 export class ClientHelper extends ClientGatewayHelper {
   async sendTransferInitializationRequest(

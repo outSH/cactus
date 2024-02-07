@@ -16,7 +16,7 @@ import {
   WatchBlocksOptionsV1,
   WatchBlocksResponseV1,
 } from "../generated/openapi/typescript-axios";
-import { Configuration } from "../generated/openapi/typescript-axios/configuration";
+import { Configuration } from "../generated/openapi/typescript-axios/configuration.js";
 
 /**
  * Configuration for Iroha2ApiClient

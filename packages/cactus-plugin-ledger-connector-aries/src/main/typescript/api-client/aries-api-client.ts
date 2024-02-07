@@ -23,7 +23,7 @@ import {
   WatchProofStateProgressV1,
   WatchProofStateV1,
 } from "../generated/openapi/typescript-axios";
-import { Configuration } from "../generated/openapi/typescript-axios/configuration";
+import { Configuration } from "../generated/openapi/typescript-axios/configuration.js";
 
 export class AriesApiClientOptions extends Configuration {
   readonly logLevel?: LogLevelDesc;

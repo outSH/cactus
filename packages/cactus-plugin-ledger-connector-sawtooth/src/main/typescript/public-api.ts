@@ -5,7 +5,7 @@ export {
   IPluginLedgerConnectorSawtoothOptions,
 } from "./plugin-ledger-connector-sawtooth";
 
-import { PluginFactoryLedgerConnector } from "./plugin-factory-ledger-connector";
+import { PluginFactoryLedgerConnector } from "./plugin-factory-ledger-connector.js";
 export { PluginFactoryLedgerConnector } from "./plugin-factory-ledger-connector";
 
 export * from "./types/model-type-guards";

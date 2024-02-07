@@ -12,8 +12,8 @@ import {
   PluginOdapGateway,
 } from "@hyperledger/cactus-plugin-odap-hermes";
 import { SessionDataRollbackActionsPerformedEnum } from "@hyperledger/cactus-plugin-odap-hermes";
-import { ClientHelper } from "./client-helper";
-import { ServerHelper } from "./server-helper";
+import { ClientHelper } from "./client-helper.js";
+import { ServerHelper } from "./server-helper.js";
 
 export interface IBesuOdapGatewayConstructorOptions {
   name: string;

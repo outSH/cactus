@@ -7,7 +7,7 @@ export {
 } from "./plugin-keychain-memory";
 export { PluginFactoryKeychain } from "./plugin-factory-keychain";
 
-import { PluginFactoryKeychain } from "./plugin-factory-keychain";
+import { PluginFactoryKeychain } from "./plugin-factory-keychain.js";
 
 export async function createPluginFactory(
   pluginFactoryOptions: IPluginFactoryOptions,

@@ -9,7 +9,7 @@ export { signIrohaTransaction } from "./iroha-sign-utils";
 export { PluginFactoryLedgerConnector } from "./plugin-factory-ledger-connector";
 
 import { IPluginFactoryOptions } from "@hyperledger/cactus-core-api";
-import { PluginFactoryLedgerConnector } from "./plugin-factory-ledger-connector";
+import { PluginFactoryLedgerConnector } from "./plugin-factory-ledger-connector.js";
 
 export {
   IrohaApiClient,

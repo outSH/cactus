@@ -49,10 +49,10 @@ import {
   IrohaTransactionParametersV1,
 } from "./generated/openapi/typescript-axios";
 
-import { Iroha2TransactEndpointV1 } from "./web-services/transact-v1-endpoint";
-import { Iroha2QueryEndpointV1 } from "./web-services/query-v1-endpoint";
-import { Iroha2WatchBlocksEndpointV1 } from "./web-services/watch-blocks-v1-endpoint";
-import { Iroha2GenerateTransactionEndpointV1 } from "./web-services/generate-transaction-v1-endpoint";
+import { Iroha2TransactEndpointV1 } from "./web-services/transact-v1-endpoint.js";
+import { Iroha2QueryEndpointV1 } from "./web-services/query-v1-endpoint.js";
+import { Iroha2WatchBlocksEndpointV1 } from "./web-services/watch-blocks-v1-endpoint.js";
+import { Iroha2GenerateTransactionEndpointV1 } from "./web-services/generate-transaction-v1-endpoint.js";
 
 import { KeyPair } from "@iroha2/crypto-core";
 import {
@@ -60,9 +60,9 @@ import {
   generateIrohaV2KeyPair,
   TransactionPayloadParameters,
 } from "./cactus-iroha-sdk-wrapper/client";
-import { CactusIrohaV2QueryClient } from "./cactus-iroha-sdk-wrapper/query";
-import { LengthOf, stringifyBigIntReplacer } from "./utils";
-import { createAccountId } from "./cactus-iroha-sdk-wrapper/data-factories";
+import { CactusIrohaV2QueryClient } from "./cactus-iroha-sdk-wrapper/query.js";
+import { LengthOf, stringifyBigIntReplacer } from "./utils.js";
+import { createAccountId } from "./cactus-iroha-sdk-wrapper/data-factories.js";
 
 /**
  * Input options for PluginLedgerConnectorIroha2.

@@ -9,7 +9,7 @@ import {
   WatchBlocksV1,
   WatchBlocksV1Progress,
 } from "../generated/openapi/typescript-axios";
-import { Configuration } from "../generated/openapi/typescript-axios/configuration";
+import { Configuration } from "../generated/openapi/typescript-axios/configuration.js";
 
 export class BesuApiClientOptions extends Configuration {
   readonly logLevel?: LogLevelDesc;

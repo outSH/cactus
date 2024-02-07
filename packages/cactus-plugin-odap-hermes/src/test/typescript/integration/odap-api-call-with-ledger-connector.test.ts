@@ -8,7 +8,7 @@ import { PluginObjectStoreIpfs } from "@hyperledger/cactus-plugin-object-store-i
 import bodyParser from "body-parser";
 import express from "express";
 import { DefaultApi as ObjectStoreIpfsApi } from "@hyperledger/cactus-plugin-object-store-ipfs";
-import { AssetProfile } from "../../../main/typescript/generated/openapi/typescript-axios";
+import { AssetProfile } from "../../../main/typescript/generated/openapi/typescript-axios.js";
 import {
   IListenOptions,
   LoggerProvider,
@@ -53,7 +53,7 @@ import {
   Web3SigningCredential,
 } from "@hyperledger/cactus-plugin-ledger-connector-besu";
 
-import { makeSessionDataChecks } from "../make-checks";
+import { makeSessionDataChecks } from "../make-checks.js";
 import {
   FabricOdapGateway,
   IFabricOdapGatewayConstructorOptions,
@@ -62,8 +62,8 @@ import {
   BesuOdapGateway,
   IBesuOdapGatewayConstructorOptions,
 } from "../../../main/typescript/gateway/besu-odap-gateway";
-import { ClientGatewayHelper } from "../../../main/typescript/gateway/client/client-helper";
-import { ServerGatewayHelper } from "../../../main/typescript/gateway/server/server-helper";
+import { ClientGatewayHelper } from "../../../main/typescript/gateway/client/client-helper.js";
+import { ServerGatewayHelper } from "../../../main/typescript/gateway/server/server-helper.js";
 
 /**
  * Use this to debug issues with the fabric node SDK
