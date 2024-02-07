@@ -41,7 +41,7 @@ import {
   createAccountId,
   createAssetDefinitionId,
   createAssetId,
-} from "./data-factories";
+} from "./data-factories.js";
 import { IrohaV2PrerequisitesProvider } from "./prerequisites-provider.js";
 
 /**

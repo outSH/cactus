@@ -11,7 +11,7 @@ import {
 import {
   WatchProofStateProgressV1,
   WatchProofStateV1,
-} from "../generated/openapi/typescript-axios";
+} from "../generated/openapi/typescript-axios.js";
 import { AnoncredAgent } from "../aries-types.js";
 
 export interface IWatchProofStateV1EndpointConfiguration {

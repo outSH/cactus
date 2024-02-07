@@ -22,12 +22,12 @@ import {
   RecoverUpdateV1Message,
   RecoverV1Message,
   SessionData,
-} from "../../../../main/typescript/public-api";
+} from "../../../../main/typescript/public-api.js";
 import { randomInt } from "crypto";
 import {
   checkValidRecoverUpdateMessage,
   sendRecoverUpdateMessage,
-} from "../../../../main/typescript/gateway/recovery/recover-update";
+} from "../../../../main/typescript/gateway/recovery/recover-update.js";
 
 import { checkValidRecoverMessage } from "../../../../main/typescript/gateway/recovery/recover.js";
 import { BesuOdapGateway } from "../../../../main/typescript/gateway/besu-odap-gateway.js";

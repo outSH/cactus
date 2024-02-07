@@ -17,7 +17,7 @@ import {
   GetPastLogsV1Request,
   GetBlockV1Request,
   GetBesuRecordV1Request,
-} from "../../../../../main/typescript/public-api";
+} from "../../../../../main/typescript/public-api.js";
 import { PluginKeychainMemory } from "@hyperledger/cactus-plugin-keychain-memory";
 import {
   BesuTestLedger,

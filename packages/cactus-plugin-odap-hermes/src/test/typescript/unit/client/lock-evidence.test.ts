@@ -4,11 +4,11 @@ import { v4 as uuidV4 } from "uuid";
 import {
   OdapMessageType,
   PluginOdapGateway,
-} from "../../../../main/typescript/gateway/plugin-odap-gateway";
+} from "../../../../main/typescript/gateway/plugin-odap-gateway.js";
 import {
   LockEvidenceV1Response,
   SessionData,
-} from "../../../../main/typescript/public-api";
+} from "../../../../main/typescript/public-api.js";
 import { BesuOdapGateway } from "../../../../main/typescript/gateway/besu-odap-gateway.js";
 import { FabricOdapGateway } from "../../../../main/typescript/gateway/fabric-odap-gateway.js";
 import { ClientGatewayHelper } from "../../../../main/typescript/gateway/client/client-helper.js";

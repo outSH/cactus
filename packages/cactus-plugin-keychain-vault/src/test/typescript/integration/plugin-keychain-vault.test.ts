@@ -25,7 +25,7 @@ import {
   Configuration,
   IPluginKeychainVaultOptions,
   PluginKeychainVault,
-} from "../../../main/typescript/public-api";
+} from "../../../main/typescript/public-api.js";
 
 import { K_CACTUS_KEYCHAIN_VAULT_MANAGED_KEY_COUNT } from "../../../main/typescript/prometheus-exporter/metrics.js";
 

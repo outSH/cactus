@@ -11,7 +11,7 @@ import {
   getCurrentNetworkCredentialPath,
   getCredentialPath,
   fabricHelper
-} from '../fabric-functions'
+} from "../fabric-functions.js"
 import { handlePromise, getNetworkConfig } from "../helpers.js"
 import { MembershipManager } from '@hyperledger/cacti-weaver-sdk-fabric'
 

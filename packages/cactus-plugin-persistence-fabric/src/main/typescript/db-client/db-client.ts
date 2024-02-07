@@ -20,7 +20,7 @@ import {
   InsertBlockDetailsInterface,
   InsertBlockTransactionEntryInterface,
   InsertDetailedTransactionEntryInterface,
-} from "../types";
+} from "../types.js";
 // import { RuntimeError } from "run-time-error-cjs";
 
 export interface PostgresDatabaseClientOptions {

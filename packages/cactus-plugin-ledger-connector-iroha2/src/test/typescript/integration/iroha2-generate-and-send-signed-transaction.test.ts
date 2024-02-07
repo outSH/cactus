@@ -21,11 +21,11 @@ import {
   IrohaQuery,
   signIrohaV2Transaction,
   TransactionStatusV1,
-} from "../../../main/typescript/public-api";
+} from "../../../main/typescript/public-api.js";
 import {
   generateTestIrohaCredentials,
   IrohaV2TestEnv,
-} from "../test-helpers/iroha2-env-setup";
+} from "../test-helpers/iroha2-env-setup.js";
 import { addRandomSuffix } from "../test-helpers/utils.js";
 
 import "jest-extended";

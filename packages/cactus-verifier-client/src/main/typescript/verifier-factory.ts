@@ -19,7 +19,7 @@ import { ISocketApiClient } from "@hyperledger/cactus-core-api";
 import {
   ClientApiConfig,
   getValidatorApiClient,
-} from "./get-validator-api-client";
+} from "./get-validator-api-client.js";
 
 //////////////////////////////////
 // Type Declarations

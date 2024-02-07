@@ -7,7 +7,7 @@ import { checkPkgNpmScope } from "./check-pkg-npm-scope.js";
 import {
   ICheckMissingNodeDepsRequest,
   checkMissingNodeDeps,
-} from "./check-missing-node-deps";
+} from "./check-missing-node-deps.js";
 import { getAllPkgDirs } from "./get-all-pkg-dirs.js";
 
 export async function runCustomChecks(

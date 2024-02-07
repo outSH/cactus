@@ -11,7 +11,7 @@ import {
   PluginLedgerConnectorFabric,
   IIdentityData,
   FabricContractInvocationType,
-} from "../../../../main/typescript/public-api";
+} from "../../../../main/typescript/public-api.js";
 import { DiscoveryOptions } from "fabric-network";
 
 const logLevel: LogLevelDesc = "TRACE";

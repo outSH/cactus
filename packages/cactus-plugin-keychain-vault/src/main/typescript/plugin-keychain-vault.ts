@@ -22,7 +22,7 @@ import { PrometheusExporter } from "./prometheus-exporter/prometheus-exporter.js
 import {
   IGetPrometheusExporterMetricsEndpointV1Options,
   GetPrometheusExporterMetricsEndpointV1,
-} from "./web-services/get-prometheus-exporter-metrics-endpoint-v1";
+} from "./web-services/get-prometheus-exporter-metrics-endpoint-v1.js";
 import { GetKeychainEntryEndpointV1 } from "./web-services/get-keychain-entry-endpoint-v1.js";
 import { SetKeychainEntryEndpointV1 } from "./web-services/set-keychain-entry-endpoint-v1.js";
 import { HasKeychainEntryEndpointV1 } from "./web-services/has-keychain-entry-endpoint-v1.js";

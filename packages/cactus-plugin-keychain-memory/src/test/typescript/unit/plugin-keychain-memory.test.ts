@@ -10,7 +10,7 @@ import { v4 as uuidv4 } from "uuid";
 import {
   IPluginKeychainMemoryOptions,
   PluginKeychainMemory,
-} from "../../../main/typescript";
+} from "../../../main/typescript.js";
 
 import { K_CACTUS_KEYCHAIN_MEMORY_TOTAL_KEY_COUNT } from "../../../main/typescript/prometheus-exporter/metrics.js";
 

@@ -15,11 +15,11 @@ import {
     handlePromise,
     generateViewAddressFromRemoteConfig,
     interopHelper
-} from '../../../helpers/helpers'
+} from "../../../helpers/helpers.js"
 import {
     fabricHelper,
     getUserCertBase64
-} from '../../../helpers/fabric-functions'
+} from "../../../helpers/fabric-functions.js"
 
 import logger from "../../../helpers/logger.js"
 import * as dotenv from 'dotenv'

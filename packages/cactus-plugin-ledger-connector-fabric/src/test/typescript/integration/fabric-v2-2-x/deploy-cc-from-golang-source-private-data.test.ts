@@ -32,7 +32,7 @@ import {
   DefaultEventHandlerStrategy,
   FabricContractInvocationType,
   PluginLedgerConnectorFabric,
-} from "../../../../main/typescript/public-api";
+} from "../../../../main/typescript/public-api.js";
 import { DefaultApi as FabricApi } from "../../../../main/typescript/public-api.js";
 
 import { IPluginLedgerConnectorFabricOptions } from "../../../../main/typescript/plugin-ledger-connector-fabric.js";

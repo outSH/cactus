@@ -70,7 +70,7 @@ import {
   WatchBlocksV1Options,
   InvokeRawWeb3EthMethodV1Request,
   InvokeRawWeb3EthContractV1Request,
-} from "./generated/openapi/typescript-axios/";
+} from "./generated/openapi/typescript-axios/.js";
 
 import { RunTransactionEndpoint } from "./web-services/run-transaction-endpoint.js";
 import { InvokeContractEndpoint } from "./web-services/invoke-contract-endpoint.js";

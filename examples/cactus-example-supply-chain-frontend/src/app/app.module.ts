@@ -15,7 +15,7 @@ import {
   CACTUS_API_URL,
   QUORUM_DEMO_LEDGER_ID,
   FABRIC_DEMO_LEDGER_ID,
-} from "../constants";
+} from "../constants.js";
 import { ApiClient } from "@hyperledger/cactus-api-client";
 import { AuthConfig } from "./common/auth-config.js";
 

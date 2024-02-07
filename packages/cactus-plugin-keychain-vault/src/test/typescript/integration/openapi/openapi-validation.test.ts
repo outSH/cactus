@@ -26,7 +26,7 @@ import {
   IPluginKeychainVaultOptions,
   PluginKeychainVault,
   SetKeychainEntryRequestV1,
-} from "../../../../main/typescript/public-api";
+} from "../../../../main/typescript/public-api.js";
 
 import { DefaultApi as KeychainVaultApi } from "../../../../main/typescript/public-api.js";
 

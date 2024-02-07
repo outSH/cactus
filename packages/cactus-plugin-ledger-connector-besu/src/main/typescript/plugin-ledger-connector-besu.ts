@@ -21,12 +21,12 @@ import {
   GetBalanceV1Request,
   GetBalanceV1Response,
   Web3TransactionReceipt,
-} from "./generated/openapi/typescript-axios/index";
+} from "./generated/openapi/typescript-axios/index.js";
 
 import {
   GetPastLogsV1Request,
   GetPastLogsV1Response,
-} from "./generated/openapi/typescript-axios/index";
+} from "./generated/openapi/typescript-axios/index.js";
 import {
   ConsensusAlgorithmFamily,
   IPluginLedgerConnector,
@@ -77,7 +77,7 @@ import {
   GetBlockV1Response,
   GetBesuRecordV1Request,
   GetBesuRecordV1Response,
-} from "./generated/openapi/typescript-axios";
+} from "./generated/openapi/typescript-axios.js";
 
 import { InvokeContractEndpoint } from "./web-services/invoke-contract-endpoint.js";
 import { isWeb3SigningCredentialNone } from "./model-type-guards.js";
@@ -86,7 +86,7 @@ import { PrometheusExporter } from "./prometheus-exporter/prometheus-exporter.js
 import {
   GetPrometheusExporterMetricsEndpointV1,
   IGetPrometheusExporterMetricsEndpointV1Options,
-} from "./web-services/get-prometheus-exporter-metrics-endpoint-v1";
+} from "./web-services/get-prometheus-exporter-metrics-endpoint-v1.js";
 import { WatchBlocksV1Endpoint } from "./web-services/watch-blocks-v1-endpoint.js";
 import { RuntimeError } from "run-time-error-cjs";
 import { GetBalanceEndpoint } from "./web-services/get-balance-endpoint.js";
@@ -99,7 +99,7 @@ import { AbiItem } from "web3-utils";
 import {
   GetOpenApiSpecV1Endpoint,
   IGetOpenApiSpecV1EndpointOptions,
-} from "./web-services/get-open-api-spec-v1-endpoint";
+} from "./web-services/get-open-api-spec-v1-endpoint.js";
 
 export const E_KEYCHAIN_NOT_FOUND = "cactus.connector.besu.keychain_not_found";
 

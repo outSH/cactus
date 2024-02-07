@@ -57,11 +57,11 @@ import { makeSessionDataChecks } from "../make-checks.js";
 import {
   IFabricOdapGatewayConstructorOptions,
   FabricOdapGateway,
-} from "../../../main/typescript/gateway/fabric-odap-gateway";
+} from "../../../main/typescript/gateway/fabric-odap-gateway.js";
 import {
   IBesuOdapGatewayConstructorOptions,
   BesuOdapGateway,
-} from "../../../main/typescript/gateway/besu-odap-gateway";
+} from "../../../main/typescript/gateway/besu-odap-gateway.js";
 import { ClientGatewayHelper } from "../../../main/typescript/gateway/client/client-helper.js";
 import { ServerGatewayHelper } from "../../../main/typescript/gateway/server/server-helper.js";
 

@@ -65,7 +65,7 @@ import { determineAddressFamily } from "./common/determine-address-family.js";
 import {
   GetOpenApiSpecV1Endpoint,
   IGetOpenApiSpecV1EndpointOptions,
-} from "./web-services/get-open-api-spec-v1-endpoint";
+} from "./web-services/get-open-api-spec-v1-endpoint.js";
 
 export interface IApiServerConstructorOptions {
   readonly pluginManagerOptions?: { pluginsPath: string };

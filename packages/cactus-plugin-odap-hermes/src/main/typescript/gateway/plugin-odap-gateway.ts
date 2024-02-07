@@ -42,7 +42,7 @@ import {
   RecoverUpdateAckV1Message,
   RollbackV1Message,
   RollbackAckV1Message,
-} from "../generated/openapi/typescript-axios";
+} from "../generated/openapi/typescript-axios.js";
 import { CommitFinalRequestEndpointV1 } from "../web-services/server-side/commit-final-request-endpoint.js";
 import { CommitFinalResponseEndpointV1 } from "../web-services/client-side/commit-final-response-endpoint.js";
 import { CommitPreparationResponseEndpointV1 } from "../web-services/client-side/commit-prepare-response-endpoint.js";
@@ -60,19 +60,19 @@ import { ServerGatewayHelper } from "./server/server-helper.js";
 import {
   checkValidRecoverMessage,
   sendRecoverMessage,
-} from "./recovery/recover";
+} from "./recovery/recover.js";
 import {
   checkValidRecoverUpdateMessage,
   sendRecoverUpdateMessage,
-} from "./recovery/recover-update";
+} from "./recovery/recover-update.js";
 import {
   checkValidRecoverUpdateAckMessage,
   sendRecoverUpdateAckMessage,
-} from "./recovery/recover-update-ack";
+} from "./recovery/recover-update-ack.js";
 import {
   checkValidRecoverSuccessMessage,
   sendRecoverSuccessMessage,
-} from "./recovery/recover-success";
+} from "./recovery/recover-success.js";
 import { SHA256 } from "crypto-js";
 import { RecoverMessageEndpointV1 } from "../web-services/recovery/recover-message-endpoint.js";
 import { RecoverUpdateMessageEndpointV1 } from "../web-services/recovery/recover-update-message-endpoint.js";
@@ -82,12 +82,12 @@ import { RollbackMessageEndpointV1 } from "../web-services/recovery/rollback-mes
 import {
   checkValidRollbackMessage,
   sendRollbackMessage,
-} from "./recovery/rollback";
+} from "./recovery/rollback.js";
 import { AxiosResponse } from "axios";
 import {
   checkValidRollbackAckMessage,
   sendRollbackAckMessage,
-} from "./recovery/rollback-ack";
+} from "./recovery/rollback-ack.js";
 import { ClientRequestEndpointV1 } from "../web-services/client-side/client-request-endpoint.js";
 import { RollbackAckMessageEndpointV1 } from "../web-services/recovery/rollback-ack-message-endpoint.js";
 

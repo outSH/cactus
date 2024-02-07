@@ -24,7 +24,7 @@ import {
   StatusResponseV1,
   WatchBlocksV1,
   WatchBlocksV1Options,
-} from "./generated/openapi/typescript-axios";
+} from "./generated/openapi/typescript-axios.js";
 import { WatchBlocksV1Endpoint } from "./web-services/watch-blocks-v1-endpoint.js";
 import { StatusEndpointV1 } from "./web-services/status-endpoint-v1.js";
 import OAS from "../json/openapi.json";

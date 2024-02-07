@@ -19,7 +19,7 @@ import {
   DefaultEventHandlerStrategy,
   PluginLedgerConnectorFabric,
   DeployContractGoSourceV1Request,
-} from "../../../../main/typescript/public-api";
+} from "../../../../main/typescript/public-api.js";
 
 import { HELLO_WORLD_CONTRACT_GO_SOURCE } from "../../fixtures/go/hello-world-contract-fabric-v14/hello-world-contract-go-source.js";
 

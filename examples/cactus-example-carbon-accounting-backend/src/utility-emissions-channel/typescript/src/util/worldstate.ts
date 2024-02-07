@@ -8,7 +8,7 @@ import {
   ErrStateNotFound,
   ErrInvalidQueryString,
   ErrStateAlreadyExists,
-} from "./const";
+} from "./const.js";
 /**
  * WorldState class is a wrapper around chaincode stub
  * for managing lifecycle of a asset of type T (interface) on HL fabric

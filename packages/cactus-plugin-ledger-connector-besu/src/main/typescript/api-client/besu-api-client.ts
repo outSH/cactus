@@ -8,7 +8,7 @@ import {
   DefaultApi,
   WatchBlocksV1,
   WatchBlocksV1Progress,
-} from "../generated/openapi/typescript-axios";
+} from "../generated/openapi/typescript-axios.js";
 import { Configuration } from "../generated/openapi/typescript-axios/configuration.js";
 
 export class BesuApiClientOptions extends Configuration {

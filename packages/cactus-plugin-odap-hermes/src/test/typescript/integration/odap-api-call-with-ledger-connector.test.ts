@@ -27,7 +27,7 @@ import { PluginKeychainMemory } from "@hyperledger/cactus-plugin-keychain-memory
 import {
   ClientV1Request,
   DefaultApi as OdapApi,
-} from "../../../main/typescript/public-api";
+} from "../../../main/typescript/public-api.js";
 import LockAssetContractJson from "../../solidity/lock-asset-contract/LockAsset.json";
 import { PluginRegistry } from "@hyperledger/cactus-core";
 import {
@@ -57,11 +57,11 @@ import { makeSessionDataChecks } from "../make-checks.js";
 import {
   FabricOdapGateway,
   IFabricOdapGatewayConstructorOptions,
-} from "../../../main/typescript/gateway/fabric-odap-gateway";
+} from "../../../main/typescript/gateway/fabric-odap-gateway.js";
 import {
   BesuOdapGateway,
   IBesuOdapGatewayConstructorOptions,
-} from "../../../main/typescript/gateway/besu-odap-gateway";
+} from "../../../main/typescript/gateway/besu-odap-gateway.js";
 import { ClientGatewayHelper } from "../../../main/typescript/gateway/client/client-helper.js";
 import { ServerGatewayHelper } from "../../../main/typescript/gateway/server/server-helper.js";
 

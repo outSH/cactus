@@ -31,12 +31,12 @@ import { PrometheusExporter } from "./prometheus-exporter/prometheus-exporter.js
 import {
   IGetPrometheusExporterMetricsEndpointV1Options,
   GetPrometheusExporterMetricsEndpointV1,
-} from "./consortium/get-prometheus-exporter-metrics-endpoint-v1";
+} from "./consortium/get-prometheus-exporter-metrics-endpoint-v1.js";
 
 import {
   Configuration,
   DefaultApi,
-} from "./generated/openapi/typescript-axios";
+} from "./generated/openapi/typescript-axios.js";
 export interface IWebAppOptions {
   port: number;
   hostname: string;

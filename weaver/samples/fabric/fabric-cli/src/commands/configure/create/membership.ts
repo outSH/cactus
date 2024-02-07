@@ -14,7 +14,7 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') })
 import {
   generateMembership,
   getCurrentNetworkCredentialPath
-} from '../../../helpers/fabric-functions'
+} from "../../../helpers/fabric-functions.js"
 
 const command: GluegunCommand = {
   name: 'membership',

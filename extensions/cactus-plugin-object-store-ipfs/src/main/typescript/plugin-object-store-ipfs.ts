@@ -28,7 +28,7 @@ import {
   LikeIpfsHttpClient,
   isLikeIpfsHttpClient,
   Options,
-} from "./kubo-rpc-client-types";
+} from "./kubo-rpc-client-types.js";
 
 export const K_IPFS_JS_HTTP_ERROR_FILE_DOES_NOT_EXIST =
   "HTTPError: file does not exist";

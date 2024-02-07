@@ -3,7 +3,7 @@ import { IPluginFactoryOptions } from "@hyperledger/cactus-core-api";
 export {
   IPluginHTLCCoordinatorBesuOptions,
   PluginHTLCCoordinatorBesu,
-} from "./plugin-htlc-coordinator-besu";
+} from "./plugin-htlc-coordinator-besu.js";
 
 export { PluginFactoryHTLCCoordinatorBesu } from "./plugin-factory-htlc-coordinator-besu";
 import { PluginFactoryHTLCCoordinatorBesu } from "./plugin-factory-htlc-coordinator-besu.js";

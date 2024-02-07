@@ -13,6 +13,6 @@
  */
 
 
-export * from "./api";
+export * from "./api.js";
 export * from "./configuration";
 

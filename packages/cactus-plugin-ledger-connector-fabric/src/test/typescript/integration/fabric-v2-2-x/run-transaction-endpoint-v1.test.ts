@@ -33,7 +33,7 @@ import {
   FabricContractInvocationType,
   DefaultEventHandlerStrategy,
   FabricSigningCredential,
-} from "../../../../main/typescript/public-api";
+} from "../../../../main/typescript/public-api.js";
 
 import { K_CACTUS_FABRIC_TOTAL_TX_COUNT } from "../../../../main/typescript/prometheus-exporter/metrics.js";
 

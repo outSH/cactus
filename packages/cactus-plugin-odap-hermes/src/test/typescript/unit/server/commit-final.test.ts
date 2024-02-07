@@ -7,12 +7,12 @@ import {
   IPluginOdapGatewayConstructorOptions,
   OdapMessageType,
   PluginOdapGateway,
-} from "../../../../main/typescript/gateway/plugin-odap-gateway";
+} from "../../../../main/typescript/gateway/plugin-odap-gateway.js";
 import { DefaultApi as ObjectStoreIpfsApi } from "@hyperledger/cactus-plugin-object-store-ipfs";
 import {
   CommitFinalV1Request,
   SessionData,
-} from "../../../../main/typescript/generated/openapi/typescript-axios/api";
+} from "../../../../main/typescript/generated/openapi/typescript-axios/api.js";
 import {
   IListenOptions,
   LogLevelDesc,

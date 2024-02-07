@@ -22,7 +22,7 @@ import {
   WatchProofStateOptionsV1,
   WatchProofStateProgressV1,
   WatchProofStateV1,
-} from "../generated/openapi/typescript-axios";
+} from "../generated/openapi/typescript-axios.js";
 import { Configuration } from "../generated/openapi/typescript-axios/configuration.js";
 
 export class AriesApiClientOptions extends Configuration {

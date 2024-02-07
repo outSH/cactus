@@ -28,7 +28,7 @@ import {
   FileBase64,
   PluginLedgerConnectorFabric,
   RunTransactionRequest,
-} from "../../../../main/typescript/public-api";
+} from "../../../../main/typescript/public-api.js";
 import { DefaultApi as FabricApi } from "../../../../main/typescript/public-api.js";
 import { IPluginLedgerConnectorFabricOptions } from "../../../../main/typescript/plugin-ledger-connector-fabric.js";
 import { DiscoveryOptions } from "fabric-network";

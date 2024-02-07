@@ -2,7 +2,7 @@ import "jest-extended";
 import {
   JsObjectSigner,
   IJsObjectSignerOptions,
-} from "../../../main/typescript/js-object-signer";
+} from "../../../main/typescript/js-object-signer.js";
 
 import { Secp256k1Keys } from "../../../main/typescript/secp256k1-keys.js";
 

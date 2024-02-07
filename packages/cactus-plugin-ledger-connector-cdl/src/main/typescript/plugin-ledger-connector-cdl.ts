@@ -32,11 +32,11 @@ import {
   SearchLineageRequestV1,
   SearchLineageResponseV1,
   RegisterHistoryDataV1Response,
-} from "./generated/openapi/typescript-axios";
+} from "./generated/openapi/typescript-axios.js";
 import {
   HTTP_HEADER_SUBSCRIPTION_KEY,
   getAuthorizationHeaders,
-} from "./type-defs";
+} from "./type-defs.js";
 import { CDLGateway } from "./cdl-gateway.js";
 
 export interface IPluginLedgerConnectorCDLOptions extends ICactusPluginOptions {

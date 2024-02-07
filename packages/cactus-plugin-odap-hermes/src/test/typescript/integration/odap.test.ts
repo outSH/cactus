@@ -19,7 +19,7 @@ import { GoIpfsTestContainer } from "@hyperledger/cactus-test-tooling";
 import {
   AssetProfile,
   ClientV1Request,
-} from "../../../main/typescript/public-api";
+} from "../../../main/typescript/public-api.js";
 import { makeSessionDataChecks } from "../make-checks.js";
 
 import { BesuOdapGateway } from "../../../main/typescript/gateway/besu-odap-gateway.js";

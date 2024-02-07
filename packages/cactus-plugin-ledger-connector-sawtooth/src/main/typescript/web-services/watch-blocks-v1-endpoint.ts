@@ -14,7 +14,7 @@ import {
   WatchBlocksV1ListenerType,
   WatchBlocksV1TransactionFilter,
   WatchBlocksV1Options,
-} from "../generated/openapi/typescript-axios";
+} from "../generated/openapi/typescript-axios.js";
 import { Block, DefaultApi as SawtoothRestApi } from "../sawtooth-api.js";
 
 const DEFAULT_POLL_TIME = 1000 * 5; // Poll every 5 seconds by default

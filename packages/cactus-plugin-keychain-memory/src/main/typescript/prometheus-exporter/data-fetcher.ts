@@ -3,7 +3,7 @@ import { KeyCount } from "./response.type";
 import {
   totalKeyCount,
   K_CACTUS_KEYCHAIN_MEMORY_TOTAL_KEY_COUNT,
-} from "./metrics";
+} from "./metrics.js";
 
 export async function collectMetrics(keyCount: KeyCount): Promise<void> {
   totalKeyCount

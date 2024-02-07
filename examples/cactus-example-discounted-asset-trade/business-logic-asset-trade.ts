@@ -35,7 +35,7 @@ import {
   createSigningToken,
   getFabricApiClient,
   getSignerIdentity,
-} from "./fabric-connector";
+} from "./fabric-connector.js";
 import { sendEthereumTransaction } from "./transaction-ethereum.js";
 import { hasKey } from "@hyperledger/cactus-common";
 import { RuntimeError } from "run-time-error-cjs";

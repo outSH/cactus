@@ -2,11 +2,11 @@ import {
   IPluginOdapGatewayConstructorOptions,
   OdapMessageType,
   PluginOdapGateway,
-} from "../../../../main/typescript/gateway/plugin-odap-gateway";
+} from "../../../../main/typescript/gateway/plugin-odap-gateway.js";
 import {
   SessionData,
   TransferCompleteV1Request,
-} from "../../../../main/typescript/generated/openapi/typescript-axios/api";
+} from "../../../../main/typescript/generated/openapi/typescript-axios/api.js";
 import { v4 as uuidV4 } from "uuid";
 import { SHA256 } from "crypto-js";
 import { randomInt } from "crypto";

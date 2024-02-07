@@ -6,12 +6,12 @@ import http, { Server } from "http";
 import {
   OdapMessageType,
   PluginOdapGateway,
-} from "../../../../main/typescript/gateway/plugin-odap-gateway";
+} from "../../../../main/typescript/gateway/plugin-odap-gateway.js";
 import { DefaultApi as ObjectStoreIpfsApi } from "@hyperledger/cactus-plugin-object-store-ipfs";
 import {
   CommitFinalV1Response,
   SessionData,
-} from "../../../../main/typescript/public-api";
+} from "../../../../main/typescript/public-api.js";
 import {
   LogLevelDesc,
   IListenOptions,

@@ -39,7 +39,7 @@ import {
   RunTransactionResponse,
   WatchBlocksV1,
   IrohaSocketIOTransactV1,
-} from "./generated/openapi/typescript-axios";
+} from "./generated/openapi/typescript-axios.js";
 
 import { RunTransactionEndpoint } from "./web-services/run-transaction-endpoint.js";
 import { GenerateTransactionEndpoint } from "./web-services/generate-transaction-endpoint.js";
@@ -48,7 +48,7 @@ import { IrohaSocketIOEndpoint } from "./web-services/iroha-socketio-endpoint.js
 import {
   GetPrometheusExporterMetricsEndpointV1,
   IGetPrometheusExporterMetricsEndpointV1Options,
-} from "./web-services/get-prometheus-exporter-metrics-endpoint-v1";
+} from "./web-services/get-prometheus-exporter-metrics-endpoint-v1.js";
 
 export const E_KEYCHAIN_NOT_FOUND = "cactus.connector.iroha.keychain_not_found";
 

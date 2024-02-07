@@ -18,7 +18,7 @@ import {
   getCurrentNetworkCredentialPath,
   generateVerificationPolicy,
   generateMembership
-} from '../../../helpers/fabric-functions'
+} from "../../../helpers/fabric-functions.js"
 
 const command: GluegunCommand = {
   name: 'all',

@@ -6,13 +6,13 @@ import { UtilityEmissionsFactorInterface } from "./lib/utilityEmissionsFactor.js
 import {
   DivisionsInterface,
   UtilityLookupItemInterface,
-} from "./lib/utilityLookupItem";
+} from "./lib/utilityLookupItem.js";
 import {
   ErrInvalidArgument,
   ErrInvalidNumberOfArgument,
   ErrMethodNotSupported,
   MsgSuccess,
-} from "./util/const";
+} from "./util/const.js";
 import { logger, stringToBytes } from "./util/util.js";
 
 export class EmissionsChaincode {

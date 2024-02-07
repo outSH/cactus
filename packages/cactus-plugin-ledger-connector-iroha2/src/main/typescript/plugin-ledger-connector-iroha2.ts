@@ -47,7 +47,7 @@ import {
   WatchBlocksOptionsV1,
   GenerateTransactionRequestV1,
   IrohaTransactionParametersV1,
-} from "./generated/openapi/typescript-axios";
+} from "./generated/openapi/typescript-axios.js";
 
 import { Iroha2TransactEndpointV1 } from "./web-services/transact-v1-endpoint.js";
 import { Iroha2QueryEndpointV1 } from "./web-services/query-v1-endpoint.js";
@@ -59,7 +59,7 @@ import {
   CactusIrohaV2Client,
   generateIrohaV2KeyPair,
   TransactionPayloadParameters,
-} from "./cactus-iroha-sdk-wrapper/client";
+} from "./cactus-iroha-sdk-wrapper/client.js";
 import { CactusIrohaV2QueryClient } from "./cactus-iroha-sdk-wrapper/query.js";
 import { LengthOf, stringifyBigIntReplacer } from "./utils.js";
 import { createAccountId } from "./cactus-iroha-sdk-wrapper/data-factories.js";

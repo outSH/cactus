@@ -17,7 +17,7 @@ import { Configuration } from "@hyperledger/cactus-core-api";
 import {
   IPluginOdapGatewayConstructorOptions,
   PluginOdapGateway,
-} from "../../../../main/typescript/gateway/plugin-odap-gateway";
+} from "../../../../main/typescript/gateway/plugin-odap-gateway.js";
 import { GoIpfsTestContainer } from "@hyperledger/cactus-test-tooling";
 
 import { RecoverV1Message } from "../../../../main/typescript/public-api.js";

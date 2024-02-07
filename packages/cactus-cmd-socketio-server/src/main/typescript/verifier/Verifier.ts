@@ -10,7 +10,7 @@ import {
   ApiInfo,
   LedgerEvent,
   IVerifierEventListener,
-} from "./LedgerPlugin";
+} from "./LedgerPlugin.js";
 import { json2str } from "./DriverCommon.js";
 import { LedgerOperation } from "../business-logic-plugin/LedgerOperation.js";
 import { LedgerPluginInfo } from "./validator-registry.js";

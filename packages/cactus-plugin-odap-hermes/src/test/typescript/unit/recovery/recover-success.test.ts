@@ -19,7 +19,7 @@ import { GoIpfsTestContainer } from "@hyperledger/cactus-test-tooling";
 import {
   RecoverSuccessV1Message,
   SessionData,
-} from "../../../../main/typescript/public-api";
+} from "../../../../main/typescript/public-api.js";
 import { randomInt } from "crypto";
 import { checkValidRecoverSuccessMessage } from "../../../../main/typescript/gateway/recovery/recover-success.js";
 import { BesuOdapGateway } from "../../../../main/typescript/gateway/besu-odap-gateway.js";

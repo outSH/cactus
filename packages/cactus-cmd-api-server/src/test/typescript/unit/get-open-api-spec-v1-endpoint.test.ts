@@ -5,7 +5,7 @@ import {
   AuthorizationProtocol,
   ConfigService,
   IAuthorizationConfig,
-} from "../../../main/typescript/public-api";
+} from "../../../main/typescript/public-api.js";
 import {
   IJoseFittingJwtParams,
   LogLevelDesc,

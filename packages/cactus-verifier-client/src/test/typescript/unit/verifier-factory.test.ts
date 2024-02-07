@@ -7,7 +7,7 @@ import { SocketIOApiClient } from "@hyperledger/cactus-api-client";
 import {
   VerifierFactory,
   VerifierFactoryConfig,
-} from "../../../main/typescript/verifier-factory";
+} from "../../../main/typescript/verifier-factory.js";
 
 describe("Constructor Tests", () => {
   test("Basic construction", () => {

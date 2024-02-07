@@ -12,7 +12,7 @@ import {
   generateMembership,
   generateAccessControl,
   generateVerificationPolicy
-} from '../../helpers/fabric-functions'
+} from "../../helpers/fabric-functions.js"
 
 import { configureNetwork } from "../../helpers/interop-setup/configure-network.js"
 import logger from "../../helpers/logger.js"

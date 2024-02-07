@@ -20,7 +20,7 @@ import {
   IPluginKeychainGoogleSmOptions,
   PluginKeychainGoogleSm,
   SetKeychainEntryRequestV1,
-} from "../../../../main/typescript/public-api";
+} from "../../../../main/typescript/public-api.js";
 
 import { SecretManagerServiceClientMock } from "../../mock/plugin-keychain-google-sm-mock.js";
 

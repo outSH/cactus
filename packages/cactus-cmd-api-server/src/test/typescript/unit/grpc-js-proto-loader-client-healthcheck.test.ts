@@ -7,7 +7,7 @@ import {
   ApiServer,
   ConfigService,
   HealthCheckResponse,
-} from "../../../main/typescript/public-api";
+} from "../../../main/typescript/public-api.js";
 import { AuthorizationProtocol } from "../../../main/typescript/public-api.js";
 import { ServiceClientConstructor } from "@grpc/grpc-js/build/src/make-client";
 import * as grpc from "@grpc/grpc-js";

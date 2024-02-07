@@ -74,7 +74,7 @@ import { Verifier } from "../../../main/typescript/verifier/Verifier.js";
 import {
   LedgerEvent,
   IVerifierEventListener,
-} from "../../../main/typescript/verifier/LedgerPlugin";
+} from "../../../main/typescript/verifier/LedgerPlugin.js";
 
 import { SocketIOTestSetupHelpers } from "@hyperledger/cactus-test-tooling";
 

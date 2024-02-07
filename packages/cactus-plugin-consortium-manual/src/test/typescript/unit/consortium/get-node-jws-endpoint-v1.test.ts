@@ -16,7 +16,7 @@ import {
 import {
   PluginConsortiumManual,
   IPluginConsortiumManualOptions,
-} from "../../../../main/typescript/public-api";
+} from "../../../../main/typescript/public-api.js";
 
 import { GetNodeJwsEndpoint } from "../../../../main/typescript/public-api.js";
 

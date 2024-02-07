@@ -8,7 +8,7 @@ import {
   PluginFactoryLedgerConnector,
   ReceiptType,
   DefaultApi as XdaiApi,
-} from "../../../main/typescript/public-api";
+} from "../../../main/typescript/public-api.js";
 import {
   Containers,
   K_DEV_WHALE_ACCOUNT_PRIVATE_KEY,

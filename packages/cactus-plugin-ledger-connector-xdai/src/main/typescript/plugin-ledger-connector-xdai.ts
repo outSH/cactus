@@ -47,7 +47,7 @@ import {
   Web3SigningCredentialCactusKeychainRef,
   Web3SigningCredentialPrivateKeyHex,
   Web3SigningCredentialType,
-} from "./generated/openapi/typescript-axios";
+} from "./generated/openapi/typescript-axios.js";
 
 import { RunTransactionEndpoint } from "./web-services/run-transaction-endpoint.js";
 import { InvokeContractEndpoint } from "./web-services/invoke-contract-endpoint.js";
@@ -56,7 +56,7 @@ import { PrometheusExporter } from "./prometheus-exporter/prometheus-exporter.js
 import {
   GetPrometheusExporterMetricsEndpointV1,
   IGetPrometheusExporterMetricsEndpointV1Options,
-} from "./web-services/get-prometheus-exporter-metrics-endpoint-v1";
+} from "./web-services/get-prometheus-exporter-metrics-endpoint-v1.js";
 import { DeployContractSolidityBytecodeJsonObjectEndpoint } from "./web-services/deploy-contract-solidity-bytecode-json-object-endpoint.js";
 import { InvokeContractJsonObjectEndpoint } from "./web-services/invoke-contract-json-object-endpoint.js";
 import { RuntimeError } from "run-time-error-cjs";

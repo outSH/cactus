@@ -44,7 +44,7 @@ import {
   CounterpartyHTLCRequest,
   WithdrawCounterpartyRequest,
   HtlcPackage,
-} from "./generated/openapi/typescript-axios";
+} from "./generated/openapi/typescript-axios.js";
 
 export interface IPluginHTLCCoordinatorBesuOptions
   extends ICactusPluginOptions {

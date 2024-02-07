@@ -12,7 +12,7 @@ import {
   CommitFinalV1Request,
   CommitFinalV1Response,
   TransferCompleteV1Request,
-} from "../../public-api";
+} from "../../public-api.js";
 import { OdapMessageType, PluginOdapGateway } from "../plugin-odap-gateway.js";
 
 export class ClientGatewayHelper {

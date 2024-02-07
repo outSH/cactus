@@ -20,16 +20,16 @@ import { GoIpfsTestContainer } from "@hyperledger/cactus-test-tooling";
 import {
   OdapLocalLog,
   SessionData,
-} from "../../../../main/typescript/public-api";
+} from "../../../../main/typescript/public-api.js";
 import { SHA256 } from "crypto-js";
 import {
   BesuOdapGateway,
   IBesuOdapGatewayConstructorOptions,
-} from "../../../../main/typescript/gateway/besu-odap-gateway";
+} from "../../../../main/typescript/gateway/besu-odap-gateway.js";
 import {
   FabricOdapGateway,
   IFabricOdapGatewayConstructorOptions,
-} from "../../../../main/typescript/gateway/fabric-odap-gateway";
+} from "../../../../main/typescript/gateway/fabric-odap-gateway.js";
 import { ClientGatewayHelper } from "../../../../main/typescript/gateway/client/client-helper.js";
 import { ServerGatewayHelper } from "../../../../main/typescript/gateway/server/server-helper.js";
 

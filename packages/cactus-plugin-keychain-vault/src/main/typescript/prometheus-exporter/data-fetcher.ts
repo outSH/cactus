@@ -3,7 +3,7 @@ import { VaultKeys } from "./response.type";
 import {
   totalKeyCount,
   K_CACTUS_KEYCHAIN_VAULT_MANAGED_KEY_COUNT,
-} from "./metrics";
+} from "./metrics.js";
 
 export async function collectMetrics(vaultKeys: VaultKeys): Promise<void> {
   totalKeyCount

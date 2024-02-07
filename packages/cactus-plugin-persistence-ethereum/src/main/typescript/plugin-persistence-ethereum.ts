@@ -29,13 +29,13 @@ import { StatusEndpointV1 } from "./web-services/status-endpoint-v1.js";
 import PostgresDatabaseClient, {
   BlockDataTransferInput,
   BlockDataTransactionInput,
-} from "./db-client/db-client";
+} from "./db-client/db-client.js";
 import {
   MonitoredToken,
   StatusResponseV1,
   TokenTypeV1,
   TrackedOperationV1,
-} from "./generated/openapi/typescript-axios";
+} from "./generated/openapi/typescript-axios.js";
 import { RuntimeError } from "run-time-error-cjs";
 import { Interface as EthersInterface } from "@ethersproject/abi";
 import { Mutex } from "async-mutex";

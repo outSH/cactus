@@ -5,7 +5,7 @@ import {
 import {
   IBesuOdapGatewayConstructorOptions,
   BesuOdapGateway,
-} from "./besu-odap-gateway";
+} from "./besu-odap-gateway.js";
 
 export class PluginFactoryBesuOdapGateway extends PluginFactory<
   BesuOdapGateway,

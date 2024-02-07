@@ -7,7 +7,7 @@ import {
   isBesuAssetReference,
   lockBesuAssetReference,
   resetBesu,
-} from "../besu-helper";
+} from "../besu-helper.js";
 import AssetReferenceContractJson from "../../../../solidity/asset-reference-contract/AssetReferenceContract.json";
 import CBDCcontractJson from "../../../../solidity/cbdc-erc-20/CBDCcontract.json";
 import { getEthAddress, getPrvKey } from "./common.js";

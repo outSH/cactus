@@ -14,7 +14,7 @@ import {
   BESU_DEMO_LEDGER_ID,
   CACTUS_API_URL,
   FABRIC_DEMO_LEDGER_ID,
-} from "../constants";
+} from "../constants.js";
 import { ApiClient } from "@hyperledger/cactus-api-client";
 
 LoggerProvider.setLogLevel("TRACE");

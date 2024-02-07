@@ -12,15 +12,15 @@ import { GatewayEventHandlerOptions } from "../generated/openapi/typescript-axio
 import {
   GatewayOptions,
   FabricSigningCredentialType,
-} from "../generated/openapi/typescript-axios/index";
+} from "../generated/openapi/typescript-axios/index.js";
 import {
   CertDatastore,
   IIdentityData,
-} from "../identity/internal/cert-datastore";
+} from "../identity/internal/cert-datastore.js";
 import {
   IIdentity,
   SecureIdentityProviders,
-} from "../identity/identity-provider";
+} from "../identity/identity-provider.js";
 
 export interface ICreateGatewayContext {
   readonly logLevel?: LogLevelDesc;

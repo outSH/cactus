@@ -14,7 +14,7 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') })
 import {
   generateAccessControl,
   getCurrentNetworkCredentialPath
-} from '../../../helpers/fabric-functions'
+} from "../../../helpers/fabric-functions.js"
 
 const command: GluegunCommand = {
   name: 'access-control',

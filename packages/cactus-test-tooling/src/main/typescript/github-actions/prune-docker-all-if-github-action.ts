@@ -3,7 +3,7 @@ import {
   Containers,
   IPruneDockerResourcesRequest,
   IPruneDockerResourcesResponse,
-} from "../common/containers";
+} from "../common/containers.js";
 import { isRunningInGithubAction } from "./is-running-in-github-action.js";
 
 /**

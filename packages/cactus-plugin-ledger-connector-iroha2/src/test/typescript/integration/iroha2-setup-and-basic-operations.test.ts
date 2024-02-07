@@ -24,7 +24,7 @@ import {
   IrohaQuery,
   PluginLedgerConnectorIroha2,
   TransactionStatusV1,
-} from "../../../main/typescript/public-api";
+} from "../../../main/typescript/public-api.js";
 import { PluginRegistry } from "@hyperledger/cactus-core";
 import { crypto } from "@iroha2/crypto-target-node";
 import { setCrypto } from "@iroha2/client";
@@ -32,7 +32,7 @@ import { setCrypto } from "@iroha2/client";
 import {
   IrohaV2TestEnv,
   generateTestIrohaCredentials,
-} from "../test-helpers/iroha2-env-setup";
+} from "../test-helpers/iroha2-env-setup.js";
 import { addRandomSuffix } from "../test-helpers/utils.js";
 
 setCrypto(crypto);

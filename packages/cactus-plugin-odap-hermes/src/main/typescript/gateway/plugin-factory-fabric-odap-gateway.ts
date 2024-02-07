@@ -5,7 +5,7 @@ import {
 import {
   IFabricOdapGatewayConstructorOptions,
   FabricOdapGateway,
-} from "./fabric-odap-gateway";
+} from "./fabric-odap-gateway.js";
 
 export class PluginFactoryFabricOdapGateway extends PluginFactory<
   FabricOdapGateway,

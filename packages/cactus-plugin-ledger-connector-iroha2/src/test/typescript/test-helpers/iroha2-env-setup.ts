@@ -32,7 +32,7 @@ import {
   PluginLedgerConnectorIroha2,
   Iroha2KeyPair,
   Iroha2ApiClient,
-} from "../../../main/typescript/public-api";
+} from "../../../main/typescript/public-api.js";
 import { addRandomSuffix } from "./utils.js";
 
 import { crypto } from "@iroha2/crypto-target-node";

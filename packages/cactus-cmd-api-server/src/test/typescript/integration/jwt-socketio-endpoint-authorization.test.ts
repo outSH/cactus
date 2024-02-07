@@ -12,7 +12,7 @@ import {
   ConfigService,
   HealthCheckResponse,
   isHealthcheckResponse,
-} from "../../../main/typescript/public-api";
+} from "../../../main/typescript/public-api.js";
 import { ApiServerApiClient } from "../../../main/typescript/public-api.js";
 import { ApiServerApiClientConfiguration } from "../../../main/typescript/public-api.js";
 import { LogLevelDesc } from "@hyperledger/cactus-common";

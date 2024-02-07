@@ -20,11 +20,11 @@ import {
   IrohaQuery,
   Iroha2KeyPair,
   TransactionStatusV1,
-} from "../../../main/typescript/public-api";
+} from "../../../main/typescript/public-api.js";
 import {
   IrohaV2TestEnv,
   generateTestIrohaCredentials,
-} from "../test-helpers/iroha2-env-setup";
+} from "../test-helpers/iroha2-env-setup.js";
 import { addRandomSuffix } from "../test-helpers/utils.js";
 
 import { bytesToHex } from "hada";

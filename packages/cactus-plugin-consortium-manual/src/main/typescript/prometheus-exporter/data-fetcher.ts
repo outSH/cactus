@@ -3,7 +3,7 @@ import { NodeCount } from "./response.type";
 import {
   totalTxCount,
   K_CACTUS_CONSORTIUM_MANUAL_TOTAL_NODE_COUNT,
-} from "./metrics";
+} from "./metrics.js";
 
 export async function collectMetrics(nodeCount: NodeCount): Promise<void> {
   totalTxCount

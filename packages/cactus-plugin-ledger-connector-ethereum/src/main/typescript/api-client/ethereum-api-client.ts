@@ -11,7 +11,7 @@ import {
   WatchBlocksV1,
   WatchBlocksV1Options,
   WatchBlocksV1Progress,
-} from "../generated/openapi/typescript-axios";
+} from "../generated/openapi/typescript-axios.js";
 import { Configuration } from "../generated/openapi/typescript-axios/configuration.js";
 import { ContractAbi } from "web3";
 

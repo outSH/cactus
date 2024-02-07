@@ -20,7 +20,7 @@ import {
   Web3SigningCredentialCactusKeychainRef,
   Web3SigningCredentialType,
   DefaultApi as QuorumApi,
-} from "../../../../../main/typescript/public-api";
+} from "../../../../../main/typescript/public-api.js";
 
 import {
   QuorumTestLedger,

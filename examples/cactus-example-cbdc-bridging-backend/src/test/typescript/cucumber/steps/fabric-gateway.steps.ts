@@ -11,7 +11,7 @@ import {
   readFabricAssetReference,
   resetFabric,
   refundFabricTokens,
-} from "../fabric-helper";
+} from "../fabric-helper.js";
 
 const FABRIC_CHANNEL_NAME = "mychannel";
 const FABRIC_CONTRACT_CBDC_ERC20_NAME = "cbdc";

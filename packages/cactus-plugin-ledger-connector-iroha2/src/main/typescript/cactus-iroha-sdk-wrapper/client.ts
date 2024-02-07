@@ -69,12 +69,12 @@ import {
   createAssetId,
   createAssetValue,
   createIrohaValue,
-} from "./data-factories";
+} from "./data-factories.js";
 import {
   TransactResponseV1,
   TransactionStatusV1,
   Iroha2BaseConfigTorii,
-} from "../generated/openapi/typescript-axios";
+} from "../generated/openapi/typescript-axios.js";
 import { IrohaV2PrerequisitesProvider } from "./prerequisites-provider.js";
 
 setCrypto(crypto);

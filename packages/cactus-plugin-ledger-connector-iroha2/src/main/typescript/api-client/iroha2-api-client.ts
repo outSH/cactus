@@ -15,7 +15,7 @@ import {
   WatchBlocksV1,
   WatchBlocksOptionsV1,
   WatchBlocksResponseV1,
-} from "../generated/openapi/typescript-axios";
+} from "../generated/openapi/typescript-axios.js";
 import { Configuration } from "../generated/openapi/typescript-axios/configuration.js";
 
 /**

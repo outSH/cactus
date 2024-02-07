@@ -7,7 +7,7 @@ import { LoggerProvider } from "@hyperledger/cactus-common";
 import {
   IAuthorizationConfig,
   ICactusApiServerOptions,
-} from "../../../../main/typescript/public-api";
+} from "../../../../main/typescript/public-api.js";
 import { ApiServer } from "../../../../main/typescript/public-api.js";
 import { ConfigService } from "../../../../main/typescript/public-api.js";
 

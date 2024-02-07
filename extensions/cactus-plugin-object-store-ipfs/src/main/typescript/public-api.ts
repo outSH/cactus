@@ -8,7 +8,7 @@ import { IPluginFactoryOptions } from "@hyperledger/cactus-core-api";
 export {
   PluginObjectStoreIpfs,
   IPluginObjectStoreIpfsOptions,
-} from "./plugin-object-store-ipfs";
+} from "./plugin-object-store-ipfs.js";
 export { PluginFactoryObjectStore } from "./plugin-factory-object-store";
 
 import { PluginFactoryObjectStore } from "./plugin-factory-object-store.js";

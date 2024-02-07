@@ -16,7 +16,7 @@ import {
   WatchBlocksOptionsV1,
   WatchBlocksResponseV1,
   BlockTypeV1,
-} from "../generated/openapi/typescript-axios";
+} from "../generated/openapi/typescript-axios.js";
 
 import { safeStringifyException, stringifyBigIntReplacer } from "../utils.js";
 

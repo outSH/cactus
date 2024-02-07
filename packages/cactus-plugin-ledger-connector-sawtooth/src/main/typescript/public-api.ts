@@ -3,7 +3,7 @@ import { IPluginFactoryOptions } from "@hyperledger/cactus-core-api";
 export {
   PluginLedgerConnectorSawtooth,
   IPluginLedgerConnectorSawtoothOptions,
-} from "./plugin-ledger-connector-sawtooth";
+} from "./plugin-ledger-connector-sawtooth.js";
 
 import { PluginFactoryLedgerConnector } from "./plugin-factory-ledger-connector.js";
 export { PluginFactoryLedgerConnector } from "./plugin-factory-ledger-connector";

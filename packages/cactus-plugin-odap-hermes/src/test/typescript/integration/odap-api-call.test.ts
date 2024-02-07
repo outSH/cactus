@@ -21,11 +21,11 @@ import { GoIpfsTestContainer } from "@hyperledger/cactus-test-tooling";
 import {
   PluginOdapGateway,
   IPluginOdapGatewayConstructorOptions,
-} from "../../../main/typescript/gateway/plugin-odap-gateway";
+} from "../../../main/typescript/gateway/plugin-odap-gateway.js";
 import {
   AssetProfile,
   ClientV1Request,
-} from "../../../main/typescript/public-api";
+} from "../../../main/typescript/public-api.js";
 import { makeSessionDataChecks } from "../make-checks.js";
 
 import { BesuOdapGateway } from "../../../main/typescript/gateway/besu-odap-gateway.js";

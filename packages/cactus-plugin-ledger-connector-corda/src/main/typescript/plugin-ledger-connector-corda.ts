@@ -25,25 +25,25 @@ import { DeployContractJarsEndpoint } from "./web-services/deploy-contract-jars-
 import {
   IGetPrometheusExporterMetricsEndpointV1Options,
   GetPrometheusExporterMetricsEndpointV1,
-} from "./web-services/get-prometheus-exporter-metrics-endpoint-v1";
+} from "./web-services/get-prometheus-exporter-metrics-endpoint-v1.js";
 
 import { PrometheusExporter } from "./prometheus-exporter/prometheus-exporter.js";
 import {
   IInvokeContractEndpointV1Options,
   InvokeContractEndpointV1,
-} from "./web-services/invoke-contract-endpoint-v1";
+} from "./web-services/invoke-contract-endpoint-v1.js";
 import {
   IListFlowsEndpointV1Options,
   ListFlowsEndpointV1,
-} from "./web-services/list-flows-endpoint-v1";
+} from "./web-services/list-flows-endpoint-v1.js";
 import {
   INetworkMapEndpointV1Options,
   NetworkMapEndpointV1,
-} from "./web-services/network-map-endpoint-v1";
+} from "./web-services/network-map-endpoint-v1.js";
 import {
   IDiagnoseNodeEndpointV1Options,
   DiagnoseNodeEndpointV1,
-} from "./web-services/diagnose-node-endpoint-v1";
+} from "./web-services/diagnose-node-endpoint-v1.js";
 
 import fs from "fs";
 

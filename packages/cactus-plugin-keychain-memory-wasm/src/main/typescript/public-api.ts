@@ -4,7 +4,7 @@ import { IPluginFactoryOptions } from "@hyperledger/cactus-core-api";
 
 export { OpenApiJson };
 
-export * from "./generated/openapi/typescript-axios/index";
+export * from "./generated/openapi/typescript-axios/index.js";
 
 export {
   PluginKeychainMemoryWasm,

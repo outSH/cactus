@@ -27,7 +27,7 @@ import {
   WatchBlocksOptionsV1,
   WatchBlocksCactusTransactionsEventV1,
   WatchBlocksDelegatedSignOptionsV1,
-} from "../generated/openapi/typescript-axios";
+} from "../generated/openapi/typescript-axios.js";
 
 const {
   newFilteredBlockEvent,

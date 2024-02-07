@@ -13,7 +13,7 @@ import {
   ConfigService,
   AuthorizationProtocol,
   IAuthorizationConfig,
-} from "../../../main/typescript/public-api";
+} from "../../../main/typescript/public-api.js";
 
 import { PluginLedgerConnectorStub } from "../fixtures/plugin-ledger-connector-stub/plugin-ledger-connector-stub.js";
 import { RunTransactionEndpoint } from "../fixtures/plugin-ledger-connector-stub/web-services/run-transaction-endpoint.js";

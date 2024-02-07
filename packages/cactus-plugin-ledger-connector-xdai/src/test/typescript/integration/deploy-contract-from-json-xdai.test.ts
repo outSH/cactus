@@ -11,7 +11,7 @@ import {
   Web3SigningCredentialCactusKeychainRef,
   ReceiptType,
   DefaultApi as XdaiApi,
-} from "../../../main/typescript/public-api";
+} from "../../../main/typescript/public-api.js";
 import { PluginKeychainMemory } from "@hyperledger/cactus-plugin-keychain-memory";
 import {
   K_DEV_WHALE_ACCOUNT_PRIVATE_KEY,

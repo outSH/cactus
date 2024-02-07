@@ -67,12 +67,12 @@ import {
   WatchConnectionStateV1,
   WatchProofStateOptionsV1,
   WatchProofStateV1,
-} from "./generated/openapi/typescript-axios";
+} from "./generated/openapi/typescript-axios.js";
 import {
   AnoncredAgent,
   cactiAgentConnectionsFilterToQuery,
   cactiAttributesToAnonCredsRequestedAttributes,
-} from "./aries-types";
+} from "./aries-types.js";
 
 import { WatchConnectionStateV1Endpoint } from "./web-services/watch-connection-state-v1-endpoint.js";
 import { WatchProofStateV1Endpoint } from "./web-services/watch-proof-state-v1-endpoint.js";

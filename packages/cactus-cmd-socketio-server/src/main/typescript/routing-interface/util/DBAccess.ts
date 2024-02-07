@@ -9,7 +9,7 @@ import { ConfigUtil } from "../util/ConfigUtil.js";
 import {
   ValidatorRegistry,
   LedgerPluginInfo,
-} from "../../verifier/validator-registry";
+} from "../../verifier/validator-registry.js";
 
 const fs = require("fs");
 const path = require("path");

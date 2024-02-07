@@ -36,7 +36,7 @@ import {
   getStatusReturn,
   InsertBlockDataEntryInterface,
   InsertDetailedTransactionEntryInterface,
-} from "./types";
+} from "./types.js";
 
 export interface IPluginPersistenceFabricOptions extends ICactusPluginOptions {
   gatewayOptions: GatewayOptions;
