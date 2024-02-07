@@ -2,6 +2,7 @@
   "name": "@hyperledger/cactus-common",
   "version": "2.0.0-alpha.2",
   "description": "Universal library used by both front end and back end components of Cactus. Aims to be a developer swiss army knife.",
+  "type": "module",
   "keywords": [
     "Hyperledger",
     "Cactus",
