@@ -10,7 +10,7 @@ async function processFile(filePath: string) {
     const data = await fs.readFile(filePath, "utf8");
 
     const updatedData = data.replace(
-      /import\s*(.*?)\s*from\s*['"](\.{1,2}\/.*?)['"]/g,
+      /import\s*({[^}]*}|[^]*?)\s*from\s*['"]((?:\.{1,2}\/)+.*?)['"]/g,
       (_match, imports, modulePath) => {
         // Add .js extension if not present
         const fullPath = `${
