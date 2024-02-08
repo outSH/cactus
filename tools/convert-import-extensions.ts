@@ -20,7 +20,18 @@ async function processFile(filePath: string) {
       },
     );
 
-    await fs.writeFile(filePath, updatedData, "utf8");
+    const updatedDataExport = updatedData.replace(
+      /export\s+({[^}]*}|[^]*?)\s*from\s*['"]((?:\.{1,2}\/)+.*?)['"]/g,
+      (_match, exports, modulePath) => {
+        // Add .js extension if not present
+        const fullPath = `${
+          path.extname(modulePath) ? modulePath : `${modulePath}.js`
+        }`;
+        return `export ${exports} from "${fullPath}"`;
+      },
+    );
+
+    await fs.writeFile(filePath, updatedDataExport, "utf8");
     console.log(`Updated file: ${filePath}`);
   } catch (error) {
     console.error(`Error processing file: ${filePath}`, error);
@@ -46,6 +57,6 @@ async function processDirectory(dirPath: string): Promise<void> {
   }
 }
 
-processDirectory("../").catch((error) => {
+processDirectory("./").catch((error) => {
   console.error("Error:", error);
 });
