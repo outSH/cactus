@@ -2,7 +2,9 @@ import { v4 as uuidV4 } from "uuid";
 import "jest-extended";
 
 import { createRuntimeErrorWithCause } from "../../../../main/typescript/public-api.js";
-import stringify from "fast-safe-stringify";
+import stringifyModule from "fast-safe-stringify";
+const stringify = stringifyModule.default;
+
 import { RuntimeError } from "run-time-error-cjs";
 
 describe("createRuntimeErrorWithCause() & newRex()", () => {

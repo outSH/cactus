@@ -1,4 +1,5 @@
-import KeyEncoder from "key-encoder";
+import KeyEncoderModule from "key-encoder";
+const KeyEncoder = KeyEncoderModule.default;
 
 export enum KeyFormat {
   Raw = "raw",
@@ -7,7 +8,7 @@ export enum KeyFormat {
 }
 
 export class KeyConverter {
-  private keyEncoder: KeyEncoder;
+  private keyEncoder: InstanceType<typeof KeyEncoder>;
 
   public readonly supportedKeyFormats: string[];
 

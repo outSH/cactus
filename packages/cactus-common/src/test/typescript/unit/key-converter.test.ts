@@ -1,6 +1,7 @@
 import test, { Test } from "tape";
 
-import KeyEncoder from "key-encoder";
+import KeyEncoderModule from "key-encoder";
+const KeyEncoder = KeyEncoderModule.default;
 
 import {
   JsObjectSigner,
@@ -15,7 +16,7 @@ import {
 test.skip("Test Public Raw key conversion", async (assert: Test) => {
   const keyConverter = new KeyConverter();
   const keyPair = Secp256k1Keys.generateKeyPairsBuffer();
-  const keyEncoder: KeyEncoder = new KeyEncoder("secp256k1");
+  const keyEncoder = new KeyEncoder("secp256k1");
   const hexPublic = Buffer.from(keyPair.publicKey).toString("hex");
   const pemPublic = keyEncoder.encodePublic(
     Buffer.from(keyPair.publicKey).toString("hex"),
@@ -62,7 +63,7 @@ test.skip("Test Public Raw key conversion", async (assert: Test) => {
 test.skip("Test Public Hex key conversion", async (assert: Test) => {
   const keyConverter = new KeyConverter();
   const keyPair = Secp256k1Keys.generateKeyPairsBuffer();
-  const keyEncoder: KeyEncoder = new KeyEncoder("secp256k1");
+  const keyEncoder = new KeyEncoder("secp256k1");
   const hexPublic = Buffer.from(keyPair.publicKey).toString("hex");
   const pemPublic = keyEncoder.encodePublic(
     Buffer.from(keyPair.publicKey).toString("hex"),
@@ -109,7 +110,7 @@ test.skip("Test Public Hex key conversion", async (assert: Test) => {
 test.skip("Test Public PEM key conversion", async (assert: Test) => {
   const keyConverter = new KeyConverter();
   const keyPair = Secp256k1Keys.generateKeyPairsBuffer();
-  const keyEncoder: KeyEncoder = new KeyEncoder("secp256k1");
+  const keyEncoder = new KeyEncoder("secp256k1");
   const hexPublic = Buffer.from(keyPair.publicKey).toString("hex");
   const pemPublic = keyEncoder.encodePublic(
     Buffer.from(keyPair.publicKey).toString("hex"),
@@ -156,7 +157,7 @@ test.skip("Test Public PEM key conversion", async (assert: Test) => {
 test.skip("Test Private Raw key conversion", async (assert: Test) => {
   const keyConverter = new KeyConverter();
   const keyPair = Secp256k1Keys.generateKeyPairsBuffer();
-  const keyEncoder: KeyEncoder = new KeyEncoder("secp256k1");
+  const keyEncoder = new KeyEncoder("secp256k1");
   const hexPrivate = keyPair.privateKey.toString("hex");
   const pemPrivate = keyEncoder.encodePrivate(
     keyPair.privateKey.toString("hex"),
@@ -203,7 +204,7 @@ test.skip("Test Private Raw key conversion", async (assert: Test) => {
 test.skip("Test Private Hex key conversion", async (assert: Test) => {
   const keyConverter = new KeyConverter();
   const keyPair = Secp256k1Keys.generateKeyPairsBuffer();
-  const keyEncoder: KeyEncoder = new KeyEncoder("secp256k1");
+  const keyEncoder = new KeyEncoder("secp256k1");
   const hexPrivate = keyPair.privateKey.toString("hex");
   const pemPrivate = keyEncoder.encodePrivate(
     keyPair.privateKey.toString("hex"),
@@ -250,7 +251,7 @@ test.skip("Test Private Hex key conversion", async (assert: Test) => {
 test.skip("Test Private PEM key conversion", async (assert: Test) => {
   const keyConverter = new KeyConverter();
   const keyPair = Secp256k1Keys.generateKeyPairsBuffer();
-  const keyEncoder: KeyEncoder = new KeyEncoder("secp256k1");
+  const keyEncoder = new KeyEncoder("secp256k1");
   const hexPrivate = keyPair.privateKey.toString("hex");
   const pemPrivate = keyEncoder.encodePrivate(
     keyPair.privateKey.toString("hex"),

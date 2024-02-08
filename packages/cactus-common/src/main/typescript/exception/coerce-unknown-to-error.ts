@@ -1,4 +1,5 @@
-import stringify from "fast-safe-stringify";
+import stringifyModule from "fast-safe-stringify";
+const stringify = stringifyModule.default;
 import sanitizeHtml from "sanitize-html";
 import { ErrorFromUnknownThrowable } from "./error-from-unknown-throwable.js";
 import { ErrorFromSymbol } from "./error-from-symbol.js";
