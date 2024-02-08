@@ -1,6 +1,6 @@
 import { EventEmitter } from "events";
 import Docker, { Container } from "dockerode";
-import { v4 as internalIpV4 } from "internal-ip";
+import internalIp from "internal-ip";
 import Web3Module from "web3";
 const Web3 = Web3Module.default;
 import { AbiItem } from "web3-utils";
@@ -16,7 +16,7 @@ import {
 } from "@hyperledger/cactus-common";
 
 import { Containers } from "../common/containers.js";
-import { RuntimeError } from "run-time-error-cjs";
+import { RuntimeError } from "run-time-error";
 
 export interface IOpenEthereumTestLedgerOptions {
   envVars?: string[];
@@ -322,7 +322,7 @@ export class OpenEthereumTestLedger {
     port?: number,
   ): Promise<string> {
     const thePort = port || (await this.getHostPortHttp());
-    const lanIpV4OrUndefined = await internalIpV4();
+    const lanIpV4OrUndefined = await internalIp.v4();
     const lanAddress = host || lanIpV4OrUndefined || "127.0.0.1"; // best effort...
     return `http://${lanAddress}:${thePort}`;
   }
@@ -332,7 +332,7 @@ export class OpenEthereumTestLedger {
     port?: number,
   ): Promise<string> {
     const thePort = port || (await this.getHostPortWs());
-    const lanIpV4OrUndefined = await internalIpV4();
+    const lanIpV4OrUndefined = await internalIp.v4();
     const lanAddress = host || lanIpV4OrUndefined || "127.0.0.1"; // best effort...
     return `ws://${lanAddress}:${thePort}`;
   }

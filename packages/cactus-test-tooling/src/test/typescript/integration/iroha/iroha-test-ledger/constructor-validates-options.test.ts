@@ -2,7 +2,7 @@ import tape from "tape";
 import _test, { Test } from "tape-promise";
 const test = _test.default(tape);
 import isPortReachable from "is-port-reachable";
-import { v4 as internalIpV4 } from "internal-ip";
+import internalIp from "internal-ip";
 import { Container } from "dockerode";
 import {
   IrohaTestLedger,
@@ -73,7 +73,7 @@ test.skip("starts/stops/destroys a docker container", async (t: Test) => {
 
   const postgresContainer: Container = await postgresTestContainer.start();
   const postgresPort = await postgresTestContainer.getPostgresPort();
-  const postgresHost = await internalIpV4();
+  const postgresHost = await internalIp.v4();
   if (!postgresHost) {
     throw new Error("Could not determine the internal IPV4 address.");
   }

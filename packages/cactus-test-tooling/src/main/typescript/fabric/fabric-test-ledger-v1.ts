@@ -34,7 +34,7 @@ import path from "path";
 import fs from "fs";
 import yaml from "js-yaml";
 import { envMapToDocker } from "../common/env-map-to-docker.js";
-import { RuntimeError } from "run-time-error-cjs";
+import { RuntimeError } from "run-time-error";
 
 export interface organizationDefinitionFabricV2 {
   path: string;

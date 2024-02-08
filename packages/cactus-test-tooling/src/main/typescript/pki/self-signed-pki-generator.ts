@@ -1,11 +1,11 @@
-import { pki, md } from "node-forge";
+import * as forge from "node-forge";
 import { v4 as uuidV4 } from "uuid";
 import { Strings } from "@hyperledger/cactus-common";
 
-export type ForgeKeyPair = pki.rsa.KeyPair;
-export type ForgePrivateKey = pki.rsa.PrivateKey;
-export type ForgeCertificate = pki.Certificate;
-export type ForgeCertificateField = pki.CertificateField;
+export type ForgeKeyPair = forge.pki.rsa.KeyPair;
+export type ForgePrivateKey = forge.pki.rsa.PrivateKey;
+export type ForgeCertificate = forge.pki.Certificate;
+export type ForgeCertificateField = forge.pki.CertificateField;
 
 /**
  * PKI as in public key infrastructure and x509 certificates.
@@ -29,33 +29,33 @@ export interface IPki {
  */
 export class SelfSignedPkiGenerator {
   public create(commonName: string, parent?: IPki): IPki {
-    const keyPair: pki.rsa.KeyPair = pki.rsa.generateKeyPair(4096);
-    const privateKeyPem: string = pki.privateKeyToPem(keyPair.privateKey);
-    const certificate = pki.createCertificate();
+    const keyPair = forge.pki.rsa.generateKeyPair(4096);
+    const privateKeyPem: string = forge.pki.privateKeyToPem(keyPair.privateKey);
+    const certificate = forge.pki.createCertificate();
 
     this.configureCertificateParameters(keyPair, certificate, commonName);
     if (parent) {
       certificate.setIssuer(parent.certificate.subject.attributes);
       certificate.publicKey = keyPair.publicKey;
       // certificate.privateKey = keyPair.privateKey;
-      certificate.sign(parent.keyPair.privateKey, md.sha512.create());
+      certificate.sign(parent.keyPair.privateKey, forge.md.sha512.create());
 
       if (!parent.certificate.verify(certificate)) {
         throw new Error("Could not verify newly generated certificate");
       }
     } else {
-      certificate.sign(keyPair.privateKey, md.sha512.create());
+      certificate.sign(keyPair.privateKey, forge.md.sha512.create());
     }
 
-    const certificatePem = pki.certificateToPem(certificate);
+    const certificatePem = forge.pki.certificateToPem(certificate);
     return { keyPair, certificate, certificatePem, privateKeyPem };
   }
 
   public configureCertificateParameters(
-    keyPair: pki.rsa.KeyPair,
-    certificate: pki.Certificate,
+    keyPair: forge.pki.rsa.KeyPair,
+    certificate: forge.pki.Certificate,
     commonName: string,
-  ): pki.Certificate {
+  ): forge.pki.Certificate {
     // 20 octets max for serial numbers of certs as per the standard
     const serialNumber = Strings.replaceAll(uuidV4(), "-", "").substring(0, 19);
     certificate.serialNumber = serialNumber;

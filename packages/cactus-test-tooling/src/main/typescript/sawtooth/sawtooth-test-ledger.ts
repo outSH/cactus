@@ -12,7 +12,7 @@ import {
 } from "@hyperledger/cactus-common";
 import { ITestLedger } from "../i-test-ledger.js";
 import { Containers } from "../common/containers.js";
-import { v4 as internalIpV4 } from "internal-ip";
+import internalIp from "internal-ip";
 
 /**
  * Type of input parameters to `SawtoothTestLedger` constructor.
@@ -249,7 +249,7 @@ export class SawtoothTestLedger implements ITestLedger {
    */
   public async getRestApiHost(): Promise<string> {
     const port = await this.getRestApiPort();
-    const lanAddress = (await internalIpV4()) ?? "127.0.0.1";
+    const lanAddress = (await internalIp.v4()) ?? "127.0.0.1";
     return `http://${lanAddress}:${port}`;
   }
 

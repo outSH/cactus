@@ -5,7 +5,7 @@ import { createRuntimeErrorWithCause } from "../../../../main/typescript/public-
 import stringifyModule from "fast-safe-stringify";
 const stringify = stringifyModule.default;
 
-import { RuntimeError } from "run-time-error-cjs";
+import { RuntimeError } from "run-time-error";
 
 describe("createRuntimeErrorWithCause() & newRex()", () => {
   it("avoids losing information of inner exception: RuntimeError instance", () => {

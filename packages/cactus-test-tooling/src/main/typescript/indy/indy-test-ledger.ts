@@ -1,6 +1,6 @@
 import { EventEmitter } from "events";
 import Docker, { Container } from "dockerode";
-import { v4 as internalIpV4 } from "internal-ip";
+import internalIp from "internal-ip";
 import type { IndyVdrPoolConfig } from "@aries-framework/indy-vdr";
 
 import {
@@ -292,7 +292,7 @@ export class IndyTestLedger {
     // this.log.debug("Raw pool_transactions_genesis file:", genesisFile);
 
     // Patch pool address
-    const localhostIp = (await internalIpV4()) || "121.0.0.1";
+    const localhostIp = (await internalIp.v4()) || "121.0.0.1";
     this.log.debug("localhost address found:", localhostIp);
     genesisFile = genesisFile.replace(
       new RegExp(DEFAULT_POOL_ADDRESS, "g"),

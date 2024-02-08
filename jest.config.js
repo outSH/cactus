@@ -1,6 +1,6 @@
 /** @type {import('ts-jest/dist/types').JestConfigWithTsJest} */
 module.exports = {
-  preset: "ts-jest",
+  preset: "ts-jest/presets/default-esm",
   logHeapUsage: true,
   testEnvironment: "node",
   maxWorkers: 1,
@@ -11,6 +11,9 @@ module.exports = {
     `**/cactus-*/src/test/typescript/{unit,integration,benchmark}/**/*.test.ts`,
     `**/cacti-*/src/test/typescript/{unit,integration,benchmark}/**/*.test.ts`,
   ],
+  moduleNameMapper: {
+    "^(\\.{1,2}/.*)\\.js$": "$1",
+  },
   // Ignore the tests that are still using tap/tape for as their test runner
   testPathIgnorePatterns: [
     `./packages/cactus-plugin-keychain-aws-sm/src/test/typescript/integration/openapi/openapi-validation.test.ts`,

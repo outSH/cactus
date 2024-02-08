@@ -1,6 +1,6 @@
 import { EventEmitter } from "events";
 import Docker, { Container } from "dockerode";
-import { v4 as internalIpV4 } from "internal-ip";
+import internalIp from "internal-ip";
 import { v4 as uuidv4 } from "uuid";
 import KcAdminClientModule from "keycloak-admin";
 const KcAdminClient = KcAdminClientModule.default;
@@ -243,7 +243,7 @@ export class KeycloakContainer {
 
   public async getApiBaseUrl(host?: string): Promise<string> {
     const port = await this.getHostPortHttp();
-    const lanIpV4OrUndefined = await internalIpV4();
+    const lanIpV4OrUndefined = await internalIp.v4();
     const lanAddress = host || lanIpV4OrUndefined || "127.0.0.1"; // best effort...
     return `http://${lanAddress}:${port}/auth`;
   }
