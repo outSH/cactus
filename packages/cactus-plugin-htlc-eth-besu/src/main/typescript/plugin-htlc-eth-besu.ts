@@ -35,7 +35,7 @@ import {
   GetStatusRequest,
   GetSingleStatusRequest,
   Web3SigningCredentialPrivateKeyHex,
-} from "./generated/openapi/typescript-axios.js";
+} from "./generated/openapi/typescript-axios/index.js";
 export interface IPluginHtlcEthBesuOptions extends ICactusPluginOptions {
   logLevel?: LogLevelDesc;
   instanceId: string;

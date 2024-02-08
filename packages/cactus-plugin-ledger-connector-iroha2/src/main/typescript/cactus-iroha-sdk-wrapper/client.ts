@@ -74,7 +74,7 @@ import {
   TransactResponseV1,
   TransactionStatusV1,
   Iroha2BaseConfigTorii,
-} from "../generated/openapi/typescript-axios.js";
+} from "../generated/openapi/typescript-axios/index.js";
 import { IrohaV2PrerequisitesProvider } from "./prerequisites-provider.js";
 
 setCrypto(crypto);

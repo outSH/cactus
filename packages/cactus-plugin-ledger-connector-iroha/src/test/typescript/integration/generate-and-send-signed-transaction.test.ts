@@ -57,7 +57,7 @@ import {
 import {
   IrohaCommand,
   IrohaQuery,
-} from "../../../main/typescript/generated/openapi/typescript-axios.js";
+} from "../../../main/typescript/generated/openapi/typescript-axios/index.js";
 
 // Logger setup
 const log: Logger = LoggerProvider.getOrCreate({

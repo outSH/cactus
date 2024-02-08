@@ -22,7 +22,7 @@ import {
   DefaultApi,
   DiagnoseNodeV1Request,
   DiagnoseNodeV1Response,
-} from "../generated/openapi/typescript-axios.js";
+} from "../generated/openapi/typescript-axios/index.js";
 
 export interface IDiagnoseNodeEndpointV1Options {
   logLevel?: LogLevelDesc;

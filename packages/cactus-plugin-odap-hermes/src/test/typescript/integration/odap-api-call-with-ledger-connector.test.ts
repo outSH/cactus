@@ -8,7 +8,7 @@ import { PluginObjectStoreIpfs } from "@hyperledger/cactus-plugin-object-store-i
 import bodyParser from "body-parser";
 import express from "express";
 import { DefaultApi as ObjectStoreIpfsApi } from "@hyperledger/cactus-plugin-object-store-ipfs";
-import { AssetProfile } from "../../../main/typescript/generated/openapi/typescript-axios.js";
+import { AssetProfile } from "../../../main/typescript/generated/openapi/typescript-axios/index.js";
 import {
   IListenOptions,
   LoggerProvider,

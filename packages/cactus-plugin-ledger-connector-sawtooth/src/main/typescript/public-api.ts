@@ -9,7 +9,7 @@ import { PluginFactoryLedgerConnector } from "./plugin-factory-ledger-connector.
 export { PluginFactoryLedgerConnector } from "./plugin-factory-ledger-connector.js";
 
 export * from "./types/model-type-guards.js";
-export * from "./generated/openapi/typescript-axios.js";
+export * from "./generated/openapi/typescript-axios/index.js";
 export {
   SawtoothApiClient,
   SawtoothApiClientOptions,

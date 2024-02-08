@@ -10,7 +10,7 @@ import {
   IrohaSocketIOTransactV1,
   IrohaBlockProgress,
   IrohaBaseConfig,
-} from "../generated/openapi/typescript-axios.js";
+} from "../generated/openapi/typescript-axios/index.js";
 import {
   Configuration,
   ConfigurationParameters,

@@ -67,7 +67,7 @@ import {
   WatchConnectionStateV1,
   WatchProofStateOptionsV1,
   WatchProofStateV1,
-} from "./generated/openapi/typescript-axios.js";
+} from "./generated/openapi/typescript-axios/index.js";
 import {
   AnoncredAgent,
   cactiAgentConnectionsFilterToQuery,

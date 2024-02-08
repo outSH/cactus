@@ -57,7 +57,7 @@ import OAS from "../json/openapi.json";
 
 import { PrometheusExporter } from "./prometheus-exporter/prometheus-exporter.js";
 import { AuthorizerFactory } from "./authzn/authorizer-factory.js";
-import { WatchHealthcheckV1 } from "./generated/openapi/typescript-axios.js";
+import { WatchHealthcheckV1 } from "./generated/openapi/typescript-axios/index.js";
 import { WatchHealthcheckV1Endpoint } from "./web-services/watch-healthcheck-v1-endpoint.js";
 import * as default_service from "./generated/proto/protoc-gen-ts/services/default_service.js";
 import { GrpcServerApiServer } from "./web-services/grpc/grpc-server-api-server.js";

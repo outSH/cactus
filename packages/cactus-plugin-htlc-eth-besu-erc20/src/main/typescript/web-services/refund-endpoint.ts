@@ -12,7 +12,7 @@ import {
   IEndpointAuthzOptions,
 } from "@hyperledger/cactus-core-api";
 import { registerWebServiceEndpoint } from "@hyperledger/cactus-core";
-import { RefundRequest } from "../generated/openapi/typescript-axios.js";
+import { RefundRequest } from "../generated/openapi/typescript-axios/index.js";
 import OAS from "../../json/openapi.json";
 import { PluginHtlcEthBesuErc20 } from "../plugin-htlc-eth-besu-erc20.js";
 

@@ -17,7 +17,7 @@ import { registerWebServiceEndpoint } from "@hyperledger/cactus-core";
 import { PluginKeychainAzureKv } from "../plugin-keychain-azure-kv.js";
 
 import OAS from "../../json/openapi.json";
-import { DeleteKeychainEntryRequestV1 } from "../generated/openapi/typescript-axios.js";
+import { DeleteKeychainEntryRequestV1 } from "../generated/openapi/typescript-axios/index.js";
 
 export interface IDeleteKeychainEntryEndpointOptions {
   logLevel?: LogLevelDesc;

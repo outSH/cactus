@@ -36,7 +36,7 @@ import {
 import {
   Configuration,
   DefaultApi,
-} from "./generated/openapi/typescript-axios.js";
+} from "./generated/openapi/typescript-axios/index.js";
 export interface IWebAppOptions {
   port: number;
   hostname: string;

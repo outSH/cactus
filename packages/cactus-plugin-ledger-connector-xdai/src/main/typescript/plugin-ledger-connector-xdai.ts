@@ -47,7 +47,7 @@ import {
   Web3SigningCredentialCactusKeychainRef,
   Web3SigningCredentialPrivateKeyHex,
   Web3SigningCredentialType,
-} from "./generated/openapi/typescript-axios.js";
+} from "./generated/openapi/typescript-axios/index.js";
 
 import { RunTransactionEndpoint } from "./web-services/run-transaction-endpoint.js";
 import { InvokeContractEndpoint } from "./web-services/invoke-contract-endpoint.js";

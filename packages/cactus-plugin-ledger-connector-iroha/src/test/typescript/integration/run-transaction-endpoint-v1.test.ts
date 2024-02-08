@@ -33,7 +33,7 @@ import {
   IrohaCommand,
   IrohaQuery,
   KeyPair,
-} from "../../../main/typescript/generated/openapi/typescript-axios.js";
+} from "../../../main/typescript/generated/openapi/typescript-axios/index.js";
 import cryptoHelper from "iroha-helpers/lib/cryptoHelper";
 import { Constants } from "@hyperledger/cactus-core-api";
 

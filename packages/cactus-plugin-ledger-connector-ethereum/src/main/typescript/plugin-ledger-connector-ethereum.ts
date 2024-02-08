@@ -60,7 +60,7 @@ import {
   ContractKeychainDefinition,
   GasTransactionConfig,
   ContractJSON,
-} from "./generated/openapi/typescript-axios.js";
+} from "./generated/openapi/typescript-axios/index.js";
 
 import { RunTransactionEndpoint } from "./web-services/run-transaction-v1-endpoint.js";
 import { InvokeContractEndpoint } from "./web-services/invoke-contract-v1-endpoint.js";

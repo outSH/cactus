@@ -6,7 +6,7 @@ import {
   IEndpointAuthzOptions,
 } from "@hyperledger/cactus-core-api";
 
-import { GetNodeJwsResponse } from "../generated/openapi/typescript-axios.js";
+import { GetNodeJwsResponse } from "../generated/openapi/typescript-axios/index.js";
 
 import {
   Logger,

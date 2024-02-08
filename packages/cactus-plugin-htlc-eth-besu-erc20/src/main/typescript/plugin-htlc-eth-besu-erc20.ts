@@ -30,7 +30,7 @@ import {
   WithdrawRequest,
   GetStatusRequest,
   GetSingleStatusRequest,
-} from "./generated/openapi/typescript-axios.js";
+} from "./generated/openapi/typescript-axios/index.js";
 import { Optional } from "typescript-optional";
 
 export interface IPluginHtlcEthBesuErc20Options extends ICactusPluginOptions {

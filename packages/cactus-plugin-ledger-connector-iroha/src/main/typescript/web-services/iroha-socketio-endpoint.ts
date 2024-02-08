@@ -6,11 +6,11 @@ import {
   RunTransactionRequestV1,
   IrohaCommand,
   IrohaBaseConfig,
-} from "../generated/openapi/typescript-axios.js";
+} from "../generated/openapi/typescript-axios/index.js";
 import {
   WatchBlocksV1,
   IrohaQuery,
-} from "../generated/openapi/typescript-axios.js";
+} from "../generated/openapi/typescript-axios/index.js";
 
 import {
   IrohaTransactionWrapper,

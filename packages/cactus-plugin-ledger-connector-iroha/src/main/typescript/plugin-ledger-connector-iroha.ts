@@ -39,7 +39,7 @@ import {
   RunTransactionResponse,
   WatchBlocksV1,
   IrohaSocketIOTransactV1,
-} from "./generated/openapi/typescript-axios.js";
+} from "./generated/openapi/typescript-axios/index.js";
 
 import { RunTransactionEndpoint } from "./web-services/run-transaction-endpoint.js";
 import { GenerateTransactionEndpoint } from "./web-services/generate-transaction-endpoint.js";

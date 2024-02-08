@@ -34,7 +34,7 @@ import {
   IrohaCommand,
   KeyPair,
   RunTransactionRequestV1,
-} from "../../../../main/typescript/generated/openapi/typescript-axios.js";
+} from "../../../../main/typescript/generated/openapi/typescript-axios/index.js";
 import cryptoHelper from "iroha-helpers/lib/cryptoHelper";
 
 import OAS from "../../../../main/json/openapi.json";

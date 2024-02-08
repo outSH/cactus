@@ -42,7 +42,7 @@ import {
   RecoverUpdateAckV1Message,
   RollbackV1Message,
   RollbackAckV1Message,
-} from "../generated/openapi/typescript-axios.js";
+} from "../generated/openapi/typescript-axios/index.js";
 import { CommitFinalRequestEndpointV1 } from "../web-services/server-side/commit-final-request-endpoint.js";
 import { CommitFinalResponseEndpointV1 } from "../web-services/client-side/commit-final-response-endpoint.js";
 import { CommitPreparationResponseEndpointV1 } from "../web-services/client-side/commit-prepare-response-endpoint.js";

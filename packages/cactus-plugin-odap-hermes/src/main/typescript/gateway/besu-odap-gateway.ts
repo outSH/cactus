@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import { Knex } from "knex";
 import { Configuration } from "@hyperledger/cactus-core-api";
-import { SessionDataRollbackActionsPerformedEnum } from "../generated/openapi/typescript-axios.js";
+import { SessionDataRollbackActionsPerformedEnum } from "../generated/openapi/typescript-axios/index.js";
 import {
   DefaultApi as BesuApi,
   Web3SigningCredential,

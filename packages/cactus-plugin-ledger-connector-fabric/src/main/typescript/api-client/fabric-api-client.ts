@@ -17,7 +17,7 @@ import {
   WatchBlocksDelegatedSignOptionsV1,
   WatchBlocksCactusTransactionsResponseV1,
   WatchBlocksCactusTransactionsEventV1,
-} from "../generated/openapi/typescript-axios.js";
+} from "../generated/openapi/typescript-axios/index.js";
 import { Configuration } from "../generated/openapi/typescript-axios/configuration.js";
 
 /**

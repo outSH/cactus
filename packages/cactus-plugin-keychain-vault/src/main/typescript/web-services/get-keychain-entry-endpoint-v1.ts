@@ -16,7 +16,7 @@ import { registerWebServiceEndpoint } from "@hyperledger/cactus-core";
 
 import OAS from "../../json/openapi.json";
 import { PluginKeychainVault } from "../plugin-keychain-vault.js";
-import { GetKeychainEntryResponseV1 } from "../generated/openapi/typescript-axios.js";
+import { GetKeychainEntryResponseV1 } from "../generated/openapi/typescript-axios/index.js";
 
 export interface IGetKeychainEntryEndpointV1Options {
   logLevel?: LogLevelDesc;

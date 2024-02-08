@@ -1,4 +1,4 @@
-import { RecoverSuccessV1Message } from "../../generated/openapi/typescript-axios.js";
+import { RecoverSuccessV1Message } from "../../generated/openapi/typescript-axios/index.js";
 import { LoggerProvider } from "@hyperledger/cactus-common";
 import { PluginOdapGateway } from "../plugin-odap-gateway.js";
 

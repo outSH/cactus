@@ -8,7 +8,7 @@ import {
   DefaultApi,
   WatchHealthcheckV1,
   HealthCheckResponse,
-} from "../generated/openapi/typescript-axios.js";
+} from "../generated/openapi/typescript-axios/index.js";
 import { Configuration } from "../generated/openapi/typescript-axios/configuration.js";
 import { ConfigurationParameters } from "../generated/openapi/typescript-axios/configuration.js";
 import { Optional } from "typescript-optional";

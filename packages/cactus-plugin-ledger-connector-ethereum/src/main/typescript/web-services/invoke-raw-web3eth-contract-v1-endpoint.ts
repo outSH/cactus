@@ -15,7 +15,7 @@ import {
 import { registerWebServiceEndpoint } from "@hyperledger/cactus-core";
 import { PluginLedgerConnectorEthereum } from "../plugin-ledger-connector-ethereum.js";
 import OAS from "../../json/openapi.json";
-import { InvokeRawWeb3EthContractV1Response } from "../generated/openapi/typescript-axios.js";
+import { InvokeRawWeb3EthContractV1Response } from "../generated/openapi/typescript-axios/index.js";
 import { ERR_INVALID_RESPONSE } from "web3";
 import { isWeb3Error } from "../public-api.js";
 

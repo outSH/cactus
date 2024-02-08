@@ -17,7 +17,7 @@ import { registerWebServiceEndpoint } from "@hyperledger/cactus-core";
 import { PluginLedgerConnectorBesu } from "../plugin-ledger-connector-besu.js";
 
 import OAS from "../../json/openapi.json";
-import { InvokeContractV1Request } from "../generated/openapi/typescript-axios.js";
+import { InvokeContractV1Request } from "../generated/openapi/typescript-axios/index.js";
 
 export interface IInvokeContractEndpointOptions {
   logLevel?: LogLevelDesc;

@@ -14,7 +14,7 @@ import {
 import { registerWebServiceEndpoint } from "@hyperledger/cactus-core";
 import OAS from "../../json/openapi.json";
 
-import { InitializeRequest } from "../generated/openapi/typescript-axios.js";
+import { InitializeRequest } from "../generated/openapi/typescript-axios/index.js";
 import { PluginHtlcEthBesu } from "../plugin-htlc-eth-besu.js";
 
 export interface IInitializeEndpointOptions {

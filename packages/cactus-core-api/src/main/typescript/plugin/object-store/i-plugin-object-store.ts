@@ -1,9 +1,9 @@
-import type { GetObjectRequestV1 } from "../../generated/openapi/typescript-axios.js";
-import type { GetObjectResponseV1 } from "../../generated/openapi/typescript-axios.js";
-import type { HasObjectRequestV1 } from "../../generated/openapi/typescript-axios.js";
-import type { SetObjectRequestV1 } from "../../generated/openapi/typescript-axios.js";
-import type { SetObjectResponseV1 } from "../../generated/openapi/typescript-axios.js";
-import type { HasObjectResponseV1 } from "../../generated/openapi/typescript-axios.js";
+import type { GetObjectRequestV1 } from "../../generated/openapi/typescript-axios/index.js";
+import type { GetObjectResponseV1 } from "../../generated/openapi/typescript-axios/index.js";
+import type { HasObjectRequestV1 } from "../../generated/openapi/typescript-axios/index.js";
+import type { SetObjectRequestV1 } from "../../generated/openapi/typescript-axios/index.js";
+import type { SetObjectResponseV1 } from "../../generated/openapi/typescript-axios/index.js";
+import type { HasObjectResponseV1 } from "../../generated/openapi/typescript-axios/index.js";
 import type { ICactusPlugin } from "../i-cactus-plugin.js";
 import type { IPluginWebService } from "../web-service/i-plugin-web-service.js";
 

@@ -15,7 +15,7 @@ import {
 } from "@hyperledger/cactus-core-api";
 import { registerWebServiceEndpoint } from "@hyperledger/cactus-core";
 
-import { DaoTokenGetAllowanceRequest } from "../../../generated/openapi/typescript-axios.js";
+import { DaoTokenGetAllowanceRequest } from "../../../generated/openapi/typescript-axios/index.js";
 import { CarbonAccountingPlugin } from "../../carbon-accounting-plugin.js";
 import OAS from "../../../../json/openapi.json";
 

@@ -15,7 +15,7 @@ import { registerWebServiceEndpoint } from "@hyperledger/cactus-core";
 import { PluginLedgerConnectorQuorum } from "../plugin-ledger-connector-quorum.js";
 import OAS from "../../json/openapi.json";
 import sanitizeHtml from "sanitize-html";
-import { InvokeRawWeb3EthContractV1Response } from "../generated/openapi/typescript-axios.js";
+import { InvokeRawWeb3EthContractV1Response } from "../generated/openapi/typescript-axios/index.js";
 
 export interface IInvokeRawWeb3EthContractEndpointOptions {
   logLevel?: LogLevelDesc;

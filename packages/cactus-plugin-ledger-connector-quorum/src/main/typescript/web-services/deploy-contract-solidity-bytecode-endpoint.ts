@@ -17,7 +17,7 @@ import {
 import { registerWebServiceEndpoint } from "@hyperledger/cactus-core";
 
 import { PluginLedgerConnectorQuorum } from "../plugin-ledger-connector-quorum.js";
-import { DeployContractSolidityBytecodeV1Request } from "../generated/openapi/typescript-axios.js";
+import { DeployContractSolidityBytecodeV1Request } from "../generated/openapi/typescript-axios/index.js";
 import OAS from "../../json/openapi.json";
 
 export interface IDeployContractSolidityBytecodeOptions {

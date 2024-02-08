@@ -18,7 +18,7 @@ import {
   PluginRegistry,
 } from "@hyperledger/cactus-core";
 import { PluginHTLCCoordinatorBesu } from "../plugin-htlc-coordinator-besu.js";
-import { OwnHTLCRequest } from "../generated/openapi/typescript-axios.js";
+import { OwnHTLCRequest } from "../generated/openapi/typescript-axios/index.js";
 import OAS from "../../json/openapi.json";
 
 export interface IOwnHTLCOptions {

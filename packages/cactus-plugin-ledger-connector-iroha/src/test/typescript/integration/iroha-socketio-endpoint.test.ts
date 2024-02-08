@@ -34,7 +34,7 @@ import {
   IrohaBlockResponse,
   IrohaCommand,
   KeyPair,
-} from "../../../main/typescript/generated/openapi/typescript-axios.js";
+} from "../../../main/typescript/generated/openapi/typescript-axios/index.js";
 
 import {
   IPluginLedgerConnectorIrohaOptions,

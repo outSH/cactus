@@ -47,7 +47,7 @@ import {
   WatchBlocksOptionsV1,
   GenerateTransactionRequestV1,
   IrohaTransactionParametersV1,
-} from "./generated/openapi/typescript-axios.js";
+} from "./generated/openapi/typescript-axios/index.js";
 
 import { Iroha2TransactEndpointV1 } from "./web-services/transact-v1-endpoint.js";
 import { Iroha2QueryEndpointV1 } from "./web-services/query-v1-endpoint.js";

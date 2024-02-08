@@ -6,7 +6,7 @@ import {
   IEndpointAuthzOptions,
 } from "@hyperledger/cactus-core-api";
 
-import { GetConsortiumJwsResponse } from "../generated/openapi/typescript-axios.js";
+import { GetConsortiumJwsResponse } from "../generated/openapi/typescript-axios/index.js";
 
 import {
   LogLevelDesc,

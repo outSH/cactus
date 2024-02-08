@@ -77,7 +77,7 @@ import {
   GetBlockV1Response,
   GetBesuRecordV1Request,
   GetBesuRecordV1Response,
-} from "./generated/openapi/typescript-axios.js";
+} from "./generated/openapi/typescript-axios/index.js";
 
 import { InvokeContractEndpoint } from "./web-services/invoke-contract-endpoint.js";
 import { isWeb3SigningCredentialNone } from "./model-type-guards.js";

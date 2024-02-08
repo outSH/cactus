@@ -8,7 +8,7 @@ import {
   RunTransactionRequest as FabricRunTransactionRequest,
 } from "@hyperledger/cactus-plugin-ledger-connector-fabric";
 import { IOdapPluginKeyPair, PluginOdapGateway } from "./plugin-odap-gateway.js";
-import { SessionDataRollbackActionsPerformedEnum } from "../generated/openapi/typescript-axios.js";
+import { SessionDataRollbackActionsPerformedEnum } from "../generated/openapi/typescript-axios/index.js";
 import { ClientGatewayHelper } from "./client/client-helper.js";
 import { ServerGatewayHelper } from "./server/server-helper.js";
 

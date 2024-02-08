@@ -32,7 +32,7 @@ import {
   SearchLineageRequestV1,
   SearchLineageResponseV1,
   RegisterHistoryDataV1Response,
-} from "./generated/openapi/typescript-axios.js";
+} from "./generated/openapi/typescript-axios/index.js";
 import {
   HTTP_HEADER_SUBSCRIPTION_KEY,
   getAuthorizationHeaders,

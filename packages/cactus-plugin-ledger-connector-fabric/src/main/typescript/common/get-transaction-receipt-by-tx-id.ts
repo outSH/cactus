@@ -5,7 +5,7 @@ import {
   TransactReceiptTransactionEndorsement,
   TransactReceiptTransactionCreator,
   TransactReceiptBlockMetaData,
-} from "../generated/openapi/typescript-axios.js";
+} from "../generated/openapi/typescript-axios/index.js";
 import { common } from "fabric-protos";
 import { querySystemChainCode } from "./query-system-chain-code.js";
 

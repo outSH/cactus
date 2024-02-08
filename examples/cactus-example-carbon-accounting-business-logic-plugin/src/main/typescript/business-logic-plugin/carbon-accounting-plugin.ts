@@ -41,7 +41,7 @@ import {
   EnrollAdminInfo,
   EnrollAdminV1Request,
   EnrollAdminV1Response,
-} from "../generated/openapi/typescript-axios.js";
+} from "../generated/openapi/typescript-axios/index.js";
 import { EnrollAdminV1Endpoint } from "./web-services/utility-emissions-channel/enroll-admin-v1-endpoint.js";
 
 export interface OrgEnv {

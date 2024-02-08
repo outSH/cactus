@@ -20,7 +20,7 @@ import {
   WatchBlocksV1Progress,
   WatchBlocksV1,
   Web3Transaction,
-} from "../generated/openapi/typescript-axios.js";
+} from "../generated/openapi/typescript-axios/index.js";
 import {
   ConvertWeb3ReturnToString,
   Web3StringReturnFormat,

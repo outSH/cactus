@@ -1,7 +1,7 @@
 import {
   ChainCodeLanguageRuntime,
   ChainCodeProgrammingLanguage,
-} from "../generated/openapi/typescript-axios.js";
+} from "../generated/openapi/typescript-axios/index.js";
 
 export function sourceLangToRuntimeLang(
   srcLanguage: ChainCodeProgrammingLanguage,

@@ -11,7 +11,7 @@ import {
   WatchBlocksV1,
   WatchBlocksV1Options,
   WatchBlocksV1Progress,
-} from "../generated/openapi/typescript-axios.js";
+} from "../generated/openapi/typescript-axios/index.js";
 import { Configuration } from "../generated/openapi/typescript-axios/configuration.js";
 import { AbiItem } from "web3-utils";
 

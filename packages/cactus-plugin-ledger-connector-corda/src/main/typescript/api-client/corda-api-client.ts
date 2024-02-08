@@ -10,7 +10,7 @@ import { ISocketApiClient } from "@hyperledger/cactus-core-api";
 import {
   DefaultApi,
   GetMonitorTransactionsV1ResponseTxInner,
-} from "../generated/openapi/typescript-axios.js";
+} from "../generated/openapi/typescript-axios/index.js";
 import { Configuration } from "../generated/openapi/typescript-axios/configuration.js";
 
 const DEFAULT_POLL_RATE_MS = 5000;

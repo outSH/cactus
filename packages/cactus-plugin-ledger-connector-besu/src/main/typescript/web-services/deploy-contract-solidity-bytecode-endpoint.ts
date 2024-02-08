@@ -20,7 +20,7 @@ import {
 } from "@hyperledger/cactus-core";
 
 import { PluginLedgerConnectorBesu } from "../plugin-ledger-connector-besu.js";
-import { DeployContractSolidityBytecodeV1Request } from "../generated/openapi/typescript-axios.js";
+import { DeployContractSolidityBytecodeV1Request } from "../generated/openapi/typescript-axios/index.js";
 import OAS from "../../json/openapi.json";
 
 export interface IDeployContractSolidityBytecodeOptions {
