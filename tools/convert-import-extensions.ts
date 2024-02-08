@@ -5,6 +5,13 @@
 import * as fs from "fs/promises";
 import * as fsSync from "fs";
 import * as path from "path";
+import ignore from "ignore";
+import log from "loglevel";
+
+// log.setDefaultLevel(level);
+// log.setLevel(level, [persist]);
+
+log.warn("Start");
 
 function resolveRelativePath(basePath: string, relativePath: string): string {
   const baseDir = path.dirname(basePath);
@@ -26,45 +33,33 @@ async function processFile(filePath: string) {
     const data = await fs.readFile(filePath, "utf8");
 
     const updatedData = data.replace(
-      /import\s*({[^}]*}|[^]*?)\s*from\s*['"]((?:\.{1,2}\/)+.*?)['"]/g,
-      (_match, imports, modulePath) => {
-        // Add .js extension if not present
-        console.log("imports", imports);
-        console.log("modulePath", modulePath);
+      /(import|export)\s+({[^}]*}|[^]*?)\s+from\s+['"]((?:\.{1,2}\/)+.*?)['"]/g,
+      (_match, verb, imports, modulePath) => {
         const resolvedPath = resolveRelativePath(filePath, modulePath);
-        console.log("HODOR RESOLVED IMPORT:", resolvedPath);
-        console.log("HODOR isDir", isDirectory(resolvedPath));
-
         if (isDirectory(resolvedPath)) {
           if (
             fsSync.existsSync(path.join(resolvedPath, "index.ts")) ||
             fsSync.existsSync(path.join(resolvedPath, "index.d.ts"))
           ) {
             console.log("index found");
-            modulePath = path.join(modulePath, "index.js");
+            // todo - flag skipDirUpdates
+            // modulePath = path.join(modulePath, "index.js");
             console.log("new modulePath", modulePath);
+            return _match;
+          } else {
+            console.error("INVALID PATH:", modulePath);
           }
+          // TODO - parse epackage.json?
         }
 
         const fullPath = `${
           path.extname(modulePath) ? modulePath : `${modulePath}.js`
         }`;
-        return `import ${imports} from "${fullPath}"`;
+        return `${verb} ${imports} from "${fullPath}"`;
       },
     );
 
-    const updatedDataExport = updatedData.replace(
-      /export\s+({[^}]*}|[^]*?)\s*from\s*['"]((?:\.{1,2}\/)+.*?)['"]/g,
-      (_match, exports, modulePath) => {
-        // Add .js extension if not present
-        const fullPath = `${
-          path.extname(modulePath) ? modulePath : `${modulePath}.js`
-        }`;
-        return `export ${exports} from "${fullPath}"`;
-      },
-    );
-
-    await fs.writeFile(filePath, updatedDataExport, "utf8");
+    await fs.writeFile(filePath, updatedData, "utf8");
     console.log(`Updated file: ${filePath}`);
   } catch (error) {
     console.error(`Error processing file: ${filePath}`, error);
@@ -72,7 +67,11 @@ async function processFile(filePath: string) {
 }
 
 async function processDirectory(dirPath: string): Promise<void> {
-  if (dirPath.includes("node_modules")) {
+  const ignorefile = await fs.readFile(".gitignore", "utf8");
+  const ig = ignore().add(ignorefile);
+  console.log("dirPath", dirPath);
+  if (dirPath !== "./" && ig.ignores(dirPath)) {
+    log.error(`${dirPath} is ignored`);
     return; // Skip processing if path includes 'node_modules'
   }
   for (const file of await fs.readdir(dirPath)) {
@@ -90,8 +89,8 @@ async function processDirectory(dirPath: string): Promise<void> {
   }
 }
 
-processFile(
-  "./extensions/cactus-plugin-htlc-coordinator-besu/src/main/typescript/web-services/withdraw-counterparty-endpoint.ts",
-).catch((error) => {
+processDirectory("./").catch((error) => {
   console.error("Error:", error);
 });
+
+// --ignore ./.gitignore --logLevel info --cjs <Dir / File>

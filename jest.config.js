@@ -5,6 +5,9 @@ module.exports = {
   testEnvironment: "node",
   maxWorkers: 1,
   maxConcurrency: 1,
+  moduleNameMapper: {
+    "^(\\.{1,2}/.*)\\.js$": "$1",
+  },
   setupFilesAfterEnv: ["jest-extended/all", "./jest.setup.console.logs.js"],
   testTimeout: 60 * 60 * 1000,
   testMatch: [
