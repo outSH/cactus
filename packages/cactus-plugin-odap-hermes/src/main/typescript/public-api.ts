@@ -1,11 +1,11 @@
-export * from "./generated/openapi/typescript-axios/index";
+export * from "./generated/openapi/typescript-axios/index.js";
 
 export {
   IPluginOdapGatewayConstructorOptions,
   PluginOdapGateway,
   OdapMessageType,
   IOdapPluginKeyPair,
-} from "./gateway/plugin-odap-gateway";
+} from "./gateway/plugin-odap-gateway.js";
 
 import { IPluginFactoryOptions } from "@hyperledger/cactus-core-api";
 import { PluginFactoryFabricOdapGateway } from "./gateway/plugin-factory-fabric-odap-gateway.js";
@@ -23,5 +23,5 @@ export async function createBesuPluginFactory(
   return new PluginFactoryBesuOdapGateway(pluginFactoryOptions);
 }
 
-export { ServerGatewayHelper } from "./gateway/server/server-helper";
-export { ClientGatewayHelper } from "./gateway/client/client-helper";
+export { ServerGatewayHelper } from "./gateway/server/server-helper.js";
+export { ClientGatewayHelper } from "./gateway/client/client-helper.js";

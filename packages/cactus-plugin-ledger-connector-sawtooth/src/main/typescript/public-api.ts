@@ -6,14 +6,14 @@ export {
 } from "./plugin-ledger-connector-sawtooth.js";
 
 import { PluginFactoryLedgerConnector } from "./plugin-factory-ledger-connector.js";
-export { PluginFactoryLedgerConnector } from "./plugin-factory-ledger-connector";
+export { PluginFactoryLedgerConnector } from "./plugin-factory-ledger-connector.js";
 
-export * from "./types/model-type-guards";
-export * from "./generated/openapi/typescript-axios";
+export * from "./types/model-type-guards.js";
+export * from "./generated/openapi/typescript-axios.js";
 export {
   SawtoothApiClient,
   SawtoothApiClientOptions,
-} from "./api-client/sawtooth-api-client";
+} from "./api-client/sawtooth-api-client.js";
 
 export async function createPluginFactory(
   pluginFactoryOptions: IPluginFactoryOptions,

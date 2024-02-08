@@ -14,5 +14,5 @@
 
 
 export * from "./api.js";
-export * from "./configuration";
+export * from "./configuration.js";
 

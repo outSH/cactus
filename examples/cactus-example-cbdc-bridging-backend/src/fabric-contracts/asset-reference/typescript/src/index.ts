@@ -4,6 +4,6 @@
 
 import { AssetReferenceContract } from "./asset-reference-contract.js";
 
-export { AssetReferenceContract } from "./asset-reference-contract";
+export { AssetReferenceContract } from "./asset-reference-contract.js";
 
 export const contracts: any[] = [AssetReferenceContract];

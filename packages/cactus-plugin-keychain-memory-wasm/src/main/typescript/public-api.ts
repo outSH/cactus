@@ -9,9 +9,9 @@ export * from "./generated/openapi/typescript-axios/index.js";
 export {
   PluginKeychainMemoryWasm,
   IPluginKeychainMemoryWasmOptions,
-} from "./plugin-keychain-memory-wasm";
+} from "./plugin-keychain-memory-wasm.js";
 
-export { PluginFactoryKeychain } from "./plugin-factory-keychain";
+export { PluginFactoryKeychain } from "./plugin-factory-keychain.js";
 
 export async function createPluginFactory(
   pluginFactoryOptions: IPluginFactoryOptions,
@@ -19,5 +19,5 @@ export async function createPluginFactory(
   return new PluginFactoryKeychain(pluginFactoryOptions);
 }
 
-export * as wasm from "./generated/wasm-pack/cactus_plugin_keychain_memory_wasm";
+export * as wasm from "./generated/wasm-pack/cactus_plugin_keychain_memory_wasm.js";
 // export * as wasm_bg from "./generated/wasm-pack/cactus_plugin_keychain_memory_wasm_bg.wasm";
