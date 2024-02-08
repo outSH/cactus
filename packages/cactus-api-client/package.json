@@ -1,6 +1,7 @@
 {
   "name": "@hyperledger/cactus-api-client",
   "version": "2.0.0-alpha.2",
+  "type": "module",
   "description": "Universal library used by both front end and back end components of Cactus. Aims to be a developer swiss army knife.",
   "keywords": [
     "Hyperledger",

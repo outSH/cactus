@@ -1,7 +1,8 @@
 import { EventEmitter } from "events";
 import Docker, { Container } from "dockerode";
 import { v4 as internalIpV4 } from "internal-ip";
-import Web3 from "web3";
+import Web3Module from "web3";
+const Web3 = Web3Module.default;
 import { AbiItem } from "web3-utils";
 import { Account, TransactionReceipt } from "web3-core";
 import { v4 as uuidv4 } from "uuid";
@@ -60,7 +61,7 @@ export class OpenEthereumTestLedger {
   private readonly wsPort: number;
   private _container: Container | undefined;
   private _containerId: string | undefined;
-  private _web3: Web3 | undefined;
+  private _web3: InstanceType<typeof Web3> | undefined;
 
   public get imageFqn(): string {
     return `${this.imageName}:${this.imageVersion}`;
@@ -78,7 +79,7 @@ export class OpenEthereumTestLedger {
     }
   }
 
-  private get web3(): Web3 {
+  private get web3(): InstanceType<typeof Web3> {
     if (this._web3) {
       return this._web3;
     } else {

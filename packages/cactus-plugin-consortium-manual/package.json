@@ -1,6 +1,7 @@
 {
   "name": "@hyperledger/cactus-plugin-consortium-manual",
   "version": "2.0.0-alpha.2",
+  "type": "module",
   "description": "A web service plugin that provides management capabilities on a Cactus consortium as a whole for administrative purposes.",
   "keywords": [
     "Hyperledger",

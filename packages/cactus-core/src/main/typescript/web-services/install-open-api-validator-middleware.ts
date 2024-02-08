@@ -1,6 +1,5 @@
 import type { Application, NextFunction, Request, Response } from "express";
 import * as OpenApiValidator from "express-openapi-validator";
-import { OpenAPIV3 } from "express-openapi-validator/dist/framework/types";
 
 import { error as EovErrors } from "express-openapi-validator";
 
@@ -40,7 +39,7 @@ export async function installOpenapiValidationMiddleware(
 
   app.use(
     OpenApiValidator.middleware({
-      apiSpec: apiSpec as OpenAPIV3.Document,
+      apiSpec: apiSpec as string,
       validateApiSpec: false,
       $refParser: {
         mode: "dereference",

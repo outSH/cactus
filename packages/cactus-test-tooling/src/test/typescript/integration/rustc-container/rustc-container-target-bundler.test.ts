@@ -1,5 +1,7 @@
 import path from "path";
-import test, { Test } from "tape-promise/tape";
+import tape from "tape";
+import _test, { Test } from "tape-promise";
+const test = _test.default(tape);
 import temp from "temp";
 import esm from "esm";
 import fs from "fs-extra";

@@ -1,7 +1,7 @@
 import path from "path";
 import { Duplex, Stream } from "stream";
 import { IncomingMessage } from "http";
-import throttle from "lodash/throttle";
+import lodash from "lodash";
 import { Container, ContainerInfo } from "dockerode";
 import Dockerode from "dockerode";
 import execa from "execa";
@@ -439,9 +439,12 @@ export class Containers {
 
       const docker = new Dockerode();
 
-      const progressPrinter = throttle((msg: IDockerPullProgress): void => {
-        log.debug(JSON.stringify(msg.progress || msg.status));
-      }, 1000);
+      const progressPrinter = lodash.throttle(
+        (msg: IDockerPullProgress): void => {
+          log.debug(JSON.stringify(msg.progress || msg.status));
+        },
+        1000,
+      );
 
       const pullStreamStartedHandler = (pullError: unknown, stream: Stream) => {
         if (pullError) {

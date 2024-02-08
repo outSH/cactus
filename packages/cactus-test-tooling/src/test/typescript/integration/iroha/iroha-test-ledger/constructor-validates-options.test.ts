@@ -1,4 +1,6 @@
-import test, { Test } from "tape-promise/tape";
+import tape from "tape";
+import _test, { Test } from "tape-promise";
+const test = _test.default(tape);
 import isPortReachable from "is-port-reachable";
 import { v4 as internalIpV4 } from "internal-ip";
 import { Container } from "dockerode";

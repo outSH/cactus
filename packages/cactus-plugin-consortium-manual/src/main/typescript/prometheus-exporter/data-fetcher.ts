@@ -1,4 +1,4 @@
-import { NodeCount } from "./response.type";
+import { NodeCount } from "./response.type.js";
 
 import {
   totalTxCount,

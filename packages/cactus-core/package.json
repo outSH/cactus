@@ -2,6 +2,7 @@
   "name": "@hyperledger/cactus-core",
   "version": "2.0.0-alpha.2",
   "description": "Contains lower level abstractions/implementation that is to be shared by multiple other, higher level packages of the project.",
+  "type": "module",
   "keywords": [
     "Hyperledger",
     "Cactus",

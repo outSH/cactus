@@ -5,7 +5,8 @@ import { v4 as uuidv4 } from "uuid";
 import Docker, { Container, ContainerInfo } from "dockerode";
 import Joi from "joi";
 import tar from "tar-stream";
-import Web3 from "web3";
+import Web3Module from "web3";
+const Web3 = Web3Module.default;
 import { Account } from "web3-core";
 import {
   Bools,

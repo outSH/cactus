@@ -2,8 +2,8 @@ import { EventEmitter } from "events";
 import Docker, { Container } from "dockerode";
 import { v4 as internalIpV4 } from "internal-ip";
 import { v4 as uuidv4 } from "uuid";
-import KcAdminClient from "keycloak-admin";
-import UserRepresentation from "keycloak-admin/lib/defs/userRepresentation";
+import KcAdminClientModule from "keycloak-admin";
+const KcAdminClient = KcAdminClientModule.default;
 
 import {
   Logger,
@@ -13,7 +13,9 @@ import {
 } from "@hyperledger/cactus-common";
 
 import { Containers } from "../common/containers.js";
-import RealmRepresentation from "keycloak-admin/lib/defs/realmRepresentation";
+
+type UserRepresentation = any;
+type RealmRepresentation = any;
 
 export interface IKeycloakContainerOptions {
   envVars?: string[];
@@ -157,7 +159,7 @@ export class KeycloakContainer {
 
     const clients = await kcAdminClient.clients.find({});
 
-    const aClient = clients.find((c) => c.clientId === clientId);
+    const aClient = clients.find((c: any) => c.clientId === clientId);
     if (!aClient) {
       throw new Error(`${fnTag} could not find client with ID ${clientId}`);
     }
@@ -188,7 +190,7 @@ export class KeycloakContainer {
 
     const clients = await kcAdminClient.clients.find({});
 
-    const aClient = clients.find((c) => c.clientId === clientId);
+    const aClient = clients.find((c: any) => c.clientId === clientId);
     if (!aClient) {
       throw new Error(`${fnTag} could not find client with ID ${clientId}`);
     }
@@ -225,7 +227,7 @@ export class KeycloakContainer {
 
     const kcAdminClient = await this.createAdminClient();
     const clients = await kcAdminClient.clients.find({});
-    const client = clients.find((c) => c.clientId === clientId);
+    const client = clients.find((c: any) => c.clientId === clientId);
     log.debug("SAML2 client: %o", JSON.stringify(client, null, 4));
 
     // http://127.0.0.1:32819/auth/realms/master/protocol/saml
@@ -252,7 +254,9 @@ export class KeycloakContainer {
     return firstRealm;
   }
 
-  public async createAdminClient(): Promise<KcAdminClient> {
+  public async createAdminClient(): Promise<
+    InstanceType<typeof KcAdminClient>
+  > {
     const baseUrl = await this.getApiBaseUrl();
     const kcAdminClient = new KcAdminClient({
       baseUrl,
