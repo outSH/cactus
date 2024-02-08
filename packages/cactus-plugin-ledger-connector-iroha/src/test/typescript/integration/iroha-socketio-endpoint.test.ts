@@ -41,7 +41,7 @@ import {
   IrohaApiClient,
   IrohaApiClientOptions,
   PluginFactoryLedgerConnector,
-} from "../../../main/typescript.js";
+} from "../../../main/typescript/index.js";
 
 import { Constants, PluginImportType } from "@hyperledger/cactus-core-api";
 

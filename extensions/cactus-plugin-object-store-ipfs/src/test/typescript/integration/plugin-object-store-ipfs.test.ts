@@ -17,7 +17,7 @@ import {
   Containers,
 } from "@hyperledger/cactus-test-tooling";
 
-import { PluginObjectStoreIpfs } from "../../../main/typescript.js";
+import { PluginObjectStoreIpfs } from "../../../main/typescript/index.js";
 import { DefaultApi as ObjectStoreIpfsApi } from "../../../main/typescript/public-api.js";
 
 const logLevel: LogLevelDesc = "TRACE";
