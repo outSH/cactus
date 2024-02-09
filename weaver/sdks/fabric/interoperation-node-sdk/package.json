@@ -20,7 +20,7 @@
     "docs": "typedoc --out docs/ src/",
     "lint": "eslint '*/**/*.{js,ts,tsx}' --quiet --fix",
     "prepublishOnly": "npm test",
-    "test": "nyc mocha -r ts-node/register --exclude 'test/data/**/*.js' --recursive  -t 10000"
+    "test": "NODE_OPTIONS='--import tsx' mocha --exclude 'test/data/**/*.js' --recursive  -t 10000"
   },
   "nyc": {
     "all": true,
@@ -65,13 +65,14 @@
     "eslint-plugin-import": "2.28.1",
     "eslint-plugin-prettier": "5.0.0",
     "mocha": "5.2.0",
-    "nyc": "12.0.2",
+    "nyc": "15.1.0",
     "prettier": "2.8.8",
     "prettier-eslint": "11.0.0",
     "rewire": "4.0.1",
     "sinon": "6.3.5",
     "sinon-chai": "3.7.0",
     "ts-node": "10.9.1",
+    "tsx": "4.7.1",
     "typedoc": "0.25.6",
     "typescript": "5.3.3"
   },
