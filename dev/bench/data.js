@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1712574761346,
+  "lastUpdate": 1712661608652,
   "repoUrl": "https://github.com/outSH/cactus",
   "entries": {
     "Benchmark": [
@@ -76,6 +76,44 @@ window.BENCHMARK_DATA = {
             "range": "±1.15%",
             "unit": "ops/sec",
             "extra": "181 samples"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "tomasz.awramski@fujitsu.com",
+            "name": "Tomasz Awramski",
+            "username": "rwat17"
+          },
+          "committer": {
+            "email": "9387513+outSH@users.noreply.github.com",
+            "name": "Michal Bajer",
+            "username": "outSH"
+          },
+          "distinct": true,
+          "id": "3cc33b143f858108422fabc859ee2fd0798552da",
+          "message": "refactor(ledger-browser): rename ledger browser\n- delete solid.js version\n- rename package\n- fix type erros\n- bump vite from 5.0.12 to 5.0.13 in /packages/cacti-ledger-browser-react\n\nCloses: #3156\n\nSigned-off-by: Tomasz Awramski <tomasz.awramski@fujitsu.com>",
+          "timestamp": "2024-04-09T11:16:02+02:00",
+          "tree_id": "56ce5a546bc51814c247d8dd446e916a2613296f",
+          "url": "https://github.com/outSH/cactus/commit/3cc33b143f858108422fabc859ee2fd0798552da"
+        },
+        "date": 1712661605882,
+        "tool": "benchmarkjs",
+        "benches": [
+          {
+            "name": "cmd-api-server_HTTP_GET_getOpenApiSpecV1",
+            "value": 537,
+            "range": "±1.79%",
+            "unit": "ops/sec",
+            "extra": "177 samples"
+          },
+          {
+            "name": "cmd-api-server_gRPC_GetOpenApiSpecV1",
+            "value": 330,
+            "range": "±1.62%",
+            "unit": "ops/sec",
+            "extra": "180 samples"
           }
         ]
       }
