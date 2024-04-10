@@ -1,20 +1,21 @@
+import { RouteObject } from "react-router-dom";
 import cactiGuiConfig from "../apps/cacti/index";
 import ethereumGuiConfig from "../apps/eth";
 import fabricAppConfig from "../apps/fabric";
 
-export type AppConfig = {
+interface AppConfig {
   name: string;
-  url: string;
-  pluginName?: string;
+  path: string;
   menuEntries: {
     title: string;
     url: string;
   }[];
-  routes: any;
-};
+  routes: RouteObject[];
+}
+
 
 export const appConfig: AppConfig[] = [
-  cactiGuiConfig,
+  // cactiGuiConfig,
   ethereumGuiConfig,
-  fabricAppConfig,
+  // fabricAppConfig,
 ];

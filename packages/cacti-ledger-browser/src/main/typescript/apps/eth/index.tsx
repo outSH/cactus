@@ -1,4 +1,4 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, RouteObject } from "react-router-dom";
 import TokenDetails from "./pages/Details/TokenDetails";
 import Dashboard from "./pages/Dashboard/Dashboard";
 import Blocks from "./pages/Blocks/Blocks";
@@ -13,125 +13,76 @@ import BlockDetails from "./pages/Details/BlockDetails";
 
 interface AppConfig {
   name: string;
-  url: string;
-  pluginName: string;
+  path: string;
   menuEntries: {
     title: string;
     url: string;
   }[];
-  routes: any;
+  routes: RouteObject[];
 }
 
 const ethConfig: AppConfig = {
   name: "Ethereum",
-  url: "eth",
-  pluginName: "PluginPersistenceEthereum",
+  path: "/eth",
   menuEntries: [
     {
       title: "Dashboard",
-      url: "/",
+      url: "/eth",
     },
     {
       title: "ERC20",
-      url: "/accounts/erc20",
+      url: "/eth/accounts/erc20",
     },
     {
       title: "ERC721 (NFT)",
-      url: "/accounts/erc721",
+      url: "/eth/accounts/erc721",
     },
   ],
   routes: [
-    // MAIN
     {
-      path: "dashboard",
-      element: (
-        <div>
-          <Dashboard></Dashboard>
-        </div>
-      ),
+      element: <Dashboard />,
     },
     {
       path: "blocks",
-      element: (
-        <div>
-          <Blocks></Blocks>
-        </div>
-      ),
+      element: <Blocks />,
     },
     {
       path: "transactions",
-
-      element: (
-        <div>
-          <Transactions />
-        </div>
-      ),
+      element: <Transactions />,
     },
-    // ACCOUNTS
     {
       path: "accounts",
-      element: (
-        <div>
-          <Outlet></Outlet>
-        </div>
-      ),
+      element: <Outlet />,
       children: [
         {
           path: ":standard",
-          element: (
-            <div>
-              <Accounts></Accounts>
-            </div>
-          ),
+          element: <Accounts />,
         },
       ],
     },
-    //BLOCK
     {
       path: "block-details",
-      element: (
-        <div>
-          <Outlet></Outlet>
-        </div>
-      ),
+      element: <Outlet />,
       children: [
         {
           path: ":number",
-          element: (
-            <div>
-              <BlockDetails></BlockDetails>
-            </div>
-          ),
+          element: <BlockDetails />,
         },
       ],
     },
-    // TOKEN TRANSACTION DETAILS
     {
       path: "token-txn-details",
-      element: (
-        <div>
-          <Outlet></Outlet>
-        </div>
-      ),
+      element: <Outlet />,
       children: [
         {
           path: ":standard/:address",
-          element: (
-            <div>
-              <TokenTransactionDetails></TokenTransactionDetails>
-            </div>
-          ),
+          element: <TokenTransactionDetails />,
         },
       ],
     },
-    // TOKEN DETAILS
     {
       path: "token-details",
-      element: (
-        <div>
-          <Outlet></Outlet>
-        </div>
-      ),
+      element: <Outlet />,
       children: [
         {
           path: ":standard/:address",
@@ -143,67 +94,37 @@ const ethConfig: AppConfig = {
         },
       ],
     },
-    // TRANSACTION DETAILS
     {
       path: "txn-details",
-      element: (
-        <div>
-          <Outlet></Outlet>
-        </div>
-      ),
+      element: <Outlet />,
       children: [
         {
           path: ":id",
-          element: (
-            <div>
-              <TransactionDetails></TransactionDetails>
-            </div>
-          ),
+          element: <TransactionDetails />,
         },
       ],
     },
-    // ERC tokens
     {
       path: "erc20",
-      element: (
-        <div>
-          <Outlet></Outlet>
-        </div>
-      ),
+      element: <Outlet />,
       children: [
         {
           path: ":account",
-          element: (
-            <div>
-              <ERC20></ERC20>
-            </div>
-          ),
+          element: <ERC20 />,
         },
         {
           path: "trend/:account/:address",
-          element: (
-            <div>
-              <SingleTokenHistory></SingleTokenHistory>
-            </div>
-          ),
+          element: <SingleTokenHistory />,
         },
       ],
     },
     {
       path: "erc721",
-      element: (
-        <div>
-          <Outlet></Outlet>
-        </div>
-      ),
+      element: <Outlet />,
       children: [
         {
           path: ":account",
-          element: (
-            <div>
-              <ERC721></ERC721>
-            </div>
-          ),
+          element: <ERC721 />,
         },
       ],
     },
