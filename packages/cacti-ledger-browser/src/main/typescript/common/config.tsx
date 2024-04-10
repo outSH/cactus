@@ -3,7 +3,7 @@ import cactiGuiConfig from "../apps/cacti/index";
 import ethereumGuiConfig from "../apps/eth";
 import fabricAppConfig from "../apps/fabric";
 
-interface AppConfig {
+export interface AppConfig {
   name: string;
   path: string;
   menuEntries: {
@@ -12,7 +12,6 @@ interface AppConfig {
   }[];
   routes: RouteObject[];
 }
-
 
 export const appConfig: AppConfig[] = [
   // cactiGuiConfig,

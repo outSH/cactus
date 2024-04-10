@@ -1,13 +1,12 @@
+import { Card } from "@mui/material";
 import { Outlet } from "react-router-dom";
 
-import styles from "./ContentLayout.module.css";
-
-function ContentLayout() {
+const ContentLayout: React.FC = () => {
   return (
-    <div className={styles.content}>
+    <Card elevation={0} sx={{ margin: "1rem", padding: "1rem" }}>
       <Outlet />
-    </div>
+    </Card>
   );
-}
+};
 
 export default ContentLayout;

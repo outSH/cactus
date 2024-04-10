@@ -8,7 +8,8 @@ import MenuIcon from "@mui/icons-material/Menu";
 import Button from "@mui/material/Button";
 import Tooltip from "@mui/material/Tooltip";
 import MenuItem from "@mui/material/MenuItem";
-import { Link } from "react-router-dom";
+import { Link as RouterLink } from "react-router-dom";
+import Link from "@mui/material/Link";
 
 const appList = [
   {
@@ -70,7 +71,9 @@ function HeaderBar({ menuEntries }: any) {
         >
           {appList.map((app) => (
             <MenuItem key={app.name} onClick={handleCloseAppMenu}>
-              <Link to={app.path}>{app.name}</Link>
+              <Link component={RouterLink} to={app.path}>
+                {app.name}
+              </Link>
             </MenuItem>
           ))}
         </Menu>
@@ -79,10 +82,12 @@ function HeaderBar({ menuEntries }: any) {
           <Box sx={{ flexGrow: 1, display: "flex" }}>
             {menuEntries.map((entry: any) => (
               <Button
+                component={RouterLink}
+                to={entry.url}
                 key={entry.title}
                 sx={{ my: 2, color: "white", display: "block" }}
               >
-                <Link to={entry.url}>{entry.title}</Link>
+                {entry.title}
               </Button>
             ))}
           </Box>
