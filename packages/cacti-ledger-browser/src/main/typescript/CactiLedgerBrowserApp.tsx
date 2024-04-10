@@ -3,30 +3,51 @@ import CssBaseline from "@mui/material/CssBaseline";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 
 import { themeOptions } from "./theme";
-import { AppConfig } from "./common/config";
 import ContentLayout from "./components/Layout/ContentLayout";
 import HeaderBar from "./components/Layout/HeaderBar";
 import WelcomePage from "./components/WelcomePage";
+import { AppConfig, AppListEntry } from "./common/types/app";
 
 type AppConfigProps = {
   appConfig: AppConfig[];
 };
 
 /**
+ * Get list of all apps from the config
+ */
+function getAppList(appConfig: AppConfig[]) {
+  const appList: AppListEntry[] = appConfig.map((app) => {
+    return {
+      path: app.path,
+      name: app.name,
+    };
+  });
+
+  appList.unshift({
+    path: "/",
+    name: "Home",
+  });
+
+  return appList;
+}
+
+/**
  * Create header bar for each app based on app menuEntries field in config.
  */
 function getHeaderBarRoutes(appConfig: AppConfig[]) {
+  const appList = getAppList(appConfig);
+
   const headerRoutesConfig = appConfig.map((app) => {
     return {
       key: app.path,
       path: `${app.path}/*`,
-      element: <HeaderBar menuEntries={app.menuEntries} />,
+      element: <HeaderBar appList={appList} menuEntries={app.menuEntries} />,
     };
   });
   headerRoutesConfig.push({
     key: "home",
     path: `*`,
-    element: <HeaderBar />,
+    element: <HeaderBar appList={appList} />,
   });
   return useRoutes(headerRoutesConfig);
 }

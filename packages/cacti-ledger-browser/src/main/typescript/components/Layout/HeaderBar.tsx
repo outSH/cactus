@@ -1,42 +1,44 @@
 import * as React from "react";
+import { Link as RouterLink } from "react-router-dom";
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import Toolbar from "@mui/material/Toolbar";
 import IconButton from "@mui/material/IconButton";
-import Menu from "@mui/material/Menu";
 import MenuIcon from "@mui/icons-material/Menu";
 import Button from "@mui/material/Button";
 import Tooltip from "@mui/material/Tooltip";
-import MenuItem from "@mui/material/MenuItem";
-import { Link as RouterLink } from "react-router-dom";
-import Link from "@mui/material/Link";
+import Drawer from "@mui/material/Drawer";
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
+import ListItemButton from "@mui/material/ListItemButton";
+import ListItemText from "@mui/material/ListItemText";
+import { AppConfigMenuEntry, AppListEntry } from "../../common/types/app";
 
-const appList = [
-  {
-    path: "/",
-    name: "Home",
-  },
-  {
-    path: "/eth",
-    name: "Ethereum",
-  },
-  {
-    path: "/fabric",
-    name: "Fabric",
-  },
-];
+type HeaderBarProps = {
+  appList: AppListEntry[];
+  menuEntries?: AppConfigMenuEntry[];
+};
 
-function HeaderBar({ menuEntries }: any) {
-  const [anchorElAppMenu, setAnchorElAppMenu] =
-    React.useState<null | HTMLElement>(null);
+const HeaderBar: React.FC<HeaderBarProps> = ({ appList, menuEntries }) => {
+  const [isAppSelectOpen, setIsAppSelectOpen] = React.useState(false);
 
-  const handleOpenAppMenu = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorElAppMenu(event.currentTarget);
-  };
-
-  const handleCloseAppMenu = () => {
-    setAnchorElAppMenu(null);
-  };
+  const AppSelectDrawer = (
+    <Box
+      sx={{ width: 250 }}
+      role="presentation"
+      onClick={() => setIsAppSelectOpen(false)}
+    >
+      <List>
+        {appList.map((app) => (
+          <ListItem key={app.name} disablePadding>
+            <ListItemButton component={RouterLink} to={app.path}>
+              <ListItemText primary={app.name} />
+            </ListItemButton>
+          </ListItem>
+        ))}
+      </List>
+    </Box>
+  );
 
   return (
     <AppBar position="static" sx={{ paddingX: 2 }}>
@@ -48,44 +50,20 @@ function HeaderBar({ menuEntries }: any) {
             color="inherit"
             aria-label="select-application-button"
             sx={{ mr: 2 }}
-            onClick={handleOpenAppMenu}
+            onClick={() => setIsAppSelectOpen(true)}
           >
             <MenuIcon />
           </IconButton>
         </Tooltip>
-        <Menu
-          sx={{ mt: "45px" }}
-          id="app-select-bar"
-          anchorEl={anchorElAppMenu}
-          anchorOrigin={{
-            vertical: "top",
-            horizontal: "right",
-          }}
-          keepMounted
-          transformOrigin={{
-            vertical: "top",
-            horizontal: "right",
-          }}
-          open={Boolean(anchorElAppMenu)}
-          onClose={handleCloseAppMenu}
-        >
-          {appList.map((app) => (
-            <MenuItem key={app.name} onClick={handleCloseAppMenu}>
-              <Link component={RouterLink} to={app.path}>
-                {app.name}
-              </Link>
-            </MenuItem>
-          ))}
-        </Menu>
 
         {menuEntries && (
           <Box sx={{ flexGrow: 1, display: "flex" }}>
-            {menuEntries.map((entry: any) => (
+            {menuEntries.map((entry) => (
               <Button
                 component={RouterLink}
                 to={entry.url}
                 key={entry.title}
-                sx={{ my: 2, color: "white", display: "block" }}
+                sx={{ color: "inherit" }}
               >
                 {entry.title}
               </Button>
@@ -93,7 +71,12 @@ function HeaderBar({ menuEntries }: any) {
           </Box>
         )}
       </Toolbar>
+
+      <Drawer open={isAppSelectOpen} onClose={() => setIsAppSelectOpen(false)}>
+        {AppSelectDrawer}
+      </Drawer>
     </AppBar>
   );
-}
+};
+
 export default HeaderBar;

@@ -1,4 +1,4 @@
-import { Outlet, RouteObject } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import TokenDetails from "./pages/Details/TokenDetails";
 import Dashboard from "./pages/Dashboard/Dashboard";
 import Blocks from "./pages/Blocks/Blocks";
@@ -10,16 +10,7 @@ import ERC20 from "./pages/ERC20/ERC20";
 import SingleTokenHistory from "./pages/SingleTokenHistory/SingleTokenHistory";
 import ERC721 from "./pages/ERC721/ERC721";
 import BlockDetails from "./pages/Details/BlockDetails";
-
-interface AppConfig {
-  name: string;
-  path: string;
-  menuEntries: {
-    title: string;
-    url: string;
-  }[];
-  routes: RouteObject[];
-}
+import { AppConfig } from "../../common/types/app";
 
 const ethConfig: AppConfig = {
   name: "Ethereum",
