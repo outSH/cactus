@@ -13,13 +13,19 @@ import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
 import { AppConfigMenuEntry, AppListEntry } from "../../common/types/app";
+import { patchAppRoutePath } from "../../common/utils";
 
 type HeaderBarProps = {
   appList: AppListEntry[];
+  path?: string;
   menuEntries?: AppConfigMenuEntry[];
 };
 
-const HeaderBar: React.FC<HeaderBarProps> = ({ appList, menuEntries }) => {
+const HeaderBar: React.FC<HeaderBarProps> = ({
+  appList,
+  path,
+  menuEntries,
+}) => {
   const [isAppSelectOpen, setIsAppSelectOpen] = React.useState(false);
 
   const AppSelectDrawer = (
@@ -56,12 +62,12 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ appList, menuEntries }) => {
           </IconButton>
         </Tooltip>
 
-        {menuEntries && (
+        {menuEntries && path && (
           <Box sx={{ flexGrow: 1, display: "flex" }}>
             {menuEntries.map((entry) => (
               <Button
                 component={RouterLink}
-                to={entry.url}
+                to={patchAppRoutePath(path, entry.url)}
                 key={entry.title}
                 sx={{ color: "inherit" }}
               >

@@ -7,6 +7,7 @@ import ContentLayout from "./components/Layout/ContentLayout";
 import HeaderBar from "./components/Layout/HeaderBar";
 import WelcomePage from "./components/WelcomePage";
 import { AppConfig, AppListEntry } from "./common/types/app";
+import { patchAppRoutePath } from "./common/utils";
 
 type AppConfigProps = {
   appConfig: AppConfig[];
@@ -41,7 +42,13 @@ function getHeaderBarRoutes(appConfig: AppConfig[]) {
     return {
       key: app.path,
       path: `${app.path}/*`,
-      element: <HeaderBar appList={appList} menuEntries={app.menuEntries} />,
+      element: (
+        <HeaderBar
+          appList={appList}
+          path={app.path}
+          menuEntries={app.menuEntries}
+        />
+      ),
     };
   });
   headerRoutesConfig.push({
@@ -50,15 +57,6 @@ function getHeaderBarRoutes(appConfig: AppConfig[]) {
     element: <HeaderBar appList={appList} />,
   });
   return useRoutes(headerRoutesConfig);
-}
-
-/**
- * Add application path to route path where applicable.
- *
- * Example: "blocks" route under "eth" app will create a path /eth/blocks
- */
-function patchAppRoutePath(appPath: string, routePath?: string) {
-  return routePath && routePath !== "/" ? `${appPath}/${routePath}` : appPath;
 }
 
 /**

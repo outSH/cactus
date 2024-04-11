@@ -18,15 +18,15 @@ const ethConfig: AppConfig = {
   menuEntries: [
     {
       title: "Dashboard",
-      url: "/eth",
+      url: "/",
     },
     {
       title: "ERC20",
-      url: "/eth/accounts/erc20",
+      url: "/accounts/erc20",
     },
     {
       title: "ERC721 (NFT)",
-      url: "/eth/accounts/erc721",
+      url: "/accounts/erc721",
     },
   ],
   routes: [
