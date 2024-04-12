@@ -13,12 +13,19 @@ const TransactionsDetails = () => {
     isError: txIsError,
     data: txData,
     error: txError,
-  } = useQuery(ethereumTxById(params.id));
+  } = useQuery({
+    ...ethereumTxById(params.id),
+    staleTime: Infinity,
+  });
+
   const {
     isError: txTransfersIsError,
     data: txTransfersData,
     error: txTransfersError,
-  } = useQuery(ethereumTokenTransfersByTxId(params.id));
+  } = useQuery({
+    ...ethereumTokenTransfersByTxId(params.id),
+    staleTime: Infinity,
+  });
 
   if (txIsError) {
     console.error("Transaction fetch error:", txError);

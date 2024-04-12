@@ -10,7 +10,7 @@ export const supabase = createClient(supabaseUrl, supabaseKey);
 /**
  * React Query config to fetch entire table from supabase.
  */
-export function supabaseTableQuery<T = unknown[]>(tableName: string) {
+export function supabaseQueryTable<T = unknown[]>(tableName: string) {
   return queryOptions({
     queryKey: [supabaseQueryKey, tableName],
     queryFn: async () => {
@@ -43,21 +43,18 @@ async function getMatchingTableEntries(
 export function supabaseQueryAllMatchingEntries<T = unknown[]>(
   tableName: string,
   query: Record<string, unknown>,
-  staleTime = 0,
 ) {
   return queryOptions({
     queryKey: [supabaseQueryKey, tableName, query],
     queryFn: () => {
       return getMatchingTableEntries(tableName, query) as T;
     },
-    staleTime,
   });
 }
 
 export function supabaseQuerySingleMatchingEntry<T = unknown>(
   tableName: string,
   query: Record<string, unknown>,
-  staleTime = 0,
 ) {
   return queryOptions({
     queryKey: [supabaseQueryKey, tableName, query],
@@ -68,6 +65,5 @@ export function supabaseQuerySingleMatchingEntry<T = unknown>(
       }
       return data[0] as T;
     },
-    staleTime,
   });
 }

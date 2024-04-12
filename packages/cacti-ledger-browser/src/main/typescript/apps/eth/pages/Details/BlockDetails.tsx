@@ -8,9 +8,10 @@ function BlockDetails() {
   if (typeof params.number === "undefined") {
     throw new Error(`BlockDetails called with empty block number ${params}`);
   }
-  const { isSuccess, isError, data, error } = useQuery(
-    ethereumBlockByNumber(params.number),
-  );
+  const { isSuccess, isError, data, error } = useQuery({
+    ...ethereumBlockByNumber(params.number),
+    staleTime: Infinity,
+  });
 
   if (isError) {
     console.error("Data fetch error:", error);
