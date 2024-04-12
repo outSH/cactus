@@ -1,10 +1,10 @@
 import CardWrapper from "../../../components/ui/CardWrapper";
 import { useQuery } from "@tanstack/react-query";
-import { persistencePluginStatusOptions } from "../queries";
+import { persistencePluginStatusQuery } from "../queries";
 
 function StatusPage() {
   const { isSuccess, isError, data, error } = useQuery(
-    persistencePluginStatusOptions(),
+    persistencePluginStatusQuery(),
   );
 
   if (isError) {
@@ -27,7 +27,7 @@ function StatusPage() {
         }
         data={
           isSuccess
-            ? data.map((p) => {
+            ? (data as any).map((p: any) => {
                 return {
                   ...p,
                   is_schema_initialized: p.is_schema_initialized
