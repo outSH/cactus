@@ -12,6 +12,9 @@ import {
   TokenTransfer,
   ERC20Txn,
   TokenHistoryItem20,
+  ERC721Txn,
+  TokenMetadata721,
+  TokenMetadata20,
 } from "../../common/supabase-types";
 
 export function ethereumAllTransactionsQuery() {
@@ -95,4 +98,29 @@ export function ethERC20TokensHistory(
       return data as TokenHistoryItem20[];
     },
   });
+}
+
+export function ethERC721TokensByTxId(accountAddress: string) {
+  return supabaseQueryAllMatchingEntries<ERC721Txn[]>("erc721_txn_meta_view", {
+    account_address: accountAddress,
+  });
+}
+
+export function ethAllERC721History() {
+  return supabaseQueryTable<TokenMetadata721>("erc721_token_history_view");
+}
+
+export function ethTokenDetails(tokenStandard: string, tokenAddress: string) {
+  if (!["erc20", "erc721"].includes(tokenStandard)) {
+    throw new Error(`Unknown token standard requested! ${tokenStandard}`);
+  }
+
+  const tableName = `token_metadata_${tokenStandard}`;
+
+  return supabaseQuerySingleMatchingEntry<TokenMetadata20 | TokenMetadata721>(
+    tableName,
+    {
+      address: tokenAddress,
+    },
+  );
 }

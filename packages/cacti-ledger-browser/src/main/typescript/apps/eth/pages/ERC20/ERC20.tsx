@@ -1,10 +1,10 @@
-import TokenAccount from "../../../../components/TokenHeader/TokenAccount";
 import CardWrapper from "../../../../components/ui/CardWrapper";
 import Chart from "../../components/Chart/Chart";
 import styles from "./ERC20.module.css";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ethERC20TokensByOwner } from "../../queries";
+import TokenAccount from "../../components/TokenHeader/TokenAccount";
 
 const ERC20 = () => {
   const params = useParams();
