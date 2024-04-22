@@ -1,4 +1,4 @@
-import { queryOptions } from "@tanstack/react-query";
+import { QueryClient, queryOptions } from "@tanstack/react-query";
 import {
   supabase,
   supabaseQueryKey,
@@ -17,8 +17,45 @@ import {
   TokenMetadata20,
 } from "../../common/supabase-types";
 
-export function ethereumAllTransactionsQuery() {
-  return supabaseQueryTable<Transaction>("transaction");
+function createQueryKey(
+  tableName: string,
+  pagination: { page: number; pageSize: number },
+) {
+  return [tableName, { pagination }];
+}
+
+export function refreshEthereumAllTransactionsQuery(
+  queryClient: QueryClient,
+  page: number,
+  pageSize: number,
+) {
+  const tableName = "transaction";
+  const refreshQueryKey = createQueryKey(tableName, { page, pageSize });
+  queryClient.invalidateQueries({ queryKey: refreshQueryKey });
+}
+
+export function ethereumAllTransactionsQuery(page: number, pageSize: number) {
+  const fromIndex = page * pageSize;
+  const toIndex = fromIndex + pageSize - 1;
+  const tableName = "transaction";
+  return queryOptions({
+    queryKey: [supabaseQueryKey, createQueryKey(tableName, { page, pageSize })],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from(tableName)
+        .select()
+        .order("block_number", { ascending: false })
+        .range(fromIndex, toIndex);
+
+      if (error) {
+        throw new Error(
+          `Could not get data from '${tableName}' table: ${error.message}`,
+        );
+      }
+
+      return data as Transaction[];
+    },
+  });
 }
 
 export function ethereumAllBlocksQuery() {
