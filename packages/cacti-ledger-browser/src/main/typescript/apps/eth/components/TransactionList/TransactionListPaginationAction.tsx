@@ -4,20 +4,13 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import FirstPageIcon from "@mui/icons-material/FirstPage";
 import KeyboardArrowLeft from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRight from "@mui/icons-material/KeyboardArrowRight";
+import { TransactionListFooterComponentProps } from "./TransactionList";
+
 const actionButtonFontSize = 30;
 
-interface TransactionsPaginationActionsProps {
-  page: number;
-  disableNext: boolean;
-  onPageChange: (newPage: number) => void;
-  onPageRefresh: () => void;
-}
-
-export default function TransactionsPaginationActions(
-  props: TransactionsPaginationActionsProps,
-) {
-  const { page, disableNext, onPageChange, onPageRefresh } = props;
-
+const TransactionListPaginationAction: React.FC<
+  TransactionListFooterComponentProps
+> = ({ page, disableNext, onPageChange, onPageRefresh }) => {
   const homeButton =
     page === 0 ? (
       <IconButton size="large" onClick={onPageRefresh} aria-label="refresh">
@@ -61,4 +54,6 @@ export default function TransactionsPaginationActions(
       </IconButton>
     </Box>
   );
-}
+};
+
+export default TransactionListPaginationAction;
