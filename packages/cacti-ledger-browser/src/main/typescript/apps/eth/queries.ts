@@ -1,4 +1,4 @@
-import { QueryClient, queryOptions } from "@tanstack/react-query";
+import { queryOptions } from "@tanstack/react-query";
 import {
   supabase,
   supabaseQueryKey,
@@ -22,16 +22,6 @@ function createQueryKey(
   pagination: { page: number; pageSize: number },
 ) {
   return [tableName, { pagination }];
-}
-
-export function refreshEthereumAllTransactionsQuery(
-  queryClient: QueryClient,
-  page: number,
-  pageSize: number,
-) {
-  const tableName = "transaction";
-  const refreshQueryKey = createQueryKey(tableName, { page, pageSize });
-  queryClient.invalidateQueries({ queryKey: refreshQueryKey });
 }
 
 export function ethereumAllTransactionsQuery(page: number, pageSize: number) {

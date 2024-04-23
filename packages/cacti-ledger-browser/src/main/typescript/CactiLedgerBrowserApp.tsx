@@ -10,6 +10,7 @@ import HeaderBar from "./components/Layout/HeaderBar";
 import WelcomePage from "./components/WelcomePage";
 import { AppConfig, AppListEntry } from "./common/types/app";
 import { patchAppRoutePath } from "./common/utils";
+import { NotificationProvider } from "./common/context/NotificationContext";
 
 type AppConfigProps = {
   appConfig: AppConfig[];
@@ -118,9 +119,11 @@ const CactiLedgerBrowserApp: React.FC<AppConfigProps> = ({ appConfig }) => {
     <BrowserRouter>
       <ThemeProvider theme={theme}>
         <QueryClientProvider client={queryClient}>
-          <CssBaseline />
-          <App appConfig={appConfig} />
-          <ReactQueryDevtools initialIsOpen={false} />
+          <NotificationProvider>
+            <CssBaseline />
+            <App appConfig={appConfig} />
+            <ReactQueryDevtools initialIsOpen={false} />
+          </NotificationProvider>
         </QueryClientProvider>
       </ThemeProvider>
     </BrowserRouter>
