@@ -10,6 +10,7 @@ const PageTitle: React.FC<PageTitleProps> = ({ children }) => {
     <Typography
       variant="h4"
       component="h1"
+      color="secondary"
       sx={{ marginBottom: 3, fontWeight: "bold" }}
     >
       {children}

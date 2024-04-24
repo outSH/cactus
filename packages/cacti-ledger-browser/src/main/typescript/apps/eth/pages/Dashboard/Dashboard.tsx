@@ -21,7 +21,7 @@ const TitleWithIcon: React.FC<TitleWithIconProps> = ({
 }) => {
   return (
     <Box display="flex" alignItems="center" marginBottom={2}>
-      <Icon sx={{ fontSize: 35 }} />
+      <Icon sx={{ fontSize: 35 }} color="primary" />
       <Typography variant="h6" component="h3" marginLeft={1}>
         {children}
       </Typography>

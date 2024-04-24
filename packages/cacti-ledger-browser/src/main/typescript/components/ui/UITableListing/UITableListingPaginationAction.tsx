@@ -4,12 +4,24 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import FirstPageIcon from "@mui/icons-material/FirstPage";
 import KeyboardArrowLeft from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRight from "@mui/icons-material/KeyboardArrowRight";
-import { TransactionListFooterComponentProps } from "./TransactionList";
 
 const actionButtonFontSize = 30;
 
-const TransactionListPaginationAction: React.FC<
-  TransactionListFooterComponentProps
+/**
+ * Pagination footer component interface.
+ */
+export interface UITableListingPaginationActionProps {
+  page: number;
+  disableNext: boolean;
+  onPageChange: (newPage: number) => void;
+  onPageRefresh: () => void;
+}
+
+/**
+ * Pagination footer component to be used with `UITableListing`.
+ */
+const UITableListingPaginationAction: React.FC<
+  UITableListingPaginationActionProps
 > = ({ page, disableNext, onPageChange, onPageRefresh }) => {
   const homeButton =
     page === 0 ? (
@@ -56,4 +68,4 @@ const TransactionListPaginationAction: React.FC<
   );
 };
 
-export default TransactionListPaginationAction;
+export default UITableListingPaginationAction;
