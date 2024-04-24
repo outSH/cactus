@@ -3,6 +3,7 @@ import Box from "@mui/material/Box";
 import PageTitle from "../../../../components/ui/PageTitle";
 import Stack from "@mui/material/Stack";
 import { Typography } from "@mui/material";
+import BlockSummary from "./BlockSummary";
 
 function Dashboard() {
   return (
@@ -18,7 +19,7 @@ function Dashboard() {
           <Typography variant="h6" component="h3" marginBottom={2}>
             Blocks
           </Typography>
-          <TransactionSummary />
+          <BlockSummary />
         </Box>
 
         <Box width={"80%"}>
