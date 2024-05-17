@@ -3,7 +3,7 @@ import TokenDetails from "./pages/Details/TokenDetails";
 import Dashboard from "./pages/Dashboard/Dashboard";
 import Blocks from "./pages/Blocks/Blocks";
 import Transactions from "./pages/Transactions/Transactions";
-import Accounts from "./pages/Accounts/Accounts";
+import OldAccounts from "./pages/OldAccounts/OldAccounts";
 import TransactionDetails from "./pages/Details/TransactionDetails";
 import ERC20 from "./pages/ERC20/ERC20";
 import SingleTokenHistory from "./pages/SingleTokenHistory/SingleTokenHistory";
@@ -21,11 +21,11 @@ const ethConfig: AppConfig = {
     },
     {
       title: "ERC20",
-      url: "/accounts/erc20",
+      url: "/old-accounts/erc20",
     },
     {
       title: "ERC721 (NFT)",
-      url: "/accounts/erc721",
+      url: "/old-accounts/erc721",
     },
   ],
   routes: [
@@ -41,12 +41,12 @@ const ethConfig: AppConfig = {
       element: <Transactions />,
     },
     {
-      path: "accounts",
+      path: "old-accounts",
       element: <Outlet />,
       children: [
         {
           path: ":standard",
-          element: <Accounts />,
+          element: <OldAccounts />,
         },
       ],
     },
