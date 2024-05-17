@@ -1,35 +1,29 @@
 import * as React from "react";
-import Paper from "@mui/material/Paper";
-import InputBase from "@mui/material/InputBase";
-import Divider from "@mui/material/Divider";
-import IconButton from "@mui/material/IconButton";
-import MenuIcon from "@mui/icons-material/Menu";
+import { ethers } from "ethers";
 import SearchIcon from "@mui/icons-material/Search";
-import DirectionsIcon from "@mui/icons-material/Directions";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
-import AccountTokenList from "./AccountTokenList";
-import { ethers } from "ethers";
-// import { isAddress } from "web3-validator";
 
-export default function CustomizedInputBase() {
+import AccountTokenList from "./AccountTokenList";
+
+export default function Accounts() {
   const [accountSearchText, setAccountSearchText] = React.useState("");
   const [errorText, setErrorText] = React.useState("");
-  const [accountShow, setAccountShow] = React.useState(false);
+  const [account, setAccount] = React.useState("");
 
   const handleSearchClick = () => {
     if (!ethers.isAddress(accountSearchText.toLowerCase())) {
       return setErrorText(
-        "Address format not recognized, use hexadecimal string",
+        "Address format not recognized, use valid hexadecimal address",
       );
     }
 
-    setAccountShow(true);
+    setAccount(accountSearchText);
   };
 
   return (
-    <>
+    <Box>
       {/* Search Bar */}
       <Box
         sx={{
@@ -42,7 +36,7 @@ export default function CustomizedInputBase() {
           <TextField
             label="Account address"
             sx={{ width: 600 }}
-            variant={accountShow ? "filled" : "standard"}
+            variant={account ? "filled" : "standard"}
             value={accountSearchText}
             onChange={(e) => {
               setErrorText("");
@@ -63,7 +57,7 @@ export default function CustomizedInputBase() {
       </Box>
 
       {/* Token Details */}
-      {accountShow && <AccountTokenList account={"bla"} />}
-    </>
+      {account && <AccountTokenList accountAddress={account} />}
+    </Box>
   );
 }

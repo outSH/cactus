@@ -4,43 +4,49 @@ import Tab from "@mui/material/Tab";
 import TabContext from "@mui/lab/TabContext";
 import TabList from "@mui/lab/TabList";
 import TabPanel from "@mui/lab/TabPanel";
+import Typography from "@mui/material/Typography";
+
 import PageTitle from "../../../../components/ui/PageTitle";
-import { Typography } from "@mui/material";
+import AccountTokenListERC721 from "../../components/AccountTokenListERC721/AccountTokenListERC721";
 
-export default function AccountTokenList() {
-  const [value, setValue] = React.useState("1");
+const ERC20_TAB_INDEX = "erc20";
+const ERC721_TAB_INDEX = "erc721";
 
-  const handleChange = (event: React.SyntheticEvent, newValue: string) => {
-    setValue(newValue);
-  };
+export type AccountTokenListProps = {
+  accountAddress: string;
+};
+
+export default function AccountTokenList({
+  accountAddress,
+}: AccountTokenListProps) {
+  const [tabIndex, setTabIndex] = React.useState(ERC20_TAB_INDEX);
 
   return (
     <Box>
       <PageTitle>Tokens</PageTitle>
-      <Box sx={{ width: "100%", typography: "body1" }}>
-        <TabContext value={value}>
+      <Box sx={{ width: "100%" }}>
+        <TabContext value={tabIndex}>
           <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
             <TabList
-              onChange={handleChange}
-              aria-label="lab API tabs example"
+              onChange={(_event, newValue) => {
+                setTabIndex(newValue);
+              }}
+              aria-label="tab select token to display"
               textColor="secondary"
               indicatorColor="primary"
             >
-              <Tab label="ERC20" value="1" />
-              <Tab label="ERC721" value="2" />
+              <Tab label="ERC20" value={ERC20_TAB_INDEX} />
+              <Tab label="ERC721 (NFT)" value={ERC721_TAB_INDEX} />
             </TabList>
           </Box>
-          <TabPanel value="1">
+          <TabPanel value={ERC20_TAB_INDEX}>
             <Typography variant="h5" color="secondary">
               ERC20
             </Typography>
             <p>Some content...</p>
           </TabPanel>
-          <TabPanel value="2">
-            <Typography variant="h5" color="secondary">
-              ERC721
-            </Typography>
-            <p>Some content...</p>
+          <TabPanel value={ERC721_TAB_INDEX}>
+            <AccountTokenListERC721 accountAddress={accountAddress} />
           </TabPanel>
         </TabContext>
       </Box>

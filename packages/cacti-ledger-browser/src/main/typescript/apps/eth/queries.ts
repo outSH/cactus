@@ -148,6 +148,36 @@ export function ethERC20TokensHistory(
   });
 }
 
+export interface EthAllERC721TokensByAccountResponseType {
+  token_id: number;
+  uri: string;
+  account_address: string;
+  last_owner_change: string;
+  token_metadata_erc721: TokenMetadata721;
+}
+
+export function ethAllERC721TokensByAccount(accountAddress: string) {
+  return queryOptions({
+    queryKey: [supabaseQueryKey, "ethAllERC721TokensByAccount", accountAddress],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("token_erc721")
+        .select(
+          "token_id, uri, account_address, last_owner_change, token_metadata_erc721(*)",
+        )
+        .eq("account_address", accountAddress);
+
+      if (error) {
+        throw new Error(
+          `Could not ${accountAddress} ERC721 token list: ${error.message}`,
+        );
+      }
+
+      return data as EthAllERC721TokensByAccountResponseType[];
+    },
+  });
+}
+
 export function ethERC721TokensByTxId(accountAddress: string) {
   return supabaseQueryAllMatchingEntries<ERC721Txn[]>("erc721_txn_meta_view", {
     account_address: accountAddress,
