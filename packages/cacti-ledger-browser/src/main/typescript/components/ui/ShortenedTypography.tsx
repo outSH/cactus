@@ -34,9 +34,9 @@ export default function ShortenedTypography(params: ShortenedTypographyProps) {
         width={maxWidth}
         {...typographyParams}
         sx={{
-          "white-space": "nowrap",
+          whiteSpace: "nowrap",
           overflow: "hidden!important",
-          "text-overflow": "ellipsis",
+          textOverflow: "ellipsis",
           direction,
         }}
       >

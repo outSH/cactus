@@ -15,6 +15,7 @@ import {
   ERC721Txn,
   TokenMetadata721,
   TokenMetadata20,
+  TokenERC20,
 } from "../../common/supabase-types";
 
 function createQueryKey(
@@ -174,6 +175,26 @@ export function ethAllERC721TokensByAccount(accountAddress: string) {
       }
 
       return data as EthAllERC721TokensByAccountResponseType[];
+    },
+  });
+}
+
+export function ethAllERC20TokensByAccount(accountAddress: string) {
+  return queryOptions({
+    queryKey: [supabaseQueryKey, "ethAllERC20TokensByAccount", accountAddress],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("token_erc20")
+        .select()
+        .eq("account_address", accountAddress);
+
+      if (error) {
+        throw new Error(
+          `Could not ${accountAddress} ERC20 token list: ${error.message}`,
+        );
+      }
+
+      return data as TokenERC20[];
     },
   });
 }

@@ -101,3 +101,14 @@ export interface balanceDate {
   created_at: string;
   balance: number;
 }
+
+/// MANUAL EDITS
+
+// Materialized View
+export interface TokenERC20 {
+  account_address: string;
+  balance: number;
+  name: string;
+  symbol: string;
+  total_supply: number;
+}

@@ -32,9 +32,9 @@ export default function ShortenedLink(params: ShortenedLinkProps) {
         {...linkParams}
         href={href}
         sx={{
-          "white-space": "nowrap",
+          whiteSpace: "nowrap",
           overflow: "hidden!important",
-          "text-overflow": "ellipsis",
+          textOverflow: "ellipsis",
           direction,
         }}
       >

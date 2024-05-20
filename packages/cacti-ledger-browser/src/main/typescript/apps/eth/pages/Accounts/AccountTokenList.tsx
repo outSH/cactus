@@ -4,10 +4,10 @@ import Tab from "@mui/material/Tab";
 import TabContext from "@mui/lab/TabContext";
 import TabList from "@mui/lab/TabList";
 import TabPanel from "@mui/lab/TabPanel";
-import Typography from "@mui/material/Typography";
 
 import PageTitle from "../../../../components/ui/PageTitle";
 import AccountTokenListERC721 from "../../components/AccountTokenListERC721/AccountTokenListERC721";
+import AccountTokenListERC20 from "../../components/AccountTokenListERC20/AccountTokenListERC20";
 
 const ERC20_TAB_INDEX = "erc20";
 const ERC721_TAB_INDEX = "erc721";
@@ -40,10 +40,7 @@ export default function AccountTokenList({
             </TabList>
           </Box>
           <TabPanel value={ERC20_TAB_INDEX}>
-            <Typography variant="h5" color="secondary">
-              ERC20
-            </Typography>
-            <p>Some content...</p>
+            <AccountTokenListERC20 accountAddress={accountAddress} />
           </TabPanel>
           <TabPanel value={ERC721_TAB_INDEX}>
             <AccountTokenListERC721 accountAddress={accountAddress} />
