@@ -8,13 +8,13 @@ import { ethAllERC721TokensByAccount } from "../../queries";
 import { useNotification } from "../../../../common/context/NotificationContext";
 import NFTCard from "./NFTCard";
 
-export type AccountTokenListERC721Props = {
+export type AccountERC721ViewProps = {
   accountAddress: string;
 };
 
-export default function AccountTokenListERC721({
+export default function AccountERC721View({
   accountAddress,
-}: AccountTokenListERC721Props) {
+}: AccountERC721ViewProps) {
   const { isError, isPending, data, error } = useQuery(
     ethAllERC721TokensByAccount(accountAddress),
   );

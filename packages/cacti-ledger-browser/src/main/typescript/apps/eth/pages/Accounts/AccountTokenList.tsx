@@ -6,8 +6,8 @@ import TabList from "@mui/lab/TabList";
 import TabPanel from "@mui/lab/TabPanel";
 
 import PageTitle from "../../../../components/ui/PageTitle";
-import AccountTokenListERC721 from "../../components/AccountTokenListERC721/AccountTokenListERC721";
-import AccountTokenListERC20 from "../../components/AccountTokenListERC20/AccountTokenListERC20";
+import AccountERC721View from "../../components/AccountERC721View/AccountERC721View";
+import AccountERC20View from "../../components/AccountERC20View/AccountERC20View";
 
 const ERC20_TAB_INDEX = "erc20";
 const ERC721_TAB_INDEX = "erc721";
@@ -40,10 +40,16 @@ export default function AccountTokenList({
             </TabList>
           </Box>
           <TabPanel value={ERC20_TAB_INDEX}>
-            <AccountTokenListERC20 accountAddress={accountAddress} />
+            <AccountERC20View
+              key={accountAddress}
+              accountAddress={accountAddress}
+            />
           </TabPanel>
           <TabPanel value={ERC721_TAB_INDEX}>
-            <AccountTokenListERC721 accountAddress={accountAddress} />
+            <AccountERC721View
+              key={accountAddress}
+              accountAddress={accountAddress}
+            />
           </TabPanel>
         </TabContext>
       </Box>

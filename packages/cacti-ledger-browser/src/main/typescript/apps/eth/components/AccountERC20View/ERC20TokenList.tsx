@@ -11,10 +11,10 @@ import TablePagination from "@mui/material/TablePagination";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import TableHead from "@mui/material/TableHead";
-import Typography from "@mui/material/Typography";
 import CircularProgress from "@mui/material/CircularProgress";
 
 import { useNotification } from "../../../../common/context/NotificationContext";
+import { TokenERC20 } from "../../../../common/supabase-types";
 import { ethAllERC20TokensByAccount } from "../../queries";
 
 const StyledHeaderCell = styled(TableCell)(({ theme }) => ({
@@ -22,13 +22,15 @@ const StyledHeaderCell = styled(TableCell)(({ theme }) => ({
   fontWeight: "bold",
 }));
 
-export type AccountTokenListERC20Props = {
+export type ERC20TokenListProps = {
   accountAddress: string;
+  onTokenSelected: (token?: TokenERC20) => void;
 };
 
-export default function AccountTokenListERC20({
+export default function ERC20TokenList({
   accountAddress,
-}: AccountTokenListERC20Props) {
+  onTokenSelected,
+}: ERC20TokenListProps) {
   const { isError, isPending, data, error } = useQuery(
     ethAllERC20TokensByAccount(accountAddress),
   );
@@ -48,15 +50,10 @@ export default function AccountTokenListERC20({
 
   return (
     <Box>
-      <Typography variant="h5" color="secondary">
-        ERC20
-      </Typography>
-
       <TableContainer
         component={Paper}
         sx={{
           minWidth: 300,
-          width: "50%",
           marginY: 2,
         }}
       >
@@ -89,7 +86,15 @@ export default function AccountTokenListERC20({
               <TableRow
                 hover
                 sx={{ cursor: "pointer" }}
-                onClick={() => console.log("TODO: Open token details page")}
+                onClick={() => {
+                  onTokenSelected(
+                    tokenList.find(
+                      (t) =>
+                        t.account_address === row.account_address &&
+                        t.token_address === t.token_address,
+                    ),
+                  );
+                }}
                 key={row.name}
               >
                 <TableCell scope="row">{row.name}</TableCell>

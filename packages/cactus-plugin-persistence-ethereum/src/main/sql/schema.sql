@@ -305,10 +305,11 @@ TABLESPACE pg_default
 AS
 SELECT
     balances.account_address,
+    balances.balance,
+    balances.token_address,
     metadata.name,
     metadata.symbol,
-    metadata.total_supply,
-    balances.balance
+    metadata.total_supply
 FROM
  (SELECT balances.account_address,
     balances.token_address,

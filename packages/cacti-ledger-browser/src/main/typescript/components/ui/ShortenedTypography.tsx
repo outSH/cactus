@@ -5,7 +5,7 @@ const defaultMaxWidth = 200;
 
 export type ShortenedTypographyProps = {
   text: string;
-  maxWidth?: number;
+  maxWidth?: number | string;
   direction?: "ltr" | "rtl";
 } & TypographyProps;
 

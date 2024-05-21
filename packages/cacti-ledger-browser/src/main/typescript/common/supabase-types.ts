@@ -61,19 +61,19 @@ export interface Transaction {
 }
 
 export interface TokenHistoryItem {
-  transaction_hash: string | null;
-  token_address: string | null;
-  created_at: string | null;
-  sender: string | null;
-  recipient: string | null;
+  transaction_hash: string;
+  token_address: string;
+  created_at: string;
+  sender: string;
+  recipient: string;
 }
 
 export interface TokenHistoryItem721 extends TokenHistoryItem {
-  token_id: number | null;
+  token_id: number;
 }
 
 export interface TokenHistoryItem20 extends TokenHistoryItem {
-  value: number | null;
+  value: number;
 }
 
 export interface TokenTransactionMetadata721 {
@@ -97,11 +97,6 @@ export interface TableProps {
   schema: TableProperty[];
 }
 
-export interface balanceDate {
-  created_at: string;
-  balance: number;
-}
-
 /// MANUAL EDITS
 
 // Materialized View
@@ -111,4 +106,5 @@ export interface TokenERC20 {
   name: string;
   symbol: string;
   total_supply: number;
+  token_address: string;
 }
