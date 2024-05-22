@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ethereumAllTransactionsQuery } from "../../queries";
+import { ethAllTransactionsQuery } from "../../queries";
 import { transactionColumnsConfig } from "./transactionColumnsConfig";
 import type { UITableListingPaginationActionProps } from "../../../../components/ui/UITableListing/UITableListingPaginationAction";
 import UITableListing from "../../../../components/ui/UITableListing/UITableListing";
@@ -34,7 +34,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
 }) => {
   return (
     <UITableListing
-      queryFunction={ethereumAllTransactionsQuery}
+      queryFunction={ethAllTransactionsQuery}
       label="transaction"
       columnConfig={transactionColumnsConfig}
       footerComponent={footerComponent}

@@ -5,6 +5,10 @@ export type BalanceHistoryListData = {
   balance: number;
 };
 
+/**
+ * Create list of total token balance history after any operation (send / receive).
+ * Can be used to graph balance history.
+ */
 export function createBalanceHistoryList(
   txHistory: TokenHistoryItem20[],
   ownerAddress: string,

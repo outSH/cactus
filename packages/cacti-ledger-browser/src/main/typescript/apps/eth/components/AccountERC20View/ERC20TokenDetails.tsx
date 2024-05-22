@@ -6,13 +6,30 @@ import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
 import Skeleton from "@mui/material/Skeleton";
 
-import { ethERC20TokensHistory } from "../../queries";
+import { ethERC20TokenHistory } from "../../queries";
 import { TokenERC20 } from "../../../../common/supabase-types";
 import ShortenedTypography from "../../../../components/ui/ShortenedTypography";
 import { useNotification } from "../../../../common/context/NotificationContext";
 import ERC20BalanceHistoryChart from "./ERC20BalanceHistoryChart";
 import ERC20BalanceHistoryTable from "./ERC20BalanceHistoryTable";
 import { createBalanceHistoryList } from "./balanceHistory";
+
+function TokenDetailsPlaceholder() {
+  return (
+    <Box
+      display="flex"
+      justifyContent="center"
+      alignItems="center"
+      height="100%"
+      border={1}
+      borderColor="lightgray"
+    >
+      <Typography color="secondary" marginBottom={1}>
+        Click on a token from the list on the left to display it's details.
+      </Typography>
+    </Box>
+  );
+}
 
 export type ERC20TokenDetailsHeaderProps = {
   token: TokenERC20;
@@ -42,14 +59,13 @@ export type ERC20TokenDetailsProps = {
 
 export default function ERC20TokenDetails({ token }: ERC20TokenDetailsProps) {
   if (!token) {
-    // TODO - Return placeholder
-    return;
+    return <TokenDetailsPlaceholder />;
   }
 
   const { showNotification } = useNotification();
 
   const { isError, isPending, data, error } = useQuery(
-    ethERC20TokensHistory(token.token_address, token.account_address),
+    ethERC20TokenHistory(token.token_address, token.account_address),
   );
   const txData = data ?? [];
 
