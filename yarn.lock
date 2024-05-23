@@ -9024,6 +9024,34 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@hyperledger/cactus-plugin-persistence-fabric@workspace:packages/cactus-plugin-persistence-fabric":
+  version: 0.0.0-use.local
+  resolution: "@hyperledger/cactus-plugin-persistence-fabric@workspace:packages/cactus-plugin-persistence-fabric"
+  dependencies:
+    "@ethersproject/abi": "npm:5.7.0"
+    "@hyperledger/cactus-common": "npm:2.0.0-alpha.2"
+    "@hyperledger/cactus-core": "npm:2.0.0-alpha.2"
+    "@hyperledger/cactus-core-api": "npm:2.0.0-alpha.2"
+    "@hyperledger/cactus-plugin-keychain-memory": "npm:2.0.0-alpha.2"
+    "@hyperledger/cactus-plugin-ledger-connector-fabric": "npm:2.0.0-alpha.2"
+    "@hyperledger/cactus-test-tooling": "npm:2.0.0-alpha.2"
+    "@openapitools/openapi-generator-cli": "npm:2.7.0"
+    "@types/express": "npm:4.17.21"
+    "@types/pg": "npm:8.6.5"
+    async-mutex: "npm:0.4.0"
+    axios: "npm:1.6.0"
+    body-parser: "npm:1.19.0"
+    express: "npm:4.19.2"
+    jest-extended: "npm:4.0.1"
+    npm-run-all: "npm:4.1.5"
+    pg: "npm:8.8.0"
+    run-time-error-cjs: "npm:1.4.0"
+    rxjs: "npm:7.8.1"
+    socket.io: "npm:4.5.4"
+    uuid: "npm:9.0.1"
+  languageName: unknown
+  linkType: soft
+
 "@hyperledger/cactus-plugin-satp-hermes@npm:2.0.0-alpha.2, @hyperledger/cactus-plugin-satp-hermes@workspace:packages/cactus-plugin-satp-hermes":
   version: 0.0.0-use.local
   resolution: "@hyperledger/cactus-plugin-satp-hermes@workspace:packages/cactus-plugin-satp-hermes"
