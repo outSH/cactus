@@ -127,7 +127,7 @@ export class PluginPersistenceFabric
   }
 
   public getPackageName(): string {
-    return `@hyperledger/cactus-plugin-persistence-fabric`;
+    return `@hyperledger/cactus-plugin-persistence-fabric-old`;
   }
 
   /**

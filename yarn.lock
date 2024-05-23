@@ -8998,9 +8998,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@hyperledger/cactus-plugin-persistence-fabric@workspace:packages/cactus-plugin-persistence-fabric":
+"@hyperledger/cactus-plugin-persistence-fabric-old@workspace:packages/cactus-plugin-persistence-fabric-old":
   version: 0.0.0-use.local
-  resolution: "@hyperledger/cactus-plugin-persistence-fabric@workspace:packages/cactus-plugin-persistence-fabric"
+  resolution: "@hyperledger/cactus-plugin-persistence-fabric-old@workspace:packages/cactus-plugin-persistence-fabric-old"
   dependencies:
     "@hyperledger/cactus-common": "npm:2.0.0-alpha.2"
     "@hyperledger/cactus-core": "npm:2.0.0-alpha.2"

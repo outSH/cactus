@@ -1,5 +1,5 @@
 {
-  "name": "@hyperledger/cactus-plugin-persistence-fabric",
+  "name": "@hyperledger/cactus-plugin-persistence-fabric-old",
   "version": "2.0.0-alpha.2",
   "description": "A web service plugin that provides management capabilities on a Cacti Plugin Fabric Block Persistance as a scrapper of blocks.",
   "keywords": [
@@ -47,7 +47,7 @@
   ],
   "main": "dist/lib/main/typescript/index.js",
   "module": "dist/lib/main/typescript/index.js",
-  "browser": "dist/cactus-plugin-persistence-fabric.web.umd.js",
+  "browser": "dist/cactus-plugin-persistence-fabric-old.web.umd.js",
   "types": "dist/lib/main/typescript/index.d.ts",
   "files": [
     "dist/*"
@@ -96,8 +96,8 @@
   "publishConfig": {
     "access": "public"
   },
-  "browserMinified": "dist/cactus-plugin-persistence-fabric.web.umd.min.js",
-  "mainMinified": "dist/cactus-plugin-persistence-fabric.node.umd.min.js",
+  "browserMinified": "dist/cactus-plugin-persistence-fabric-old.web.umd.min.js",
+  "mainMinified": "dist/cactus-plugin-persistence-fabric-old.node.umd.min.js",
   "watch": {
     "codegen:openapi": {
       "patterns": [
