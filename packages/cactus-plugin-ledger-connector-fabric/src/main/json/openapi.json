@@ -1140,8 +1140,8 @@
       "WatchBlocksListenerTypeV1": {
         "type": "string",
         "description": "Response type from WatchBlocks. 'Cactus*' are custom views, others correspond to fabric SDK call.",
-        "enum": ["filtered", "full", "private", "cactus:transactions"],
-        "x-enum-varnames": ["Filtered", "Full", "Private", "CactusTransactions"]
+        "enum": ["filtered", "full", "private", "cactus:transactions", "cactus:full-block"],
+        "x-enum-varnames": ["Filtered", "Full", "Private", "CactusTransactions", "CactusFullBlock"]
       },
       "WatchBlocksOptionsV1": {
         "type": "object",

@@ -21,6 +21,7 @@ import { StatusEndpointV1 } from "./web-services/status-endpoint-v1";
 import PostgresDatabaseClient from "./db-client/db-client";
 import { StatusResponseV1 } from "./generated/openapi/typescript-axios";
 import type { Express } from "express";
+import type { Subscription } from "rxjs";
 
 /**
  * Constructor parameter for Fabric persistence plugin.
@@ -42,6 +43,7 @@ export class PluginPersistenceFabric
 
   private readonly instanceId: string;
   private apiClient: FabricApiClient;
+  private watchBlocksSubscription: Subscription | undefined;
   private dbClient: PostgresDatabaseClient;
   private log: Logger;
   private isConnected = false;
@@ -167,8 +169,59 @@ export class PluginPersistenceFabric
    *
    * @param onError callback method that will be called on error.
    */
-  public async startMonitor(onError?: (err: unknown) => void): Promise<void> {
-    throw new Error("Not implemented yet");
+  public async startMonitor(
+    wbConfig: any,
+    onError?: (err: unknown) => void,
+  ): Promise<void> {
+    // Synchronize the current DB state
+    // this.lastSeenBlock = await this.syncAll();
+
+    const blocksObservable = this.apiClient.watchBlocksV1(wbConfig);
+
+    if (!blocksObservable) {
+      throw new Error(
+        "Could not get a valid blocks observable in startMonitor",
+      );
+    }
+
+    this.watchBlocksSubscription = blocksObservable.subscribe({
+      next: async (event) => {
+        try {
+          this.log.debug("Received new block.");
+
+          if (!event) {
+            this.log.warn("Received invalid block ledger event:", event);
+            return;
+          }
+
+          this.log.error("BLOCK:", JSON.stringify(event));
+          // await this.pushNewBlock(event.blockData);
+        } catch (error: unknown) {
+          this.log.error("Unexpected error when pushing new block:", error);
+        }
+      },
+      error: (err) => {
+        this.log.error("Error when watching for new blocks, err:", err);
+
+        if (onError) {
+          try {
+            onError(err);
+          } catch (error: unknown) {
+            this.log.error(
+              "Unexpected error in onError monitor handler:",
+              error,
+            );
+          }
+        }
+      },
+      complete: () => {
+        this.log.info("Watch completed");
+        if (this.watchBlocksSubscription) {
+          this.watchBlocksSubscription.unsubscribe();
+        }
+        this.watchBlocksSubscription = undefined;
+      },
+    });
   }
 
   /**
@@ -176,7 +229,11 @@ export class PluginPersistenceFabric
    * If the monitoring wasn't running - nothing happens.
    */
   public stopMonitor(): void {
-    throw new Error("Not implemented yet");
+    if (this.watchBlocksSubscription) {
+      this.watchBlocksSubscription.unsubscribe();
+      this.watchBlocksSubscription = undefined;
+      this.log.info("stopMonitor(): Done.");
+    }
   }
 
   /**

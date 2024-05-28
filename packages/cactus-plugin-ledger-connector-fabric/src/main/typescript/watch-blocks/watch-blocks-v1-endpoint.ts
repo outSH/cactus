@@ -17,6 +17,7 @@ import { BlockEvent, BlockListener, EventType, Gateway } from "fabric-network";
 import { Socket as SocketIoSocket } from "socket.io";
 import { v4 as uuidv4 } from "uuid";
 import { RuntimeError } from "run-time-error-cjs";
+import Long from "long";
 
 import { assertFabricFunctionIsAvailable } from "../common/utils";
 import { SignPayloadCallback } from "../plugin-ledger-connector-fabric";
@@ -48,6 +49,15 @@ assertFabricFunctionIsAvailable(newPrivateBlockEvent, "newPrivateBlockEvent");
 export interface IWatchBlocksV1EndpointConfiguration {
   logLevel?: LogLevelDesc;
   socket: SocketIoSocket;
+}
+
+function longToNumber(longNumberObject: any) {
+  const longValue = new Long(
+    longNumberObject.low,
+    longNumberObject.hight,
+    longNumberObject.unsigned,
+  );
+  return longValue.toNumber();
 }
 
 /**
@@ -82,6 +92,108 @@ export class WatchBlocksV1Endpoint {
   }
 
   /**
+   * Callback executed when receiving block with custom cactus type "cactus:full-block"
+   * Sends WatchBlocksV1.Next with new block to the client.
+   *
+   * @param blockEvent full block
+   *
+   * @returns Nothing.
+   */
+  private monitorCactusFullBlockCallback(blockEvent: BlockEvent) {
+    const { socket, log } = this;
+    const clientId = socket.id;
+    log.debug(
+      `CactusFullBlock BlockEvent received: #${blockEvent.blockNumber.toString()}, client: ${clientId}`,
+    );
+
+    if (!("data" in blockEvent.blockData)) {
+      log.error("Wrong blockEvent type received - should not happen!");
+      return;
+    }
+
+    const blockData = blockEvent.blockData.data?.data as any;
+    if (!blockData) {
+      log.debug("Block data empty - ignore...");
+      return;
+    }
+
+    const transactions: any[] = [];
+    for (const data of blockData) {
+      try {
+        const payload = data.payload;
+        const channelHeader = payload.header.channel_header;
+        const transaction = payload.data;
+
+        const transactionActions: any[] = [];
+        for (const action of transaction.actions) {
+          const actionPayload = action.payload;
+          const proposalPayload = actionPayload.chaincode_proposal_payload;
+          const invocationSpec = proposalPayload.input;
+
+          // Decode args and function name
+          const rawArgs = invocationSpec.chaincode_spec.input.args as Buffer[];
+          const decodedArgs = rawArgs.map((arg: Buffer) =>
+            arg.toString("utf8"),
+          );
+          const functionName = decodedArgs.shift() ?? "<unknown>";
+
+          const chaincodeId = invocationSpec.chaincode_spec.chaincode_id.name;
+          const channelHeader = payload.header.channel_header;
+          const transactionId = channelHeader.tx_id;
+
+          const endorsements = actionPayload.action.endorsements.map(
+            (e: any) => {
+              return {
+                mspid: e.endorser.mspid,
+                signature: "0x" + Buffer.from(e.signature).toString("hex"),
+              };
+            },
+          );
+
+          transactionActions.push({
+            chaincodeId,
+            transactionId,
+            functionName,
+            functionArgs: decodedArgs,
+            endorsements,
+          });
+        }
+
+        transactions.push({
+          hash: channelHeader.tx_id,
+          channelId: channelHeader.channel_id,
+          timestamp: channelHeader.timestamp,
+          protocolVersion: channelHeader.version,
+          type: channelHeader.typeString,
+          epoch: longToNumber(channelHeader.epoch),
+          actions: transactionActions,
+        });
+      } catch (error) {
+        log.warn(
+          "Could not retrieve transaction from received block. Error:",
+          safeStringifyException(error),
+        );
+      }
+    }
+
+    socket.emit(WatchBlocksV1.Next, {
+      blockNumber: longToNumber(blockEvent.blockData.header?.number),
+      blockHash:
+        "0x" +
+        Buffer.from(blockEvent.blockData.header?.data_hash as any).toString(
+          "hex",
+        ),
+      previousBlockHash:
+        "0x" +
+        Buffer.from(blockEvent.blockData.header?.previous_hash as any).toString(
+          "hex",
+        ),
+      transactionCount: blockEvent.blockData.data?.data?.length ?? 0,
+      cactusTransactionsEvents: transactions,
+    } as any);
+  }
+
+  /**
    * Callback executed when receiving block with custom cactus type "cactus:transactions"
    * Sends WatchBlocksV1.Next with new block to the client.
    *
@@ -112,25 +224,29 @@ export class WatchBlocksV1Endpoint {
       try {
         const payload = data.payload;
         const transaction = payload.data;
-        const actionPayload = transaction.actions[0].payload;
-        const proposalPayload = actionPayload.chaincode_proposal_payload;
-        const invocationSpec = proposalPayload.input;
+        for (const action of transaction.actions) {
+          const actionPayload = action.payload;
+          const proposalPayload = actionPayload.chaincode_proposal_payload;
+          const invocationSpec = proposalPayload.input;
 
-        // Decode args and function name
-        const rawArgs = invocationSpec.chaincode_spec.input.args as Buffer[];
-        const decodedArgs = rawArgs.map((arg: Buffer) => arg.toString("utf8"));
-        const functionName = decodedArgs.shift() ?? "<unknown>";
+          // Decode args and function name
+          const rawArgs = invocationSpec.chaincode_spec.input.args as Buffer[];
+          const decodedArgs = rawArgs.map((arg: Buffer) =>
+            arg.toString("utf8"),
+          );
+          const functionName = decodedArgs.shift() ?? "<unknown>";
 
-        const chaincodeId = invocationSpec.chaincode_spec.chaincode_id.name;
-        const channelHeader = payload.header.channel_header;
-        const transactionId = channelHeader.tx_id;
+          const chaincodeId = invocationSpec.chaincode_spec.chaincode_id.name;
+          const channelHeader = payload.header.channel_header;
+          const transactionId = channelHeader.tx_id;
 
-        transactions.push({
-          chaincodeId,
-          transactionId,
-          functionName,
-          functionArgs: decodedArgs,
-        });
+          transactions.push({
+            chaincodeId,
+            transactionId,
+            functionName,
+            functionArgs: decodedArgs,
+          });
+        }
       } catch (error) {
         log.warn(
           "Could not retrieve transaction from received block. Error:",
@@ -252,6 +368,12 @@ export class WatchBlocksV1Endpoint {
           this.monitorCactusTransactionsCallback(blockEvent);
         listenerType = "full";
         break;
+      case WatchBlocksListenerTypeV1.CactusFullBlock:
+        listener = async (blockEvent) =>
+          this.monitorCactusFullBlockCallback(blockEvent);
+        listenerType = "full";
+        break;
+
       default:
         // Will not compile if any type was not handled by above switch.
         const unknownType: never = type;

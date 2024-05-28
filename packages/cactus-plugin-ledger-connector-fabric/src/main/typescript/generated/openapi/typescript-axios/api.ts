@@ -1383,7 +1383,8 @@ export const WatchBlocksListenerTypeV1 = {
     Filtered: 'filtered',
     Full: 'full',
     Private: 'private',
-    CactusTransactions: 'cactus:transactions'
+    CactusTransactions: 'cactus:transactions',
+    CactusFullBlock: 'cactus:full-block'
 } as const;
 
 export type WatchBlocksListenerTypeV1 = typeof WatchBlocksListenerTypeV1[keyof typeof WatchBlocksListenerTypeV1];
