@@ -84,6 +84,7 @@ Class | Method | HTTP request | Description
  - [org.openapitools.client.models.GetBlockRequestV1QueryBlockHash](docs/GetBlockRequestV1QueryBlockHash.md)
  - [org.openapitools.client.models.GetBlockResponseDecodedV1](docs/GetBlockResponseDecodedV1.md)
  - [org.openapitools.client.models.GetBlockResponseEncodedV1](docs/GetBlockResponseEncodedV1.md)
+ - [org.openapitools.client.models.GetBlockResponseTypeV1](docs/GetBlockResponseTypeV1.md)
  - [org.openapitools.client.models.GetBlockResponseV1](docs/GetBlockResponseV1.md)
  - [org.openapitools.client.models.GetTransactionReceiptResponse](docs/GetTransactionReceiptResponse.md)
  - [org.openapitools.client.models.RunDelegatedSignTransactionRequest](docs/RunDelegatedSignTransactionRequest.md)

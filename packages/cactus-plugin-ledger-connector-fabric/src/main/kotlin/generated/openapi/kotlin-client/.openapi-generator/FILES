@@ -49,6 +49,7 @@ src/main/kotlin/org/openapitools/client/models/GetBlockRequestV1Query.kt
 src/main/kotlin/org/openapitools/client/models/GetBlockRequestV1QueryBlockHash.kt
 src/main/kotlin/org/openapitools/client/models/GetBlockResponseDecodedV1.kt
 src/main/kotlin/org/openapitools/client/models/GetBlockResponseEncodedV1.kt
+src/main/kotlin/org/openapitools/client/models/GetBlockResponseTypeV1.kt
 src/main/kotlin/org/openapitools/client/models/GetBlockResponseV1.kt
 src/main/kotlin/org/openapitools/client/models/GetTransactionReceiptResponse.kt
 src/main/kotlin/org/openapitools/client/models/RunDelegatedSignTransactionRequest.kt

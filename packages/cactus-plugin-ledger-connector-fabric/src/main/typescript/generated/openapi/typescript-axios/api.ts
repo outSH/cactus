@@ -781,12 +781,14 @@ export interface GetBlockRequestV1 {
      */
     'query': GetBlockRequestV1Query;
     /**
-     * If true, encoded buffer will be returned. Otherwise, entire block object is returned.
-     * @type {boolean}
+     * 
+     * @type {GetBlockResponseTypeV1}
      * @memberof GetBlockRequestV1
      */
-    'skipDecode'?: boolean;
+    'type'?: GetBlockResponseTypeV1;
 }
+
+
 /**
  * Query selector, caller must provide at least one of them. First found will be used, rest will be ignored, so it\'s recommended to pass single selector.
  * @export
@@ -857,6 +859,22 @@ export interface GetBlockResponseEncodedV1 {
      */
     'encodedBlock': string;
 }
+/**
+ * Response type from GetBlock.
+ * @export
+ * @enum {string}
+ */
+
+export const GetBlockResponseTypeV1 = {
+    Full: 'full',
+    Encoded: 'encoded',
+    CactiTransactions: 'cacti:transactions',
+    CactiFullBlock: 'cacti:full-block'
+} as const;
+
+export type GetBlockResponseTypeV1 = typeof GetBlockResponseTypeV1[keyof typeof GetBlockResponseTypeV1];
+
+
 /**
  * @type GetBlockResponseV1
  * Response from GetBlock endpoint.

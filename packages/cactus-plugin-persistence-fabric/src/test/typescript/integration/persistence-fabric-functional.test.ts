@@ -6,7 +6,7 @@
 // Constants
 //////////////////////////////////
 
-const dbConnectionString = "_________CONSTRING___________";
+const dbConnectionString = "";
 
 const testLogLevel: LogLevelDesc = "debug";
 const sutLogLevel: LogLevelDesc = "debug";
@@ -53,6 +53,7 @@ import {
   DefaultEventHandlerStrategy,
   FabricApiClient,
   FabricSigningCredential,
+  GetBlockResponseTypeV1,
   PluginLedgerConnectorFabric,
   WatchBlocksListenerTypeV1,
 } from "@hyperledger/cactus-plugin-ledger-connector-fabric";
@@ -229,6 +230,23 @@ describe("Fabric persistence plugin tests", () => {
    */
   test("Sample test", async () => {
     expect(true).toBeTruthy();
+
+    const getBlockReq = {
+      channelName: ledgerChannelName,
+      gatewayOptions: {
+        identity: signingCredential.keychainRef,
+        wallet: {
+          keychain: signingCredential,
+        },
+      },
+      query: {
+        blockNumber: "6",
+      },
+      type: GetBlockResponseTypeV1.CactiFullBlock,
+    };
+
+    const getBlockResponse = (await apiClient.getBlockV1(getBlockReq)) as any;
+    log.debug("getBlockResponse HODOR", JSON.stringify(getBlockResponse.data));
 
     await persistence.startMonitor(
       {

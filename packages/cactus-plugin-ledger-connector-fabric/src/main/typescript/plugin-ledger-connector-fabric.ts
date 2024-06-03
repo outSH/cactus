@@ -95,12 +95,12 @@ import {
   GetTransactionReceiptResponse,
   GatewayOptions,
   GetBlockRequestV1,
-  GetBlockResponseV1,
   WatchBlocksV1,
   WatchBlocksOptionsV1,
   RunDelegatedSignTransactionRequest,
   RunTransactionResponseType,
   WatchBlocksDelegatedSignOptionsV1,
+  GetBlockResponseTypeV1,
 } from "./generated/openapi/typescript-axios/index";
 
 import {
@@ -143,6 +143,10 @@ import { isSshExecOk } from "./common/is-ssh-exec-ok";
 import { asBuffer, assertFabricFunctionIsAvailable } from "./common/utils";
 import { findAndReplaceFabricLoggingSpec } from "./common/find-and-replace-fabric-logging-spec";
 import { deployContractGoSourceImplFabricV256 } from "./deploy-contract-go-source/deploy-contract-go-source-impl-fabric-v2-5-6";
+import {
+  formatCactiFullBlockResponse,
+  formatCactiTransactionsBlockResponse,
+} from "./get-block/cacti-block-formatters";
 
 const { loadFromConfig } = require("fabric-network/lib/impl/ccp/networkconfig");
 assertFabricFunctionIsAvailable(loadFromConfig, "loadFromConfig");
@@ -1496,7 +1500,7 @@ export class PluginLedgerConnectorFabric
    * @param req input parameters
    * @returns Entire block object or encoded buffer (if req.skipDecode is true)
    */
-  public async getBlock(req: GetBlockRequestV1): Promise<GetBlockResponseV1> {
+  public async getBlock(req: GetBlockRequestV1): Promise<any> {
     const fnTag = `${this.className}:getBlock(req: GetBlockRequestV1)`;
     this.log.debug(
       "getBlock() called, channelName:",
@@ -1506,12 +1510,12 @@ export class PluginLedgerConnectorFabric
     );
 
     const gateway = await this.createGatewayWithOptions(req.gatewayOptions);
-    const { channelName, skipDecode } = req;
+    const { channelName, type } = req;
     const connectionChannelName = req.connectionChannelName ?? channelName;
     const queryConfig = {
       gateway,
       connectionChannelName,
-      skipDecode,
+      skipDecode: type === GetBlockResponseTypeV1.Encoded,
     };
 
     let responseData: unknown;
@@ -1560,20 +1564,26 @@ export class PluginLedgerConnectorFabric
       throw new RuntimeError(eMsg);
     }
 
-    if (skipDecode) {
-      if (!(responseData instanceof Buffer)) {
-        const eMsg = `${fnTag} - expected Buffer as GetBlockByTxID response from Fabric system chaincode but received ${typeof responseData} instead...`;
-        throw new RuntimeError(eMsg);
-      }
-      const encodedBlockB64 = responseData.toString("base64");
-      return {
-        encodedBlock: encodedBlockB64,
-      };
+    switch (type) {
+      case GetBlockResponseTypeV1.Encoded:
+        if (!(responseData instanceof Buffer)) {
+          const eMsg = `${fnTag} - expected Buffer as GetBlockByTxID response from Fabric system chaincode but received ${typeof responseData} instead...`;
+          throw new RuntimeError(eMsg);
+        }
+        const encodedBlockB64 = responseData.toString("base64");
+        return {
+          encodedBlock: encodedBlockB64,
+        };
+      case GetBlockResponseTypeV1.CactiTransactions:
+        return formatCactiTransactionsBlockResponse(responseData as any);
+      case GetBlockResponseTypeV1.CactiFullBlock:
+        return formatCactiFullBlockResponse(responseData as any);
+      case GetBlockResponseTypeV1.Full:
+      default:
+        return {
+          decodedBlock: responseData,
+        };
     }
-
-    return {
-      decodedBlock: responseData,
-    };
   }
 
   /**

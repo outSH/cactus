@@ -1056,10 +1056,9 @@
               }
             }
           },
-          "skipDecode": {
-            "type": "boolean",
-            "description": "If true, encoded buffer will be returned. Otherwise, entire block object is returned.",
-            "default": false,
+          "type": {
+            "$ref": "#/components/schemas/GetBlockResponseTypeV1",
+            "description": "Type of response block to return.",
             "nullable": false
           }
         }
@@ -1142,6 +1141,13 @@
         "description": "Response type from WatchBlocks. 'Cactus*' are custom views, others correspond to fabric SDK call.",
         "enum": ["filtered", "full", "private", "cactus:transactions", "cactus:full-block"],
         "x-enum-varnames": ["Filtered", "Full", "Private", "CactusTransactions", "CactusFullBlock"]
+      },
+      "GetBlockResponseTypeV1": {
+        "type": "string",
+        "default": "full",
+        "description": "Response type from GetBlock.",
+        "enum": ["full", "encoded", "cacti:transactions", "cacti:full-block"],
+        "x-enum-varnames": ["Full", "Encoded", "CactiTransactions", "CactiFullBlock"]
       },
       "WatchBlocksOptionsV1": {
         "type": "object",
