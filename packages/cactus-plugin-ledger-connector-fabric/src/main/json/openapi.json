@@ -1091,6 +1091,12 @@
         "description": "Response from GetBlock endpoint.",
         "oneOf": [
           {
+            "$ref": "#/components/schemas/CactiBlockTransactionsResponseV1"
+          },
+          {
+            "$ref": "#/components/schemas/CactiBlockFullResponseV1"
+          },
+          {
             "$ref": "#/components/schemas/GetBlockResponseDecodedV1"
           },
           {
@@ -1139,15 +1145,32 @@
       "WatchBlocksListenerTypeV1": {
         "type": "string",
         "description": "Response type from WatchBlocks. 'Cactus*' are custom views, others correspond to fabric SDK call.",
-        "enum": ["filtered", "full", "private", "cactus:transactions", "cactus:full-block"],
-        "x-enum-varnames": ["Filtered", "Full", "Private", "CactusTransactions", "CactusFullBlock"]
+        "enum": [
+          "filtered",
+          "full",
+          "private",
+          "cactus:transactions",
+          "cactus:full-block"
+        ],
+        "x-enum-varnames": [
+          "Filtered",
+          "Full",
+          "Private",
+          "CactusTransactions",
+          "CactusFullBlock"
+        ]
       },
       "GetBlockResponseTypeV1": {
         "type": "string",
         "default": "full",
         "description": "Response type from GetBlock.",
         "enum": ["full", "encoded", "cacti:transactions", "cacti:full-block"],
-        "x-enum-varnames": ["Full", "Encoded", "CactiTransactions", "CactiFullBlock"]
+        "x-enum-varnames": [
+          "Full",
+          "Encoded",
+          "CactiTransactions",
+          "CactiFullBlock"
+        ]
       },
       "WatchBlocksOptionsV1": {
         "type": "object",
@@ -1217,7 +1240,7 @@
           }
         }
       },
-      "WatchBlocksCactusTransactionsEventV1": {
+      "CactiBlockTransactionEventV1": {
         "type": "object",
         "description": "Transaction summary from commited block.",
         "required": [
@@ -1253,18 +1276,30 @@
           }
         }
       },
-      "WatchBlocksCactusTransactionsResponseV1": {
+      "CactiBlockTransactionsResponseV1": {
         "type": "object",
         "description": "Custom response containing block transactions summary. Compatible with legacy fabric-socketio connector monitoring.",
-        "required": ["cactusTransactionsEvents"],
+        "required": ["cactiTransactionsEvents"],
         "properties": {
-          "cactusTransactionsEvents": {
+          "cactiTransactionsEvents": {
             "description": "List of transactions summary",
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/WatchBlocksCactusTransactionsEventV1",
+              "$ref": "#/components/schemas/CactiBlockTransactionEventV1",
               "nullable": false
             }
+          }
+        }
+      },
+      "CactiBlockFullResponseV1": {
+        "type": "object",
+        "description": "Custom response containing full block summary.",
+        "required": ["cactiFullEvents"],
+        "properties": {
+          "cactiFullEvents": {
+            "description": "Full parsed block with transactions.",
+            "$ref": "#/components/schemas/CactiBlockFullEventV1",
+            "nullable": false
           }
         }
       },
@@ -1301,6 +1336,184 @@
           }
         }
       },
+      "FullBlockTransactionEndorserCertV1": {
+        "type": "object",
+        "description": "Transaction endorser certificate object",
+        "required": [
+          "issuer",
+          "serialNumber",
+          "subject",
+          "subjectAltName",
+          "validFrom",
+          "validTo",
+          "pem"
+        ],
+        "properties": {
+          "issuer": {
+            "nullable": false,
+            "type": "string"
+          },
+          "serialNumber": {
+            "nullable": false,
+            "type": "string"
+          },
+          "subject": {
+            "nullable": false,
+            "type": "string"
+          },
+          "subjectAltName": {
+            "nullable": false,
+            "type": "string"
+          },
+          "validFrom": {
+            "nullable": false,
+            "type": "string"
+          },
+          "validTo": {
+            "nullable": false,
+            "type": "string"
+          },
+          "pem": {
+            "nullable": false,
+            "type": "string"
+          }
+        }
+      },
+      "FullBlockTransactionEndorsementV1": {
+        "type": "object",
+        "description": "Transaction endorsment object returned from fabric block.",
+        "required": ["mspid", "endorserCert", "signature"],
+        "properties": {
+          "mspid": {
+            "nullable": false,
+            "type": "string"
+          },
+          "endorserCert": {
+            "$ref": "#/components/schemas/FullBlockTransactionEndorserCertV1",
+            "nullable": false
+          },
+          "signature": {
+            "nullable": false,
+            "type": "string"
+          }
+        }
+      },
+      "FullBlockTransactionActionV1": {
+        "type": "object",
+        "description": "Transaction action returned from fabric block.",
+        "required": [
+          "functionName",
+          "functionArgs",
+          "chaincodeId",
+          "endorsements"
+        ],
+        "properties": {
+          "functionName": {
+            "nullable": false,
+            "type": "string"
+          },
+          "functionArgs": {
+            "type": "array",
+            "items": {
+              "nullable": false,
+              "type": "string"
+            }
+          },
+          "chaincodeId": {
+            "nullable": false,
+            "type": "string"
+          },
+          "endorsements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FullBlockTransactionEndorsementV1",
+              "nullable": false
+            }
+          }
+        }
+      },
+      "FullBlockTransactionEventV1": {
+        "type": "object",
+        "description": "Transaction returned from fabric block.",
+        "required": [
+          "hash",
+          "channelId",
+          "timestamp",
+          "protocolVersion",
+          "type",
+          "epoch",
+          "actions"
+        ],
+        "properties": {
+          "hash": {
+            "nullable": false,
+            "type": "string"
+          },
+          "channelId": {
+            "nullable": false,
+            "type": "string"
+          },
+          "timestamp": {
+            "nullable": false,
+            "type": "string"
+          },
+          "protocolVersion": {
+            "nullable": false,
+            "type": "number"
+          },
+          "type": {
+            "nullable": false,
+            "type": "string"
+          },
+          "epoch": {
+            "nullable": false,
+            "type": "number"
+          },
+          "actions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FullBlockTransactionActionV1",
+              "nullable": false
+            }
+          }
+        }
+      },
+      "CactiBlockFullEventV1": {
+        "type": "object",
+        "description": "Custom format full fabric block with transactions",
+        "required": [
+          "blockNumber",
+          "blockHash",
+          "previousBlockHash",
+          "transactionCount",
+          "cactiTransactionsEvents"
+        ],
+        "properties": {
+          "blockNumber": {
+            "nullable": false,
+            "type": "number"
+          },
+          "blockHash": {
+            "nullable": false,
+            "type": "string"
+          },
+          "previousBlockHash": {
+            "nullable": false,
+            "type": "string"
+          },
+          "transactionCount": {
+            "nullable": false,
+            "type": "number"
+          },
+          "cactiTransactionsEvents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FullBlockTransactionEventV1",
+              "nullable": false
+            }
+          }
+        }
+      },
       "WatchBlocksCactusErrorResponseV1": {
         "type": "object",
         "description": "Error response from WatchBlocks operation.",
@@ -1320,7 +1533,11 @@
         "description": "Response block from WatchBlocks endpoint. Depends on 'type' passed in subscription options.",
         "oneOf": [
           {
-            "$ref": "#/components/schemas/WatchBlocksCactusTransactionsResponseV1",
+            "$ref": "#/components/schemas/CactiBlockTransactionsResponseV1",
+            "nullable": false
+          },
+          {
+            "$ref": "#/components/schemas/CactiBlockFullResponseV1",
             "nullable": false
           },
           {

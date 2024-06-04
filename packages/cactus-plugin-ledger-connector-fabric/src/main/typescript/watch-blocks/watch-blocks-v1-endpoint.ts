@@ -54,15 +54,6 @@ export interface IWatchBlocksV1EndpointConfiguration {
   socket: SocketIoSocket;
 }
 
-function longToNumber(longNumberObject: any) {
-  const longValue = new Long(
-    longNumberObject.low,
-    longNumberObject.hight,
-    longNumberObject.unsigned,
-  );
-  return longValue.toNumber();
-}
-
 /**
  * Endpoint to watch for new blocks on fabric ledger and report them
  * to client using socketio.
@@ -115,7 +106,7 @@ export class WatchBlocksV1Endpoint {
 
     socket.emit(
       WatchBlocksV1.Next,
-      formatCactiFullBlockResponse(blockEvent.blockData) as any,
+      formatCactiFullBlockResponse(blockEvent.blockData),
     );
   }
 

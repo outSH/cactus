@@ -56,6 +56,10 @@ Class | Method | HTTP request | Description
 <a id="documentation-for-models"></a>
 ## Documentation for Models
 
+ - [org.openapitools.client.models.CactiBlockFullEventV1](docs/CactiBlockFullEventV1.md)
+ - [org.openapitools.client.models.CactiBlockFullResponseV1](docs/CactiBlockFullResponseV1.md)
+ - [org.openapitools.client.models.CactiBlockTransactionEventV1](docs/CactiBlockTransactionEventV1.md)
+ - [org.openapitools.client.models.CactiBlockTransactionsResponseV1](docs/CactiBlockTransactionsResponseV1.md)
  - [org.openapitools.client.models.ChainCodeLanguageRuntime](docs/ChainCodeLanguageRuntime.md)
  - [org.openapitools.client.models.ChainCodeLifeCycleCommandResponses](docs/ChainCodeLifeCycleCommandResponses.md)
  - [org.openapitools.client.models.ChainCodeProgrammingLanguage](docs/ChainCodeProgrammingLanguage.md)
@@ -75,6 +79,10 @@ Class | Method | HTTP request | Description
  - [org.openapitools.client.models.FabricSigningCredential](docs/FabricSigningCredential.md)
  - [org.openapitools.client.models.FabricSigningCredentialType](docs/FabricSigningCredentialType.md)
  - [org.openapitools.client.models.FileBase64](docs/FileBase64.md)
+ - [org.openapitools.client.models.FullBlockTransactionActionV1](docs/FullBlockTransactionActionV1.md)
+ - [org.openapitools.client.models.FullBlockTransactionEndorsementV1](docs/FullBlockTransactionEndorsementV1.md)
+ - [org.openapitools.client.models.FullBlockTransactionEndorserCertV1](docs/FullBlockTransactionEndorserCertV1.md)
+ - [org.openapitools.client.models.FullBlockTransactionEventV1](docs/FullBlockTransactionEventV1.md)
  - [org.openapitools.client.models.GatewayDiscoveryOptions](docs/GatewayDiscoveryOptions.md)
  - [org.openapitools.client.models.GatewayEventHandlerOptions](docs/GatewayEventHandlerOptions.md)
  - [org.openapitools.client.models.GatewayOptions](docs/GatewayOptions.md)
@@ -97,8 +105,6 @@ Class | Method | HTTP request | Description
  - [org.openapitools.client.models.TransactReceiptTransactionEndorsement](docs/TransactReceiptTransactionEndorsement.md)
  - [org.openapitools.client.models.VaultTransitKey](docs/VaultTransitKey.md)
  - [org.openapitools.client.models.WatchBlocksCactusErrorResponseV1](docs/WatchBlocksCactusErrorResponseV1.md)
- - [org.openapitools.client.models.WatchBlocksCactusTransactionsEventV1](docs/WatchBlocksCactusTransactionsEventV1.md)
- - [org.openapitools.client.models.WatchBlocksCactusTransactionsResponseV1](docs/WatchBlocksCactusTransactionsResponseV1.md)
  - [org.openapitools.client.models.WatchBlocksDelegatedSignOptionsV1](docs/WatchBlocksDelegatedSignOptionsV1.md)
  - [org.openapitools.client.models.WatchBlocksFilteredResponseV1](docs/WatchBlocksFilteredResponseV1.md)
  - [org.openapitools.client.models.WatchBlocksFullResponseV1](docs/WatchBlocksFullResponseV1.md)

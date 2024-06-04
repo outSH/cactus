@@ -24,6 +24,100 @@ import type { RequestArgs } from './base';
 import { BASE_PATH, COLLECTION_FORMATS, BaseAPI, RequiredError } from './base';
 
 /**
+ * Custom format full fabric block with transactions
+ * @export
+ * @interface CactiBlockFullEventV1
+ */
+export interface CactiBlockFullEventV1 {
+    /**
+     * 
+     * @type {number}
+     * @memberof CactiBlockFullEventV1
+     */
+    'blockNumber': number;
+    /**
+     * 
+     * @type {string}
+     * @memberof CactiBlockFullEventV1
+     */
+    'blockHash': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof CactiBlockFullEventV1
+     */
+    'previousBlockHash': string;
+    /**
+     * 
+     * @type {number}
+     * @memberof CactiBlockFullEventV1
+     */
+    'transactionCount': number;
+    /**
+     * 
+     * @type {Array<FullBlockTransactionEventV1>}
+     * @memberof CactiBlockFullEventV1
+     */
+    'cactiTransactionsEvents': Array<FullBlockTransactionEventV1>;
+}
+/**
+ * Custom response containing full block summary.
+ * @export
+ * @interface CactiBlockFullResponseV1
+ */
+export interface CactiBlockFullResponseV1 {
+    /**
+     * 
+     * @type {CactiBlockFullEventV1}
+     * @memberof CactiBlockFullResponseV1
+     */
+    'cactiFullEvents': CactiBlockFullEventV1;
+}
+/**
+ * Transaction summary from commited block.
+ * @export
+ * @interface CactiBlockTransactionEventV1
+ */
+export interface CactiBlockTransactionEventV1 {
+    /**
+     * ChainCode containing function that was executed.
+     * @type {string}
+     * @memberof CactiBlockTransactionEventV1
+     */
+    'chaincodeId': string;
+    /**
+     * Transaction identifier.
+     * @type {string}
+     * @memberof CactiBlockTransactionEventV1
+     */
+    'transactionId': string;
+    /**
+     * Function name that was executed.
+     * @type {string}
+     * @memberof CactiBlockTransactionEventV1
+     */
+    'functionName': string;
+    /**
+     * List of function arguments.
+     * @type {Array<string>}
+     * @memberof CactiBlockTransactionEventV1
+     */
+    'functionArgs': Array<string>;
+}
+/**
+ * Custom response containing block transactions summary. Compatible with legacy fabric-socketio connector monitoring.
+ * @export
+ * @interface CactiBlockTransactionsResponseV1
+ */
+export interface CactiBlockTransactionsResponseV1 {
+    /**
+     * List of transactions summary
+     * @type {Array<CactiBlockTransactionEventV1>}
+     * @memberof CactiBlockTransactionsResponseV1
+     */
+    'cactiTransactionsEvents': Array<CactiBlockTransactionEventV1>;
+}
+/**
  * Enumerates the supported programming language runtimes of Hyperledger Fabric
  * @export
  * @enum {string}
@@ -649,6 +743,160 @@ export interface FileBase64 {
     'filepath'?: string;
 }
 /**
+ * Transaction action returned from fabric block.
+ * @export
+ * @interface FullBlockTransactionActionV1
+ */
+export interface FullBlockTransactionActionV1 {
+    /**
+     * 
+     * @type {string}
+     * @memberof FullBlockTransactionActionV1
+     */
+    'functionName': string;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof FullBlockTransactionActionV1
+     */
+    'functionArgs': Array<string>;
+    /**
+     * 
+     * @type {string}
+     * @memberof FullBlockTransactionActionV1
+     */
+    'chaincodeId': string;
+    /**
+     * 
+     * @type {Array<FullBlockTransactionEndorsementV1>}
+     * @memberof FullBlockTransactionActionV1
+     */
+    'endorsements': Array<FullBlockTransactionEndorsementV1>;
+}
+/**
+ * Transaction endorsment object returned from fabric block.
+ * @export
+ * @interface FullBlockTransactionEndorsementV1
+ */
+export interface FullBlockTransactionEndorsementV1 {
+    /**
+     * 
+     * @type {string}
+     * @memberof FullBlockTransactionEndorsementV1
+     */
+    'mspid': string;
+    /**
+     * 
+     * @type {FullBlockTransactionEndorserCertV1}
+     * @memberof FullBlockTransactionEndorsementV1
+     */
+    'endorserCert': FullBlockTransactionEndorserCertV1;
+    /**
+     * 
+     * @type {string}
+     * @memberof FullBlockTransactionEndorsementV1
+     */
+    'signature': string;
+}
+/**
+ * Transaction endorser certificate object
+ * @export
+ * @interface FullBlockTransactionEndorserCertV1
+ */
+export interface FullBlockTransactionEndorserCertV1 {
+    /**
+     * 
+     * @type {string}
+     * @memberof FullBlockTransactionEndorserCertV1
+     */
+    'issuer': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof FullBlockTransactionEndorserCertV1
+     */
+    'serialNumber': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof FullBlockTransactionEndorserCertV1
+     */
+    'subject': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof FullBlockTransactionEndorserCertV1
+     */
+    'subjectAltName': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof FullBlockTransactionEndorserCertV1
+     */
+    'validFrom': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof FullBlockTransactionEndorserCertV1
+     */
+    'validTo': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof FullBlockTransactionEndorserCertV1
+     */
+    'pem': string;
+}
+/**
+ * Transaction returned from fabric block.
+ * @export
+ * @interface FullBlockTransactionEventV1
+ */
+export interface FullBlockTransactionEventV1 {
+    /**
+     * 
+     * @type {string}
+     * @memberof FullBlockTransactionEventV1
+     */
+    'hash': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof FullBlockTransactionEventV1
+     */
+    'channelId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof FullBlockTransactionEventV1
+     */
+    'timestamp': string;
+    /**
+     * 
+     * @type {number}
+     * @memberof FullBlockTransactionEventV1
+     */
+    'protocolVersion': number;
+    /**
+     * 
+     * @type {string}
+     * @memberof FullBlockTransactionEventV1
+     */
+    'type': string;
+    /**
+     * 
+     * @type {number}
+     * @memberof FullBlockTransactionEventV1
+     */
+    'epoch': number;
+    /**
+     * 
+     * @type {Array<FullBlockTransactionActionV1>}
+     * @memberof FullBlockTransactionEventV1
+     */
+    'actions': Array<FullBlockTransactionActionV1>;
+}
+/**
  * 
  * @export
  * @interface GatewayDiscoveryOptions
@@ -880,7 +1128,7 @@ export type GetBlockResponseTypeV1 = typeof GetBlockResponseTypeV1[keyof typeof 
  * Response from GetBlock endpoint.
  * @export
  */
-export type GetBlockResponseV1 = GetBlockResponseDecodedV1 | GetBlockResponseEncodedV1;
+export type GetBlockResponseV1 = CactiBlockFullResponseV1 | CactiBlockTransactionsResponseV1 | GetBlockResponseDecodedV1 | GetBlockResponseEncodedV1;
 
 /**
  * 
@@ -1277,50 +1525,6 @@ export interface WatchBlocksCactusErrorResponseV1 {
     'errorMessage': string;
 }
 /**
- * Transaction summary from commited block.
- * @export
- * @interface WatchBlocksCactusTransactionsEventV1
- */
-export interface WatchBlocksCactusTransactionsEventV1 {
-    /**
-     * ChainCode containing function that was executed.
-     * @type {string}
-     * @memberof WatchBlocksCactusTransactionsEventV1
-     */
-    'chaincodeId': string;
-    /**
-     * Transaction identifier.
-     * @type {string}
-     * @memberof WatchBlocksCactusTransactionsEventV1
-     */
-    'transactionId': string;
-    /**
-     * Function name that was executed.
-     * @type {string}
-     * @memberof WatchBlocksCactusTransactionsEventV1
-     */
-    'functionName': string;
-    /**
-     * List of function arguments.
-     * @type {Array<string>}
-     * @memberof WatchBlocksCactusTransactionsEventV1
-     */
-    'functionArgs': Array<string>;
-}
-/**
- * Custom response containing block transactions summary. Compatible with legacy fabric-socketio connector monitoring.
- * @export
- * @interface WatchBlocksCactusTransactionsResponseV1
- */
-export interface WatchBlocksCactusTransactionsResponseV1 {
-    /**
-     * List of transactions summary
-     * @type {Array<WatchBlocksCactusTransactionsEventV1>}
-     * @memberof WatchBlocksCactusTransactionsResponseV1
-     */
-    'cactusTransactionsEvents': Array<WatchBlocksCactusTransactionsEventV1>;
-}
-/**
  * Options passed when subscribing to block monitoring with delegated signing.
  * @export
  * @interface WatchBlocksDelegatedSignOptionsV1
@@ -1459,7 +1663,7 @@ export interface WatchBlocksPrivateResponseV1 {
  * Response block from WatchBlocks endpoint. Depends on \'type\' passed in subscription options.
  * @export
  */
-export type WatchBlocksResponseV1 = WatchBlocksCactusErrorResponseV1 | WatchBlocksCactusTransactionsResponseV1 | WatchBlocksFilteredResponseV1 | WatchBlocksFullResponseV1 | WatchBlocksPrivateResponseV1;
+export type WatchBlocksResponseV1 = CactiBlockFullResponseV1 | CactiBlockTransactionsResponseV1 | WatchBlocksCactusErrorResponseV1 | WatchBlocksFilteredResponseV1 | WatchBlocksFullResponseV1 | WatchBlocksPrivateResponseV1;
 
 /**
  * Websocket requests for monitoring new blocks.

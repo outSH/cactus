@@ -101,6 +101,7 @@ import {
   RunTransactionResponseType,
   WatchBlocksDelegatedSignOptionsV1,
   GetBlockResponseTypeV1,
+  GetBlockResponseV1,
 } from "./generated/openapi/typescript-axios/index";
 
 import {
@@ -1500,7 +1501,7 @@ export class PluginLedgerConnectorFabric
    * @param req input parameters
    * @returns Entire block object or encoded buffer (if req.skipDecode is true)
    */
-  public async getBlock(req: GetBlockRequestV1): Promise<any> {
+  public async getBlock(req: GetBlockRequestV1): Promise<GetBlockResponseV1> {
     const fnTag = `${this.className}:getBlock(req: GetBlockRequestV1)`;
     this.log.debug(
       "getBlock() called, channelName:",
