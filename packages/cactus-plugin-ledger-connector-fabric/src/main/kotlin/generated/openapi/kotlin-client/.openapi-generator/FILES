@@ -40,13 +40,14 @@ src/main/kotlin/org/openapitools/client/models/DeployContractV1Response.kt
 src/main/kotlin/org/openapitools/client/models/DeploymentTargetOrgFabric2x.kt
 src/main/kotlin/org/openapitools/client/models/DeploymentTargetOrganization.kt
 src/main/kotlin/org/openapitools/client/models/ErrorExceptionResponseV1.kt
+src/main/kotlin/org/openapitools/client/models/FabricCertificateIdentityV1.kt
 src/main/kotlin/org/openapitools/client/models/FabricContractInvocationType.kt
 src/main/kotlin/org/openapitools/client/models/FabricSigningCredential.kt
 src/main/kotlin/org/openapitools/client/models/FabricSigningCredentialType.kt
+src/main/kotlin/org/openapitools/client/models/FabricX509CertificateV1.kt
 src/main/kotlin/org/openapitools/client/models/FileBase64.kt
 src/main/kotlin/org/openapitools/client/models/FullBlockTransactionActionV1.kt
 src/main/kotlin/org/openapitools/client/models/FullBlockTransactionEndorsementV1.kt
-src/main/kotlin/org/openapitools/client/models/FullBlockTransactionEndorserCertV1.kt
 src/main/kotlin/org/openapitools/client/models/FullBlockTransactionEventV1.kt
 src/main/kotlin/org/openapitools/client/models/GatewayDiscoveryOptions.kt
 src/main/kotlin/org/openapitools/client/models/GatewayEventHandlerOptions.kt

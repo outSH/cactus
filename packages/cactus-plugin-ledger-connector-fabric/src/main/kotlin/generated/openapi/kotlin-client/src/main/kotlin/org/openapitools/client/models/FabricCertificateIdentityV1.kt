@@ -15,26 +15,26 @@
 
 package org.openapitools.client.models
 
-import org.openapitools.client.models.FabricCertificateIdentityV1
+import org.openapitools.client.models.FabricX509CertificateV1
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 
 /**
- * Transaction endorsment object returned from fabric block.
+ * Combination of certificate and it's MSP ID used to identify fabric actors.
  *
- * @param signer 
- * @param signature 
+ * @param mspid 
+ * @param cert 
  */
 
 
-data class FullBlockTransactionEndorsementV1 (
+data class FabricCertificateIdentityV1 (
 
-    @Json(name = "signer")
-    val signer: FabricCertificateIdentityV1,
+    @Json(name = "mspid")
+    val mspid: kotlin.String,
 
-    @Json(name = "signature")
-    val signature: kotlin.String
+    @Json(name = "cert")
+    val cert: FabricX509CertificateV1
 
 )
 

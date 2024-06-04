@@ -1,5 +1,5 @@
 import Long from "long";
-import { X509Certificate } from "crypto";
+import { BinaryLike, X509Certificate } from "crypto";
 
 import {
   LoggerProvider,
@@ -10,6 +10,7 @@ import {
   CactiBlockFullResponseV1,
   CactiBlockTransactionEventV1,
   CactiBlockTransactionsResponseV1,
+  FabricX509CertificateV1,
   FullBlockTransactionActionV1,
   FullBlockTransactionEndorsementV1,
   FullBlockTransactionEventV1,
@@ -26,6 +27,22 @@ function longToNumber(longNumberObject: any) {
     longNumberObject.unsigned,
   );
   return longValue.toNumber();
+}
+
+function parseX509CertToObject(
+  certBuffer: BinaryLike,
+): FabricX509CertificateV1 {
+  const cert = new X509Certificate(certBuffer);
+
+  return {
+    serialNumber: cert.serialNumber,
+    subject: cert.subject,
+    issuer: cert.issuer,
+    subjectAltName: cert.subjectAltName ?? "",
+    validFrom: cert.validFrom,
+    validTo: cert.validTo,
+    pem: cert.toString(),
+  };
 }
 
 export function formatCactiFullBlockResponse(
@@ -48,6 +65,10 @@ export function formatCactiFullBlockResponse(
         const actionPayload = action.payload;
         const proposalPayload = actionPayload.chaincode_proposal_payload;
         const invocationSpec = proposalPayload.input;
+        const actionCreatorCert = parseX509CertToObject(
+          action.header.creator.id_bytes,
+        );
+        const actionCreatorMspId = action.header.creator.mspid;
 
         // Decode args and function name
         const rawArgs = invocationSpec.chaincode_spec.input.args as Buffer[];
@@ -55,29 +76,24 @@ export function formatCactiFullBlockResponse(
         const functionName = decodedArgs.shift() ?? "<unknown>";
         const chaincodeId = invocationSpec.chaincode_spec.chaincode_id.name;
 
-        const endorsements: FullBlockTransactionEndorsementV1[] =
-          actionPayload.action.endorsements.map((e: any) => {
-            const endorserCert = new X509Certificate(e.endorser.id_bytes);
-
-            return {
+        const endorsements = actionPayload.action.endorsements.map((e: any) => {
+          return {
+            signer: {
               mspid: e.endorser.mspid,
-              endorserCert: {
-                serialNumber: endorserCert.serialNumber,
-                subject: endorserCert.subject,
-                issuer: endorserCert.issuer,
-                subjectAltName: endorserCert.subjectAltName,
-                validFrom: endorserCert.validFrom,
-                validTo: endorserCert.validTo,
-                pem: endorserCert.toString(),
-              },
-              signature: "0x" + Buffer.from(e.signature).toString("hex"),
-            };
-          });
+              cert: parseX509CertToObject(e.endorser.id_bytes),
+            },
+            signature: "0x" + Buffer.from(e.signature).toString("hex"),
+          } as FullBlockTransactionEndorsementV1;
+        });
 
         transactionActions.push({
-          chaincodeId,
           functionName,
           functionArgs: decodedArgs,
+          chaincodeId,
+          creator: {
+            mspid: actionCreatorMspId,
+            cert: actionCreatorCert,
+          },
           endorsements,
         });
       }

@@ -649,6 +649,25 @@ export interface ErrorExceptionResponseV1 {
     'error': string;
 }
 /**
+ * Combination of certificate and it\'s MSP ID used to identify fabric actors.
+ * @export
+ * @interface FabricCertificateIdentityV1
+ */
+export interface FabricCertificateIdentityV1 {
+    /**
+     * 
+     * @type {string}
+     * @memberof FabricCertificateIdentityV1
+     */
+    'mspid': string;
+    /**
+     * 
+     * @type {FabricX509CertificateV1}
+     * @memberof FabricCertificateIdentityV1
+     */
+    'cert': FabricX509CertificateV1;
+}
+/**
  * 
  * @export
  * @enum {string}
@@ -718,6 +737,55 @@ export type FabricSigningCredentialType = typeof FabricSigningCredentialType[key
 
 
 /**
+ * Transaction endorser certificate object
+ * @export
+ * @interface FabricX509CertificateV1
+ */
+export interface FabricX509CertificateV1 {
+    /**
+     * 
+     * @type {string}
+     * @memberof FabricX509CertificateV1
+     */
+    'issuer': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof FabricX509CertificateV1
+     */
+    'serialNumber': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof FabricX509CertificateV1
+     */
+    'subject': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof FabricX509CertificateV1
+     */
+    'subjectAltName': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof FabricX509CertificateV1
+     */
+    'validFrom': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof FabricX509CertificateV1
+     */
+    'validTo': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof FabricX509CertificateV1
+     */
+    'pem': string;
+}
+/**
  * Represents a file-system file that has a name and a body which holds the file contents as a Base64 encoded string
  * @export
  * @interface FileBase64
@@ -768,6 +836,12 @@ export interface FullBlockTransactionActionV1 {
     'chaincodeId': string;
     /**
      * 
+     * @type {FabricCertificateIdentityV1}
+     * @memberof FullBlockTransactionActionV1
+     */
+    'creator': FabricCertificateIdentityV1;
+    /**
+     * 
      * @type {Array<FullBlockTransactionEndorsementV1>}
      * @memberof FullBlockTransactionActionV1
      */
@@ -781,71 +855,16 @@ export interface FullBlockTransactionActionV1 {
 export interface FullBlockTransactionEndorsementV1 {
     /**
      * 
-     * @type {string}
+     * @type {FabricCertificateIdentityV1}
      * @memberof FullBlockTransactionEndorsementV1
      */
-    'mspid': string;
-    /**
-     * 
-     * @type {FullBlockTransactionEndorserCertV1}
-     * @memberof FullBlockTransactionEndorsementV1
-     */
-    'endorserCert': FullBlockTransactionEndorserCertV1;
+    'signer': FabricCertificateIdentityV1;
     /**
      * 
      * @type {string}
      * @memberof FullBlockTransactionEndorsementV1
      */
     'signature': string;
-}
-/**
- * Transaction endorser certificate object
- * @export
- * @interface FullBlockTransactionEndorserCertV1
- */
-export interface FullBlockTransactionEndorserCertV1 {
-    /**
-     * 
-     * @type {string}
-     * @memberof FullBlockTransactionEndorserCertV1
-     */
-    'issuer': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof FullBlockTransactionEndorserCertV1
-     */
-    'serialNumber': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof FullBlockTransactionEndorserCertV1
-     */
-    'subject': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof FullBlockTransactionEndorserCertV1
-     */
-    'subjectAltName': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof FullBlockTransactionEndorserCertV1
-     */
-    'validFrom': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof FullBlockTransactionEndorserCertV1
-     */
-    'validTo': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof FullBlockTransactionEndorserCertV1
-     */
-    'pem': string;
 }
 /**
  * Transaction returned from fabric block.

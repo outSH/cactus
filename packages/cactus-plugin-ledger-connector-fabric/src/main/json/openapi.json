@@ -1336,7 +1336,7 @@
           }
         }
       },
-      "FullBlockTransactionEndorserCertV1": {
+      "FabricX509CertificateV1": {
         "type": "object",
         "description": "Transaction endorser certificate object",
         "required": [
@@ -1379,17 +1379,28 @@
           }
         }
       },
-      "FullBlockTransactionEndorsementV1": {
+      "FabricCertificateIdentityV1": {
         "type": "object",
-        "description": "Transaction endorsment object returned from fabric block.",
-        "required": ["mspid", "endorserCert", "signature"],
+        "description": "Combination of certificate and it's MSP ID used to identify fabric actors.",
+        "required": ["mspid", "cert"],
         "properties": {
           "mspid": {
             "nullable": false,
             "type": "string"
           },
-          "endorserCert": {
-            "$ref": "#/components/schemas/FullBlockTransactionEndorserCertV1",
+          "cert": {
+            "$ref": "#/components/schemas/FabricX509CertificateV1",
+            "nullable": false
+          }
+        }
+      },
+      "FullBlockTransactionEndorsementV1": {
+        "type": "object",
+        "description": "Transaction endorsment object returned from fabric block.",
+        "required": ["signer", "signature"],
+        "properties": {
+          "signer": {
+            "$ref": "#/components/schemas/FabricCertificateIdentityV1",
             "nullable": false
           },
           "signature": {
@@ -1405,6 +1416,7 @@
           "functionName",
           "functionArgs",
           "chaincodeId",
+          "creator",
           "endorsements"
         ],
         "properties": {
@@ -1422,6 +1434,10 @@
           "chaincodeId": {
             "nullable": false,
             "type": "string"
+          },
+          "creator": {
+            "$ref": "#/components/schemas/FabricCertificateIdentityV1",
+            "nullable": false
           },
           "endorsements": {
             "type": "array",
