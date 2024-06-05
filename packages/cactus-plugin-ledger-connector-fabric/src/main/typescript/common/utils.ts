@@ -1,3 +1,5 @@
+import Long from "long";
+
 /**
  * Check if provided variable is a function. Throws otherwise.
  * To be used with unsafe `require()` imports from fabric SDK packages.
@@ -28,4 +30,13 @@ export function asBuffer(bytes: Uint8Array | null | undefined): Buffer {
   }
 
   return Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength); // Create a Buffer view to avoid copying
+}
+
+export function fabricLongToNumber(longNumberObject: any) {
+  const longValue = new Long(
+    longNumberObject.low,
+    longNumberObject.hight,
+    longNumberObject.unsigned,
+  );
+  return longValue.toNumber();
 }

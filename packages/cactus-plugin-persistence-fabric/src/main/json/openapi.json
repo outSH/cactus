@@ -11,13 +11,27 @@
   },
   "components": {
     "schemas": {
+      "TrackedOperationV1": {
+        "description": "Persistence plugin operation that is tracked and returned in status report.",
+        "type": "object",
+        "required": ["startAt", "operation"],
+        "properties": {
+          "startAt": {
+            "type": "string",
+            "nullable": false,
+            "description": "Start time of the operation."
+          },
+          "operation": {
+            "type": "string",
+            "nullable": false,
+            "description": "Operation name."
+          }
+        }
+      },
       "StatusResponseV1": {
         "description": "Response with plugin status report.",
         "type": "object",
-        "required": [
-          "instanceId",
-          "webServicesRegistered"
-        ],
+        "required": ["instanceId", "webServicesRegistered"],
         "properties": {
           "instanceId": {
             "type": "string",

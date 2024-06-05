@@ -17,6 +17,7 @@ import {
 } from "@hyperledger/cactus-plugin-ledger-connector-fabric/src/main/typescript/generated/openapi/typescript-axios/api";
 
 import { Client as PostgresClient } from "pg";
+import sanitizeHtml from "sanitize-html";
 
 export interface PostgresDatabaseClientOptions {
   connectionString: string;
@@ -247,7 +248,7 @@ export default class PostgresDatabaseClient {
          RETURNING id;`,
       [
         action.functionName,
-        action.functionArgs.join(","),
+        action.functionArgs.map((a) => sanitizeHtml(a)).join(","),
         action.chaincodeId,
         action.creator.mspid,
         creatorCertId,
@@ -289,6 +290,27 @@ export default class PostgresDatabaseClient {
         "Transaction action endorsement was not inserted into the DB",
       );
     }
+  }
+
+  /**
+   * Read block data. Throws if block was not found.
+   *
+   * @param blockNumber fabric block number
+   * @returns Block data.
+   */
+  public async getBlock(blockNumber: number): Promise<any> {
+    this.assertConnected();
+
+    const queryResponse = await this.client.query(
+      "SELECT * FROM fabric.block WHERE number = $1",
+      [blockNumber],
+    );
+
+    if (queryResponse.rows.length !== 1) {
+      throw new Error(`Could not read block #${blockNumber} from the DB`);
+    }
+
+    return queryResponse.rows[0];
   }
 
   /**
@@ -339,5 +361,32 @@ export default class PostgresDatabaseClient {
         "Could not insert block data into the database - transaction reverted",
       );
     }
+  }
+
+  /**
+   * Compare committed block numbers with requested range, return list of blocks that are missing.
+   * @param startBlockNumber block to check from (including)
+   * @param endBlockNumber block to check to (including)
+   * @returns list of missing block numbers
+   */
+  public async getMissingBlocksInRange(
+    startBlockNumber: number,
+    endBlockNumber: number,
+  ): Promise<any> {
+    Checks.truthy(
+      endBlockNumber >= startBlockNumber,
+      `getMissingBlocksInRange startBlockNumber larger than endBlockNumber`,
+    );
+    this.assertConnected();
+
+    const queryResponse = await this.client.query(
+      "SELECT * FROM fabric.get_missing_blocks_in_range($1, $2) as block_number",
+      [startBlockNumber, endBlockNumber],
+    );
+    this.log.debug(
+      `Found ${queryResponse.rowCount} missing blocks between ${startBlockNumber} and ${endBlockNumber}`,
+    );
+
+    return queryResponse.rows;
   }
 }

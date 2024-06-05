@@ -1063,6 +1063,32 @@
           }
         }
       },
+      "GetChainInfoRequestV1": {
+        "description": "Request for GetChainInfo endpoint.",
+        "type": "object",
+        "required": ["channelName", "gatewayOptions", "query"],
+        "properties": {
+          "channelName": {
+            "type": "string",
+            "description": "Fabric channel which we want to query.",
+            "minLength": 1,
+            "maxLength": 100,
+            "nullable": false
+          },
+          "connectionChannelName": {
+            "type": "string",
+            "description": "Fabric channel we want to connect to. If not provided, then one from channelName parameter will be used",
+            "minLength": 1,
+            "maxLength": 100,
+            "nullable": false
+          },
+          "gatewayOptions": {
+            "$ref": "#/components/schemas/GatewayOptions",
+            "description": "Fabric SDK gateway options.",
+            "nullable": false
+          }
+        }
+      },
       "FabricFullBlockDataV1": {
         "description": "Full hyperledger fabric block data."
       },
@@ -1103,6 +1129,28 @@
             "$ref": "#/components/schemas/GetBlockResponseEncodedV1"
           }
         ]
+      },
+      "GetChainInfoResponseV1": {
+        "type": "object",
+        "description": "Response from GetChainInfo endpoint.",
+        "required": ["height", "currentBlockHash", "previousBlockHash"],
+        "properties": {
+          "height": {
+            "description": "Current height of fabric ledger",
+            "type": "number",
+            "nullable": false
+          },
+          "currentBlockHash": {
+            "description": "Current block hash of fabric ledger",
+            "type": "string",
+            "nullable": false
+          },
+          "previousBlockHash": {
+            "description": "Previous block hash of fabric ledger",
+            "type": "string",
+            "nullable": false
+          }
+        }
       },
       "ErrorExceptionResponseV1": {
         "type": "object",
@@ -1839,6 +1887,50 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/GetBlockResponseV1"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorExceptionResponseV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/plugins/@hyperledger/cactus-plugin-ledger-connector-fabric/get-chain-info": {
+      "post": {
+        "operationId": "getChainInfoV1",
+        "summary": "Get fabric ledger chain info.",
+        "x-hyperledger-cacti": {
+          "http": {
+            "verbLowerCase": "post",
+            "path": "/api/v1/plugins/@hyperledger/cactus-plugin-ledger-connector-fabric/get-chain-info"
+          }
+        },
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetChainInfoRequestV1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetChainInfoResponseV1"
                 }
               }
             }

@@ -17,13 +17,21 @@ import type {
 import {
   CactiBlockFullEventV1,
   FabricApiClient,
+  GatewayOptions,
+  GetBlockResponseTypeV1,
+  GetChainInfoResponseV1,
+  WatchBlocksListenerTypeV1,
 } from "@hyperledger/cactus-plugin-ledger-connector-fabric";
 
 import OAS from "../json/openapi.json";
 import { StatusEndpointV1 } from "./web-services/status-endpoint-v1";
 import PostgresDatabaseClient from "./db-client/db-client";
-import { StatusResponseV1 } from "./generated/openapi/typescript-axios";
+import {
+  StatusResponseV1,
+  TrackedOperationV1,
+} from "./generated/openapi/typescript-axios";
 import type { Express } from "express";
+import { v4 as uuidv4 } from "uuid";
 import type { Subscription } from "rxjs";
 import { Mutex } from "async-mutex";
 
@@ -34,6 +42,8 @@ export interface IPluginPersistenceFabricOptions extends ICactusPluginOptions {
   apiClient: FabricApiClient;
   connectionString: string;
   logLevel: LogLevelDesc;
+  channelName: string;
+  gatewayOptions: GatewayOptions;
 }
 
 /**
@@ -47,14 +57,19 @@ export class PluginPersistenceFabric
 
   private readonly instanceId: string;
   private apiClient: FabricApiClient;
+  private channelName: string;
+  private gatewayOptions: GatewayOptions;
   private watchBlocksSubscription: Subscription | undefined;
   private dbClient: PostgresDatabaseClient;
   private log: Logger;
   private isConnected = false;
   private pushBlockMutex = new Mutex();
+  private syncBlocksMutex = new Mutex();
   private isWebServicesRegistered = false;
   private lastSeenBlock = 0;
   private endpoints: IWebServiceEndpoint[] | undefined;
+  private trackedOperations = new Map<string, TrackedOperationV1>();
+  private failedBlocks = new Set<number>();
 
   constructor(public readonly options: IPluginPersistenceFabricOptions) {
     const fnTag = `${PluginPersistenceFabric.CLASS_NAME}#constructor()`;
@@ -65,6 +80,8 @@ export class PluginPersistenceFabric
       options.connectionString,
       `${fnTag} options.connectionString`,
     );
+    Checks.truthy(options.channelName, `${fnTag} options.channelName`);
+    Checks.truthy(options.gatewayOptions, `${fnTag} options.gatewayOptions`);
 
     const level = this.options.logLevel || "INFO";
     const label = PluginPersistenceFabric.CLASS_NAME;
@@ -72,11 +89,97 @@ export class PluginPersistenceFabric
 
     this.instanceId = options.instanceId;
     this.apiClient = options.apiClient;
+    this.channelName = options.channelName;
+    this.gatewayOptions = options.gatewayOptions;
 
     this.dbClient = new PostgresDatabaseClient({
       connectionString: options.connectionString,
       logLevel: level,
     });
+  }
+
+  /**
+   * True if all blocks were synchronized successfully, false otherwise.
+   */
+  private get isLedgerInSync(): boolean {
+    return this.failedBlocks.size === 0;
+  }
+
+  /**
+   * Add new plugin operation that will show up in status report.
+   * Remember to remove this operation with `removeTrackedOperation` after it's finished.
+   *
+   * @param id unique id of the operation (use `uuid`)
+   * @param operation operation name to show up in the status report
+   */
+  private addTrackedOperation(id: string, operation: string): void {
+    if (this.trackedOperations.has(id)) {
+      this.log.error(`Operation with ID ${id} is already tracked!`);
+      return;
+    }
+
+    this.trackedOperations.set(id, {
+      startAt: Date.now().toString(),
+      operation: operation,
+    });
+  }
+
+  /**
+   * Remove operation added with `addTrackedOperation`.
+   * If called with non-existent operation - nothing happens.
+   *
+   * @param id unique id of the operation (use `uuid`)
+   */
+  private removeTrackedOperation(id: string): void {
+    this.trackedOperations.delete(id);
+  }
+
+  /**
+   * Get block data from the ledger using the cacti connector.
+   *
+   * @returns Full block data including transactions (`CactiBlockFullEventV1`)
+   */
+  private async getBlockFromLedger(
+    blockNumber: number,
+  ): Promise<CactiBlockFullEventV1> {
+    const response = await this.apiClient.getBlockV1({
+      channelName: this.channelName,
+      gatewayOptions: this.gatewayOptions,
+      query: {
+        blockNumber: blockNumber.toString(),
+      },
+      type: GetBlockResponseTypeV1.CactiFullBlock,
+    });
+
+    if (
+      response &&
+      response.status === 200 &&
+      "cactiFullEvents" in response.data
+    ) {
+      return response.data.cactiFullEvents;
+    } else {
+      throw new Error(
+        `Could not get block with number ${blockNumber} from the ledger`,
+      );
+    }
+  }
+
+  /**
+   * Get chain info from the ledger using the cacti connector.
+   *
+   * @returns chain information (including current height and block hash)
+   */
+  private async getChainInfoFromLedger(): Promise<GetChainInfoResponseV1> {
+    const response = await this.apiClient.getChainInfoV1({
+      channelName: this.channelName,
+      gatewayOptions: this.gatewayOptions,
+    });
+
+    if (response && response.status === 200) {
+      return response.data;
+    } else {
+      throw new Error("Could not get chain information from the ledger");
+    }
   }
 
   /**
@@ -93,31 +196,98 @@ export class PluginPersistenceFabric
 
       try {
         this.lastSeenBlock = block.blockNumber;
-        await this.parseAndStoreBlockData(block);
+        await this.dbClient.insertBlockData(block);
       } catch (error: unknown) {
         this.log.warn(
           `Could not add new block #${block.blockNumber}, error:`,
           error,
         );
-        // this.addFailedBlock(blockNumber);
+        this.addFailedBlock(block.blockNumber);
       }
 
-      // const isGap = blockNumber - previousBlockNumber > 1;
-      // if (isGap) {
-      //   const gapFrom = previousBlockNumber + 1;
-      //   const gapTo = blockNumber - 1;
-      //   try {
-      //     await this.syncBlocks(gapFrom, gapTo);
-      //   } catch (error: unknown) {
-      //     this.log.warn(
-      //       `Could not sync blocks in a gap between #${gapFrom} and #${gapTo}, error:`,
-      //       error,
-      //     );
-      //     for (let i = gapFrom; i < gapTo; i++) {
-      //       this.addFailedBlock(i);
-      //     }
-      //   }
-      // }
+      const isGap = block.blockNumber - previousBlockNumber > 1;
+      if (isGap) {
+        const gapFrom = previousBlockNumber + 1;
+        const gapTo = block.blockNumber - 1;
+        try {
+          await this.syncBlocks(gapFrom, gapTo);
+        } catch (error: unknown) {
+          this.log.warn(
+            `Could not sync blocks in a gap between #${gapFrom} and #${gapTo}, error:`,
+            error,
+          );
+          for (let i = gapFrom; i < gapTo; i++) {
+            this.addFailedBlock(i);
+          }
+        }
+      }
+    });
+  }
+
+  /**
+   * Add a block to failed blocks list.
+   * This method first ensures that the block is not present in the database.
+   * If it's not, new block is added to failed blocks and the plugin is out of sync.
+   * Failed blocks can be retried again with `syncFailedBlocks()` method.
+   *
+   * @param blockNumber block number to be added to failed blocks list.
+   */
+  private async addFailedBlock(blockNumber: number) {
+    try {
+      const block = await this.dbClient.getBlock(blockNumber);
+      if ((block.number as unknown as string) !== blockNumber.toString()) {
+        throw new Error("Invalid response from the DB");
+      }
+      this.log.debug(
+        `Block #${blockNumber} already present in DB - remove from the failed pool.`,
+      );
+      this.failedBlocks.delete(blockNumber);
+    } catch (error: unknown) {
+      this.log.info(
+        `Block #${blockNumber} not found in the DB - add to the failed blocks pool.`,
+      );
+      this.log.debug("getBlock() error message:", error);
+      this.failedBlocks.add(blockNumber);
+    }
+  }
+
+  /**
+   * Synchronize blocks in specified range.
+   * Only the blocks not already present in the database from specified range will be pushed.
+   *
+   * @warn This operation can take a long time to finish if you specify a wide range!
+   *
+   * @param startBlockNumber starting block number (including)
+   * @param endBlockNumber ending block number (including)
+   */
+  private async syncBlocks(
+    startBlockNumber: number,
+    endBlockNumber: number,
+  ): Promise<void> {
+    // Only one block synchronization can run at a time to prevent data race.
+    await this.syncBlocksMutex.runExclusive(async () => {
+      this.log.info(
+        "Synchronize blocks from",
+        startBlockNumber,
+        "to",
+        endBlockNumber,
+      );
+
+      const missingBlockNumbers = await this.dbClient.getMissingBlocksInRange(
+        startBlockNumber,
+        endBlockNumber,
+      );
+      this.log.error("MISSING:", missingBlockNumbers);
+
+      for (const n of missingBlockNumbers.map((r: any) => r.block_number)) {
+        try {
+          const block = await this.getBlockFromLedger(n);
+          await this.dbClient.insertBlockData(block);
+        } catch (error: unknown) {
+          this.log.warn(`Could not synchronize block #${n}, error:`, error);
+          this.addFailedBlock(n);
+        }
+      }
     });
   }
 
@@ -226,14 +396,15 @@ export class PluginPersistenceFabric
    *
    * @param onError callback method that will be called on error.
    */
-  public async startMonitor(
-    wbConfig: any,
-    onError?: (err: unknown) => void,
-  ): Promise<void> {
+  public async startMonitor(onError?: (err: unknown) => void): Promise<void> {
     // Synchronize the current DB state
-    // this.lastSeenBlock = await this.syncAll();
+    this.lastSeenBlock = await this.syncAll();
 
-    const blocksObservable = this.apiClient.watchBlocksV1(wbConfig);
+    const blocksObservable = this.apiClient.watchBlocksV1({
+      channelName: this.channelName,
+      gatewayOptions: this.gatewayOptions,
+      type: WatchBlocksListenerTypeV1.CactusFullBlock,
+    });
 
     if (!blocksObservable) {
       throw new Error(
@@ -293,43 +464,67 @@ export class PluginPersistenceFabric
   }
 
   /**
-   * TODO
-   * Parse entire block data, detect possible token transfer operations and store the new block data to the database.
-   * Note: token balances are not updated.
-   *
-   * @param block `web3.js` block object.
-   */
-  public async parseAndStoreBlockData(
-    block: CactiBlockFullEventV1,
-  ): Promise<void> {
-    try {
-      await this.dbClient.insertBlockData(block);
-    } catch (error: unknown) {
-      const message = `Parsing block #${block.blockNumber} failed: ${error}`;
-      this.log.error(message);
-      throw new Error(message);
-    }
-  }
-
-  /**
    * Walk through all the blocks that could not be synchronized with the DB for some reasons and try pushing them again.
    * Blocks will remain on "failed blocks" list until it's successfully pushed to the database.
+   * We can't calculate token balances until all failed blocks are pushed to the server (plugin will remain out of sync until then).
+   *
+   * @todo Add automatic tests for this method.
    *
    * @returns list of restored blocks
    */
   public async syncFailedBlocks(): Promise<number[]> {
-    throw new Error("Not implemented yet");
+    const blocksRestored: number[] = [];
+    const operationId = uuidv4();
+    this.addTrackedOperation(operationId, "syncFailedBlocks");
+
+    try {
+      for (const n of this.failedBlocks) {
+        try {
+          const block = await this.getBlockFromLedger(n);
+          await this.dbClient.insertBlockData(block);
+          this.failedBlocks.delete(n);
+          blocksRestored.push(n);
+        } catch (error: unknown) {
+          this.log.warn(`Could not sync failed block #${n}, error:`, error);
+        }
+      }
+
+      if (blocksRestored) {
+        this.log.info("Restored following failed blocks:", blocksRestored);
+      }
+    } finally {
+      this.removeTrackedOperation(operationId);
+    }
+
+    return blocksRestored;
   }
 
   /**
    * Synchronize entire ledger state with the database.
    * - Synchronize all blocks that failed to synchronize until now.
    * - Detect any other missing blocks between the database and the ledger, push them to the DB.
+   * - Update the token balances if the database is in sync.
    *
    * @warn This operation can take a long time to finish!
    * @returns latest synchronized block number.
    */
   public async syncAll(): Promise<number> {
-    throw new Error("Not implemented yet");
+    const operationId = uuidv4();
+    this.addTrackedOperation(operationId, "syncAll");
+
+    try {
+      this.log.info("syncAll() started...");
+
+      await this.syncFailedBlocks();
+
+      const { height } = await this.getChainInfoFromLedger();
+      const latestBlock = height - 1; // Height points to next block, not the latest
+
+      await this.syncBlocks(1, latestBlock);
+
+      return latestBlock;
+    } finally {
+      this.removeTrackedOperation(operationId);
+    }
   }
 }

@@ -61,6 +61,25 @@ export interface StatusResponseV1 {
      */
     'webServicesRegistered': boolean;
 }
+/**
+ * Persistence plugin operation that is tracked and returned in status report.
+ * @export
+ * @interface TrackedOperationV1
+ */
+export interface TrackedOperationV1 {
+    /**
+     * Start time of the operation.
+     * @type {string}
+     * @memberof TrackedOperationV1
+     */
+    'startAt': string;
+    /**
+     * Operation name.
+     * @type {string}
+     * @memberof TrackedOperationV1
+     */
+    'operation': string;
+}
 
 /**
  * DefaultApi - axios parameter creator

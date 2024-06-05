@@ -1150,6 +1150,56 @@ export type GetBlockResponseTypeV1 = typeof GetBlockResponseTypeV1[keyof typeof 
 export type GetBlockResponseV1 = CactiBlockFullResponseV1 | CactiBlockTransactionsResponseV1 | GetBlockResponseDecodedV1 | GetBlockResponseEncodedV1;
 
 /**
+ * Request for GetChainInfo endpoint.
+ * @export
+ * @interface GetChainInfoRequestV1
+ */
+export interface GetChainInfoRequestV1 {
+    /**
+     * Fabric channel which we want to query.
+     * @type {string}
+     * @memberof GetChainInfoRequestV1
+     */
+    'channelName': string;
+    /**
+     * Fabric channel we want to connect to. If not provided, then one from channelName parameter will be used
+     * @type {string}
+     * @memberof GetChainInfoRequestV1
+     */
+    'connectionChannelName'?: string;
+    /**
+     * 
+     * @type {GatewayOptions}
+     * @memberof GetChainInfoRequestV1
+     */
+    'gatewayOptions': GatewayOptions;
+}
+/**
+ * Response from GetChainInfo endpoint.
+ * @export
+ * @interface GetChainInfoResponseV1
+ */
+export interface GetChainInfoResponseV1 {
+    /**
+     * Current height of fabric ledger
+     * @type {number}
+     * @memberof GetChainInfoResponseV1
+     */
+    'height': number;
+    /**
+     * Current block hash of fabric ledger
+     * @type {string}
+     * @memberof GetChainInfoResponseV1
+     */
+    'currentBlockHash': string;
+    /**
+     * Previous block hash of fabric ledger
+     * @type {string}
+     * @memberof GetChainInfoResponseV1
+     */
+    'previousBlockHash': string;
+}
+/**
  * 
  * @export
  * @interface GetTransactionReceiptResponse
@@ -1832,6 +1882,40 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * 
+         * @summary Get fabric ledger chain info.
+         * @param {GetChainInfoRequestV1} [getChainInfoRequestV1] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getChainInfoV1: async (getChainInfoRequestV1?: GetChainInfoRequestV1, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/v1/plugins/@hyperledger/cactus-plugin-ledger-connector-fabric/get-chain-info`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(getChainInfoRequestV1, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @summary Get the Prometheus Metrics
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -2013,6 +2097,17 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
+         * @summary Get fabric ledger chain info.
+         * @param {GetChainInfoRequestV1} [getChainInfoRequestV1] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getChainInfoV1(getChainInfoRequestV1?: GetChainInfoRequestV1, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GetChainInfoResponseV1>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getChainInfoV1(getChainInfoRequestV1, options);
+            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+        },
+        /**
+         * 
          * @summary Get the Prometheus Metrics
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -2093,6 +2188,16 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          */
         getBlockV1(getBlockRequestV1?: GetBlockRequestV1, options?: any): AxiosPromise<GetBlockResponseV1> {
             return localVarFp.getBlockV1(getBlockRequestV1, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Get fabric ledger chain info.
+         * @param {GetChainInfoRequestV1} [getChainInfoRequestV1] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getChainInfoV1(getChainInfoRequestV1?: GetChainInfoRequestV1, options?: any): AxiosPromise<GetChainInfoResponseV1> {
+            return localVarFp.getChainInfoV1(getChainInfoRequestV1, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -2177,6 +2282,18 @@ export class DefaultApi extends BaseAPI {
      */
     public getBlockV1(getBlockRequestV1?: GetBlockRequestV1, options?: AxiosRequestConfig) {
         return DefaultApiFp(this.configuration).getBlockV1(getBlockRequestV1, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Get fabric ledger chain info.
+     * @param {GetChainInfoRequestV1} [getChainInfoRequestV1] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public getChainInfoV1(getChainInfoRequestV1?: GetChainInfoRequestV1, options?: AxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).getChainInfoV1(getChainInfoRequestV1, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

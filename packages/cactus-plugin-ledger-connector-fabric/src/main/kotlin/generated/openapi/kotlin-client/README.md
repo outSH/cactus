@@ -47,6 +47,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**deployContractGoSourceV1**](docs/DefaultApi.md#deploycontractgosourcev1) | **POST** /api/v1/plugins/@hyperledger/cactus-plugin-ledger-connector-fabric/deploy-contract-go-source | Deploys a chaincode contract in the form of a go sources.
 *DefaultApi* | [**deployContractV1**](docs/DefaultApi.md#deploycontractv1) | **POST** /api/v1/plugins/@hyperledger/cactus-plugin-ledger-connector-fabric/deploy-contract | Deploys a chaincode contract from a set of source files. Note: This endpoint only supports Fabric 2.x. The 'v1' suffix in the method name refers to the Cactus API version, not the supported Fabric ledger version.
 *DefaultApi* | [**getBlockV1**](docs/DefaultApi.md#getblockv1) | **POST** /api/v1/plugins/@hyperledger/cactus-plugin-ledger-connector-fabric/get-block | Get block from the channel using one of selectors from the input. Works only on Fabric 2.x.
+*DefaultApi* | [**getChainInfoV1**](docs/DefaultApi.md#getchaininfov1) | **POST** /api/v1/plugins/@hyperledger/cactus-plugin-ledger-connector-fabric/get-chain-info | Get fabric ledger chain info.
 *DefaultApi* | [**getPrometheusMetricsV1**](docs/DefaultApi.md#getprometheusmetricsv1) | **GET** /api/v1/plugins/@hyperledger/cactus-plugin-ledger-connector-fabric/get-prometheus-exporter-metrics | Get the Prometheus Metrics
 *DefaultApi* | [**getTransactionReceiptByTxIDV1**](docs/DefaultApi.md#gettransactionreceiptbytxidv1) | **POST** /api/v1/plugins/@hyperledger/cactus-plugin-ledger-connector-fabric/get-transaction-receipt-by-txid | get a transaction receipt by tx id on a Fabric ledger.
 *DefaultApi* | [**runDelegatedSignTransactionV1**](docs/DefaultApi.md#rundelegatedsigntransactionv1) | **POST** /api/v1/plugins/@hyperledger/cactus-plugin-ledger-connector-fabric/run-delegated-sign-transaction | Runs a transaction on a Fabric ledger using user-provided signing callback.
@@ -95,6 +96,8 @@ Class | Method | HTTP request | Description
  - [org.openapitools.client.models.GetBlockResponseEncodedV1](docs/GetBlockResponseEncodedV1.md)
  - [org.openapitools.client.models.GetBlockResponseTypeV1](docs/GetBlockResponseTypeV1.md)
  - [org.openapitools.client.models.GetBlockResponseV1](docs/GetBlockResponseV1.md)
+ - [org.openapitools.client.models.GetChainInfoRequestV1](docs/GetChainInfoRequestV1.md)
+ - [org.openapitools.client.models.GetChainInfoResponseV1](docs/GetChainInfoResponseV1.md)
  - [org.openapitools.client.models.GetTransactionReceiptResponse](docs/GetTransactionReceiptResponse.md)
  - [org.openapitools.client.models.RunDelegatedSignTransactionRequest](docs/RunDelegatedSignTransactionRequest.md)
  - [org.openapitools.client.models.RunTransactionRequest](docs/RunTransactionRequest.md)

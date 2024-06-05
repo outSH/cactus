@@ -101,3 +101,30 @@ CREATE TABLE fabric.transaction_action_endorsement (
 
 
 ALTER TABLE fabric.transaction_action_endorsement OWNER TO postgres;
+
+
+-- FUNCTION: fabric.get_missing_blocks_in_range(integer, integer)
+
+-- DROP FUNCTION IF EXISTS fabric.get_missing_blocks_in_range(integer, integer);
+
+CREATE OR REPLACE FUNCTION fabric.get_missing_blocks_in_range(
+  start_number integer,
+  end_number integer)
+RETURNS TABLE(block_number integer)
+LANGUAGE 'plpgsql'
+COST 100
+VOLATILE PARALLEL UNSAFE
+ROWS 1000
+AS $BODY$
+BEGIN
+  RETURN query
+    SELECT series AS block_number
+    FROM generate_series(start_number, end_number, 1) series
+    LEFT JOIN fabric.block ON series = block.number
+    WHERE block.number IS NULL;
+END;
+$BODY$;
+
+ALTER FUNCTION fabric.get_missing_blocks_in_range(integer, integer)
+    OWNER TO postgres;
+

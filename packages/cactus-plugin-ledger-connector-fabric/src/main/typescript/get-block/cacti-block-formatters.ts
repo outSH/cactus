@@ -1,4 +1,3 @@
-import Long from "long";
 import { BinaryLike, X509Certificate } from "crypto";
 
 import {
@@ -15,19 +14,11 @@ import {
   FullBlockTransactionEndorsementV1,
   FullBlockTransactionEventV1,
 } from "../generated/openapi/typescript-axios";
+import { fabricLongToNumber } from "../common/utils";
 
 const level = "INFO";
 const label = "cacti-block-formatters";
 const log = LoggerProvider.getOrCreate({ level, label });
-
-function longToNumber(longNumberObject: any) {
-  const longValue = new Long(
-    longNumberObject.low,
-    longNumberObject.hight,
-    longNumberObject.unsigned,
-  );
-  return longValue.toNumber();
-}
 
 function parseX509CertToObject(
   certBuffer: BinaryLike,
@@ -104,7 +95,7 @@ export function formatCactiFullBlockResponse(
         timestamp: channelHeader.timestamp,
         protocolVersion: channelHeader.version,
         type: channelHeader.typeString,
-        epoch: longToNumber(channelHeader.epoch),
+        epoch: fabricLongToNumber(channelHeader.epoch),
         actions: transactionActions,
       });
     } catch (error) {
@@ -117,7 +108,7 @@ export function formatCactiFullBlockResponse(
 
   return {
     cactiFullEvents: {
-      blockNumber: longToNumber(blockEvent.header?.number),
+      blockNumber: fabricLongToNumber(blockEvent.header?.number),
       blockHash:
         "0x" + Buffer.from(blockEvent.header?.data_hash as any).toString("hex"),
       previousBlockHash:
