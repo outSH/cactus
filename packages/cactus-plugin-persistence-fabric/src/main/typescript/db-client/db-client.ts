@@ -11,6 +11,9 @@ import {
 import {
   CactiBlockFullEventV1,
   FabricX509CertificateV1,
+  FullBlockTransactionActionV1,
+  FullBlockTransactionEndorsementV1,
+  FullBlockTransactionEventV1,
 } from "@hyperledger/cactus-plugin-ledger-connector-fabric/src/main/typescript/generated/openapi/typescript-axios/api";
 
 import { Client as PostgresClient } from "pg";
@@ -54,17 +57,6 @@ export default class PostgresDatabaseClient {
   }
 
   /**
-   * Internal method that throws if postgres client is not connected yet.
-   */
-  private assertConnected(): void {
-    if (!this.isConnected) {
-      throw new Error(
-        `${PostgresDatabaseClient.CLASS_NAME} method called before connecting to the DB!`,
-      );
-    }
-  }
-
-  /**
    * Connect to a PostgreSQL database using connection string from the constructor.
    */
   public async connect(): Promise<void> {
@@ -82,6 +74,24 @@ export default class PostgresDatabaseClient {
     this.isConnected = false;
   }
 
+  /**
+   * Internal method that throws if postgres client is not connected yet.
+   */
+  private assertConnected(): void {
+    if (!this.isConnected) {
+      throw new Error(
+        `${PostgresDatabaseClient.CLASS_NAME} method called before connecting to the DB!`,
+      );
+    }
+  }
+
+  /**
+   * Convert certificate subject attributes to map, throw if string is invalid.
+   *
+   * @param attrString cert subject
+   *
+   * @returns Map of cert attributes
+   */
   private certificateAttrsStringToMap(attrString: string): Map<string, string> {
     return new Map(
       attrString.split("\n").map((a) => {
@@ -96,6 +106,14 @@ export default class PostgresDatabaseClient {
     );
   }
 
+  /**
+   * Search for certifciate object in database using it's serial number.
+   * If it's not found, insert.
+   *
+   * @param fabricCert fabric x.509 certificate
+   *
+   * @returns certificate ID in the DB.
+   */
   private async insertCertificateIfNotExists(
     fabricCert: FabricX509CertificateV1,
   ): Promise<string> {
@@ -154,8 +172,127 @@ export default class PostgresDatabaseClient {
   }
 
   /**
-   * TODO
-   * Insert entire block data into the database (the block itself, transactions and token transfers if there were any).
+   * Insert data to block table.
+   */
+  private async insertToBlockTable(
+    block: CactiBlockFullEventV1,
+  ): Promise<string> {
+    this.log.debug(
+      `Insert to fabric.block #${block.blockNumber} (${block.blockHash})`,
+    );
+    const blockInsertResponse = await this.client.query(
+      `INSERT INTO fabric.block("number", "hash", "transaction_count")
+         VALUES ($1, $2, $3)
+         RETURNING id;`,
+      [block.blockNumber, block.blockHash, block.transactionCount],
+    );
+    if (blockInsertResponse.rowCount !== 1) {
+      throw new Error(
+        `Block ${block.blockNumber} was not inserted into the DB`,
+      );
+    }
+
+    return blockInsertResponse.rows[0].id;
+  }
+
+  /**
+   * Insert data to transaction table.
+   */
+  private async insertToTransactionTable(
+    tx: FullBlockTransactionEventV1,
+    blockId: string,
+    blockNumber: number,
+  ): Promise<string> {
+    this.log.debug(`Insert to fabric.transaction with hash ${tx.hash})`);
+
+    const txInsertResponse = await this.client.query(
+      `INSERT INTO
+          fabric.transaction("hash", "timestamp", "type", "epoch", "channel_id", "protocol_version", "block_id", "block_number")
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+         RETURNING id;`,
+      [
+        tx.hash,
+        tx.timestamp,
+        tx.type,
+        tx.epoch,
+        tx.channelId,
+        tx.protocolVersion,
+        blockId,
+        blockNumber,
+      ],
+    );
+    if (txInsertResponse.rowCount !== 1) {
+      throw new Error(`Transaction ${tx.hash} was not inserted into the DB`);
+    }
+
+    return txInsertResponse.rows[0].id;
+  }
+
+  /**
+   * Insert data to transaction_action table.
+   */
+  private async insertToTransactionActionTable(
+    action: FullBlockTransactionActionV1,
+    txId: string,
+  ): Promise<string> {
+    const creatorCertId = await this.insertCertificateIfNotExists(
+      action.creator.cert,
+    );
+
+    this.log.debug("Insert to fabric.transaction_action");
+    const txActionInsertResponse = await this.client.query(
+      `INSERT INTO
+          fabric.transaction_action("function_name", "function_args", "chaincode_id", "creator_msp_id", "creator_certificate_id", "transaction_id")
+         VALUES ($1, $2, $3, $4, $5, $6)
+         RETURNING id;`,
+      [
+        action.functionName,
+        action.functionArgs.join(","),
+        action.chaincodeId,
+        action.creator.mspid,
+        creatorCertId,
+        txId,
+      ],
+    );
+    if (txActionInsertResponse.rowCount !== 1) {
+      throw new Error("Transaction action was not inserted into the DB");
+    }
+
+    return txActionInsertResponse.rows[0].id;
+  }
+
+  /**
+   * Insert data to transaction_action_endorsement table.
+   */
+  private async insertToTransactionActionEndorsementTable(
+    endorsement: FullBlockTransactionEndorsementV1,
+    txActionId: string,
+  ): Promise<void> {
+    const signerCertId = await this.insertCertificateIfNotExists(
+      endorsement.signer.cert,
+    );
+
+    this.log.debug("Insert to fabric.transaction_action_endorsement");
+    const txActionEndorsementInsertResponse = await this.client.query(
+      `INSERT INTO
+                  fabric.transaction_action_endorsement("mspid", "signature", "certificate_id", "transaction_action_id")
+                 VALUES ($1, $2, $3, $4);`,
+      [
+        endorsement.signer.mspid,
+        endorsement.signature,
+        signerCertId,
+        txActionId,
+      ],
+    );
+    if (txActionEndorsementInsertResponse.rowCount !== 1) {
+      throw new Error(
+        "Transaction action endorsement was not inserted into the DB",
+      );
+    }
+  }
+
+  /**
+   * Insert entire block data into the database (the block itself and transactions).
    * Everything is committed in single atomic transaction (rollback on error).
    * @param blockData new block data.
    */
@@ -167,99 +304,29 @@ export default class PostgresDatabaseClient {
     try {
       await this.client.query("BEGIN");
 
-      // Insert block
-      this.log.debug(
-        `Insert to fabric.block #${block.blockNumber} (${block.blockHash})`,
-      );
-      const blockInsertResponse = await this.client.query(
-        `INSERT INTO fabric.block("number", "hash", "transaction_count")
-           VALUES ($1, $2, $3)
-           RETURNING id;`,
-        [block.blockNumber, block.blockHash, block.transactionCount],
-      );
-      if (blockInsertResponse.rowCount !== 1) {
-        throw new Error(
-          `Block ${block.blockNumber} was not inserted into the DB`,
-        );
-      }
+      const blockId = await this.insertToBlockTable(block);
 
       for (const tx of block.cactiTransactionsEvents) {
         // Insert transaction
-        this.log.debug(`Insert to fabric.transaction with hash ${tx.hash})`);
-        const txInsertResponse = await this.client.query(
-          `INSERT INTO
-              fabric.transaction("hash", "timestamp", "type", "epoch", "channel_id", "protocol_version", "block_id", "block_number")
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-             RETURNING id;`,
-          [
-            tx.hash,
-            tx.timestamp,
-            tx.type,
-            tx.epoch,
-            tx.channelId,
-            tx.protocolVersion,
-            blockInsertResponse.rows[0].id,
-            block.blockNumber,
-          ],
+        const txId = await this.insertToTransactionTable(
+          tx,
+          blockId,
+          block.blockNumber,
         );
-        if (txInsertResponse.rowCount !== 1) {
-          throw new Error(
-            `Transaction ${tx.hash} was not inserted into the DB`,
-          );
-        }
-        const txId = txInsertResponse.rows[0].id;
-        this.log.debug("New transaction inserted with id", txId);
 
-        // Insert transaction actions
         for (const action of tx.actions) {
-          const creatorCertId = await this.insertCertificateIfNotExists(
-            action.creator.cert,
+          // Insert transaction actions
+          const txActionId = await this.insertToTransactionActionTable(
+            action,
+            txId,
           );
-
-          this.log.debug("Insert to fabric.transaction_action");
-          const txActionInsertResponse = await this.client.query(
-            `INSERT INTO
-                fabric.transaction_action("function_name", "function_args", "chaincode_id", "creator_msp_id", "creator_certificate_id", "transaction_id")
-               VALUES ($1, $2, $3, $4, $5, $6)
-               RETURNING id;`,
-            [
-              action.functionName,
-              action.functionArgs.join(","),
-              action.chaincodeId,
-              action.creator.mspid,
-              creatorCertId,
-              txId,
-            ],
-          );
-          if (txActionInsertResponse.rowCount !== 1) {
-            throw new Error("Transaction action was not inserted into the DB");
-          }
-          const txActionId = txActionInsertResponse.rows[0].id;
-          this.log.debug("New transaction action inserted with id", txActionId);
 
           for (const endorsement of action.endorsements) {
-            const signerCertId = await this.insertCertificateIfNotExists(
-              endorsement.signer.cert,
+            // Insert transaction action endorsements
+            await this.insertToTransactionActionEndorsementTable(
+              endorsement,
+              txActionId,
             );
-
-            this.log.debug("Insert to fabric.transaction_action_endorsement");
-            const txActionEndorsementInsertResponse = await this.client.query(
-              `INSERT INTO
-                  fabric.transaction_action_endorsement("mspid", "signature", "certificate_id", "transaction_action_id")
-                 VALUES ($1, $2, $3, $4);`,
-              [
-                endorsement.signer.mspid,
-                endorsement.signature,
-                signerCertId,
-                txActionId,
-              ],
-            );
-            if (txActionEndorsementInsertResponse.rowCount !== 1) {
-              throw new Error(
-                "Transaction action endorsement was not inserted into the DB",
-              );
-            }
-            this.log.debug("New transaction action endorsement inserted");
           }
         }
       }
