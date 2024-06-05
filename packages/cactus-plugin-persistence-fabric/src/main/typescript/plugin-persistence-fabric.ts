@@ -14,7 +14,10 @@ import type {
   ICactusPlugin,
   ICactusPluginOptions,
 } from "@hyperledger/cactus-core-api";
-import { FabricApiClient } from "@hyperledger/cactus-plugin-ledger-connector-fabric";
+import {
+  CactiBlockFullEventV1,
+  FabricApiClient,
+} from "@hyperledger/cactus-plugin-ledger-connector-fabric";
 
 import OAS from "../json/openapi.json";
 import { StatusEndpointV1 } from "./web-services/status-endpoint-v1";
@@ -22,6 +25,7 @@ import PostgresDatabaseClient from "./db-client/db-client";
 import { StatusResponseV1 } from "./generated/openapi/typescript-axios";
 import type { Express } from "express";
 import type { Subscription } from "rxjs";
+import { Mutex } from "async-mutex";
 
 /**
  * Constructor parameter for Fabric persistence plugin.
@@ -47,7 +51,9 @@ export class PluginPersistenceFabric
   private dbClient: PostgresDatabaseClient;
   private log: Logger;
   private isConnected = false;
+  private pushBlockMutex = new Mutex();
   private isWebServicesRegistered = false;
+  private lastSeenBlock = 0;
   private endpoints: IWebServiceEndpoint[] | undefined;
 
   constructor(public readonly options: IPluginPersistenceFabricOptions) {
@@ -73,6 +79,48 @@ export class PluginPersistenceFabric
     });
   }
 
+  /**
+   * Parse and push a new block received from the connector.
+   * Gap between last seen block and current one is checked and missing blocks are filled when necessary.
+   *
+   * @param block Full fabric block summary (`CactiBlockFullEventV1`)
+   */
+  private async pushNewBlock(block: CactiBlockFullEventV1): Promise<void> {
+    // Push one block at a time, in case previous block is still being processed
+    // (example: filling the gap takes longer than expected)
+    await this.pushBlockMutex.runExclusive(async () => {
+      const previousBlockNumber = this.lastSeenBlock;
+
+      try {
+        this.lastSeenBlock = block.blockNumber;
+        await this.parseAndStoreBlockData(block);
+      } catch (error: unknown) {
+        this.log.warn(
+          `Could not add new block #${block.blockNumber}, error:`,
+          error,
+        );
+        // this.addFailedBlock(blockNumber);
+      }
+
+      // const isGap = blockNumber - previousBlockNumber > 1;
+      // if (isGap) {
+      //   const gapFrom = previousBlockNumber + 1;
+      //   const gapTo = blockNumber - 1;
+      //   try {
+      //     await this.syncBlocks(gapFrom, gapTo);
+      //   } catch (error: unknown) {
+      //     this.log.warn(
+      //       `Could not sync blocks in a gap between #${gapFrom} and #${gapTo}, error:`,
+      //       error,
+      //     );
+      //     for (let i = gapFrom; i < gapTo; i++) {
+      //       this.addFailedBlock(i);
+      //     }
+      //   }
+      // }
+    });
+  }
+
   public getInstanceId(): string {
     return this.instanceId;
   }
@@ -95,13 +143,22 @@ export class PluginPersistenceFabric
    * Fetches tokens to be monitored and stores them in local memory.
    */
   public async onPluginInit(): Promise<void> {
-    throw new Error("Not implemented yet");
+    await this.dbClient.connect();
+    // await this.dbClient.initializePlugin(
+    //   PluginPersistenceEthereum.CLASS_NAME,
+    //   this.instanceId,
+    // );
+    this.isConnected = true;
   }
 
   /**
    * Close the connection to the DB, cleanup any allocated resources.
    */
-  public async shutdown(): Promise<void> {}
+  public async shutdown(): Promise<void> {
+    this.stopMonitor();
+    await this.dbClient.shutdown();
+    this.isConnected = false;
+  }
 
   /**
    * Register all the plugin endpoints on supplied `Express` server.
@@ -189,13 +246,12 @@ export class PluginPersistenceFabric
         try {
           this.log.debug("Received new block.");
 
-          if (!event) {
+          if (!event || !("cactiFullEvents" in event)) {
             this.log.warn("Received invalid block ledger event:", event);
             return;
           }
 
-          this.log.error("BLOCK:", JSON.stringify(event));
-          // await this.pushNewBlock(event.blockData);
+          await this.pushNewBlock(event.cactiFullEvents);
         } catch (error: unknown) {
           this.log.error("Unexpected error when pushing new block:", error);
         }
@@ -233,6 +289,25 @@ export class PluginPersistenceFabric
       this.watchBlocksSubscription.unsubscribe();
       this.watchBlocksSubscription = undefined;
       this.log.info("stopMonitor(): Done.");
+    }
+  }
+
+  /**
+   * TODO
+   * Parse entire block data, detect possible token transfer operations and store the new block data to the database.
+   * Note: token balances are not updated.
+   *
+   * @param block `web3.js` block object.
+   */
+  public async parseAndStoreBlockData(
+    block: CactiBlockFullEventV1,
+  ): Promise<void> {
+    try {
+      await this.dbClient.insertBlockData(block);
+    } catch (error: unknown) {
+      const message = `Parsing block #${block.blockNumber} failed: ${error}`;
+      this.log.error(message);
+      throw new Error(message);
     }
   }
 
