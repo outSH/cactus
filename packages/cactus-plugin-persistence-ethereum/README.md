@@ -171,6 +171,15 @@ To run all the tests for this persistence plugin to ensure it's working correctl
 npx jest cactus-plugin-persistence-ethereum
 ```
 
+### Manual test
+
+You can use `sample-persistence-plugin-setup.js` script to perform full end-to-end test of the persistence plugin.
+
+```sh
+SUPABASE_CONNECTION_STRING="<connection-string-to-supabase>" node packages/cactus-plugin-persistence-ethereum/dist/lib/test/typescript/manual/sample-persistence-plugin-setup.js
+# Or use ts-node / tsx to run typescript file directly.
+```
+
 ## Contributing
 
 We welcome contributions to Hyperledger Cactus in many forms, and there’s always plenty to do!

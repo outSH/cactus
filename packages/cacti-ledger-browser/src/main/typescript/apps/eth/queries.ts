@@ -3,8 +3,8 @@
  * @todo Move to separate directory if this file becomes too complex.
  */
 
+import { createClient } from "@supabase/supabase-js";
 import { queryOptions } from "@tanstack/react-query";
-import { supabase, supabaseQueryKey } from "../../common/supabase-client";
 import {
   Transaction,
   Block,
@@ -12,6 +12,16 @@ import {
   TokenMetadata721,
   TokenERC20,
 } from "../../common/supabase-types";
+
+// TODO - Configure for an app
+const supabaseQueryKey = "supabase:ethereum";
+const supabaseUrl = "http://localhost:8000";
+const supabaseKey =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJhbm9uIiwKICAgICJpc3MiOiAic3VwYWJhc2UtZGVtbyIsCiAgICAiaWF0IjogMTY0MTc2OTIwMCwKICAgICJleHAiOiAxNzk5NTM1NjAwCn0.dc_X5iR_VP_qT0zsiyj_I_OZ2T9FtRU2BBNWN8Bu4GE";
+
+export const supabase = createClient(supabaseUrl, supabaseKey, {
+  schema: "ethereum",
+});
 
 function createQueryKey(
   tableName: string,

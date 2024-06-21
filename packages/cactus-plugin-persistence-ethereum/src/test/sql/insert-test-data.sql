@@ -1,6 +1,6 @@
 -- Sample test input for ethereum GUI. Can be used to check the views manually without running the persistence plugin first.
 INSERT INTO
-  block
+  ethereum.block
 VALUES
   (
     '15690287',
@@ -53,7 +53,7 @@ VALUES
   );
 
 INSERT INTO
-  token_metadata_erc721
+  ethereum.token_metadata_erc721
 VALUES
   (
     '0x44D39e215C112c5AEC6a733d691B464aa62b3F85',
@@ -81,7 +81,7 @@ VALUES
   );
 
 INSERT INTO
-  token_metadata_erc20
+  ethereum.token_metadata_erc20
 VALUES
   (
     '0x514910771AF9Ca656af840dff83E8264EcF986CA',
@@ -113,7 +113,7 @@ VALUES
   );
 
 INSERT INTO
-  token_erc721
+  ethereum.token_erc721
 VALUES
   (
     extensions.uuid_generate_v4(),
@@ -145,7 +145,7 @@ VALUES
   );
 
 INSERT INTO
-  transaction
+  ethereum.transaction
 VALUES
   (
     '4c969755-3ea2-4ea9-983f-419e7d49d36f',
@@ -226,7 +226,7 @@ VALUES
   );
 
 INSERT INTO
-  token_transfer
+  ethereum.token_transfer
 VALUES
   (
     extensions.uuid_generate_v4(),
