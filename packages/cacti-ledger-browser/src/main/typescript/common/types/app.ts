@@ -22,15 +22,18 @@ export interface GetStatusResponse {
   status: AppStatus;
 }
 
-export interface AppConfigOptions {
+export interface AppConfigPersistencePluginOptions {
   instanceName: string;
   description: string | undefined;
   path: string;
+  supabaseSchema: string;
+  supabaseUrl: string;
+  supabaseKey: string;
 }
 
-export interface AppConfig {
+export interface AppConfig<T = any> {
   appName: string;
-  options: AppConfigOptions;
+  options: T;
   menuEntries: AppConfigMenuEntry[];
   routes: RouteObject[];
   useAppStatus: () => GetStatusResponse;

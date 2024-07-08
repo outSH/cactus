@@ -1,4 +1,9 @@
-import { useRoutes, BrowserRouter, RouteObject } from "react-router-dom";
+import {
+  useRoutes,
+  BrowserRouter,
+  RouteObject,
+  Outlet,
+} from "react-router-dom";
 import CssBaseline from "@mui/material/CssBaseline";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -11,6 +16,7 @@ import HomePage from "./pages/home/HomePage";
 import { AppConfig, AppListEntry } from "./common/types/app";
 import { patchAppRoutePath } from "./common/utils";
 import { NotificationProvider } from "./common/context/NotificationContext";
+import { appConfig } from "./common/config";
 
 type AppConfigProps = {
   appConfig: AppConfig[];
@@ -70,6 +76,7 @@ function getContentRoutes(appConfig: AppConfig[]) {
     return {
       key: app.options.path,
       path: app.options.path,
+      element: <Outlet context={app.options} />,
       children: app.routes.map((route) => {
         return {
           key: route.path,
@@ -84,7 +91,7 @@ function getContentRoutes(appConfig: AppConfig[]) {
   // Include landing / welcome page
   appRoutes.push({
     index: true,
-    element: <HomePage />,
+    element: <HomePage appConfig={appConfig} />,
   });
 
   return useRoutes([
@@ -114,7 +121,7 @@ const theme = createTheme(themeOptions);
 // React Query client
 const queryClient = new QueryClient();
 
-const CactiLedgerBrowserApp: React.FC<AppConfigProps> = ({ appConfig }) => {
+const CactiLedgerBrowserApp = () => {
   return (
     <BrowserRouter>
       <ThemeProvider theme={theme}>

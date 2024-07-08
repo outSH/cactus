@@ -1,10 +1,14 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
-import { appConfig } from "../../common/config";
+import { AppConfig } from "../../common/types/app";
 import AppCard from "./AppCard";
 
-export default function HomePage() {
+type HomePageProps = {
+  appConfig: AppConfig[];
+};
+
+export default function HomePage({ appConfig }: HomePageProps) {
   return (
     <Box>
       <Typography variant="h5" color="secondary">

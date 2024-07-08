@@ -3,7 +3,7 @@
  * @todo Move to separate directory if this file becomes too complex.
  */
 
-import { createClient } from "@supabase/supabase-js";
+import { SupabaseClient, createClient } from "@supabase/supabase-js";
 import { queryOptions } from "@tanstack/react-query";
 import {
   FabricBlock,
@@ -12,15 +12,9 @@ import {
   FabricTransactionAction,
   FabricTransactionActionEndorsement,
 } from "./fabric-supabase-types";
+import { useFabricSupabaseConfig } from "./hooks";
 
-// TODO - Configure for an app
-const supabaseQueryKey = "supabase:fabric";
-const supabaseUrl = "http://localhost:8000";
-const supabaseKey =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJhbm9uIiwKICAgICJpc3MiOiAic3VwYWJhc2UtZGVtbyIsCiAgICAiaWF0IjogMTY0MTc2OTIwMCwKICAgICJleHAiOiAxNzk5NTM1NjAwCn0.dc_X5iR_VP_qT0zsiyj_I_OZ2T9FtRU2BBNWN8Bu4GE";
-export const supabase = createClient(supabaseUrl, supabaseKey, {
-  schema: "fabric",
-});
+let supabase: SupabaseClient | undefined;
 
 function createQueryKey(
   tableName: string,
@@ -29,12 +23,25 @@ function createQueryKey(
   return [tableName, { pagination }];
 }
 
+function useSupabaseClient(): [SupabaseClient, string] {
+  const supabaseConfig = useFabricSupabaseConfig();
+
+  if (!supabase) {
+    supabase = createClient(supabaseConfig.url, supabaseConfig.key, {
+      schema: supabaseConfig.schema,
+    });
+  }
+
+  return [supabase, `supabase:${supabaseConfig.schema}`];
+}
+
 /**
  * Get all recorded fabric blocks.
  * Returns `queryOptions` to be used as argument to `useQuery` from `react-query`.
  * Supports paging.
  */
 export function fabricAllBlocksQuery(page: number, pageSize: number) {
+  const [supabase, supabaseQueryKey] = useSupabaseClient();
   const fromIndex = page * pageSize;
   const toIndex = fromIndex + pageSize - 1;
   const tableName = "block";
@@ -64,6 +71,7 @@ export function fabricAllBlocksQuery(page: number, pageSize: number) {
  * Supports paging.
  */
 export function fabricAllTransactionsQuery(page: number, pageSize: number) {
+  const [supabase, supabaseQueryKey] = useSupabaseClient();
   const fromIndex = page * pageSize;
   const toIndex = fromIndex + pageSize - 1;
   const tableName = "transaction";
@@ -92,6 +100,7 @@ export function fabricAllTransactionsQuery(page: number, pageSize: number) {
  * Get transaction object form the database using it's hash.
  */
 export function fabricTransactionByHash(hash: string) {
+  const [supabase, supabaseQueryKey] = useSupabaseClient();
   const tableName = "transaction";
 
   return queryOptions({
@@ -123,6 +132,7 @@ export function fabricTransactionByHash(hash: string) {
  * Get transaction actions form the database using parent transaction id.
  */
 export function fabricTransactionActions(txId: string) {
+  const [supabase, supabaseQueryKey] = useSupabaseClient();
   const tableName = "transaction_action";
 
   return queryOptions({
@@ -148,6 +158,7 @@ export function fabricTransactionActions(txId: string) {
  * Get fabric certificate using it's ID.
  */
 export function fabricCertificate(id: string) {
+  const [supabase, supabaseQueryKey] = useSupabaseClient();
   const tableName = "certificate";
 
   return queryOptions({
@@ -179,6 +190,7 @@ export function fabricCertificate(id: string) {
  *  Get transaction action endorsements form the database using parent action id.
  */
 export function fabricActionEndorsements(actionId: string) {
+  const [supabase, supabaseQueryKey] = useSupabaseClient();
   const tableName = "transaction_action_endorsement";
 
   return queryOptions({
