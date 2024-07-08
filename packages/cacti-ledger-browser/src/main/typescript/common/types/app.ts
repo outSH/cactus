@@ -1,5 +1,6 @@
 import React from "react";
 import { RouteObject } from "react-router-dom";
+import { GuiAppConfig } from "../supabase-types";
 
 export interface AppListEntry {
   path: string;
@@ -28,7 +29,7 @@ export interface AppConfigPersistencePluginOptions {
   supabaseKey: string;
 }
 
-export interface AppConfig<T = any> {
+export interface AppConfig<T = unknown> {
   appName: string;
   instanceName: string;
   description: string | undefined;
@@ -39,3 +40,5 @@ export interface AppConfig<T = any> {
   useAppStatus: () => GetStatusResponse;
   StatusComponent: React.ReactElement;
 }
+
+export type CreateAppConfigFactoryType = (app: GuiAppConfig) => AppConfig;

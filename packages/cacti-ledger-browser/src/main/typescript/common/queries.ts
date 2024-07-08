@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { queryOptions } from "@tanstack/react-query";
-import { PluginStatus } from "./supabase-types";
+import { GuiAppConfig, PluginStatus } from "./supabase-types";
 
 const supabaseQueryKey = "supabase";
 const supabaseUrl = "http://localhost:8000";
@@ -36,6 +36,28 @@ export function persistencePluginStatus(name: string) {
       }
 
       return data.pop() as PluginStatus;
+    },
+  });
+}
+
+/**
+ * Get persistence plugin app config from the database.
+ */
+export function guiAppConfig() {
+  const tableName = "gui_app_config";
+
+  return queryOptions({
+    queryKey: [supabaseQueryKey, tableName],
+    queryFn: async () => {
+      const { data, error } = await supabase.from(tableName).select();
+
+      if (error) {
+        throw new Error(
+          `Could not get GUI App configuration: ${error.message}`,
+        );
+      }
+
+      return data as GuiAppConfig[];
     },
   });
 }

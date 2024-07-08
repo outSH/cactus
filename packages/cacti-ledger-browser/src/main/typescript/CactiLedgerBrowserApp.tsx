@@ -5,8 +5,13 @@ import {
   Outlet,
 } from "react-router-dom";
 import CssBaseline from "@mui/material/CssBaseline";
+import CircularProgress from "@mui/material/CircularProgress";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import {
+  QueryClient,
+  QueryClientProvider,
+  useQuery,
+} from "@tanstack/react-query";
 // import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 import { themeOptions } from "./theme";
@@ -16,11 +21,9 @@ import HomePage from "./pages/home/HomePage";
 import { AppConfig, AppListEntry } from "./common/types/app";
 import { patchAppRoutePath } from "./common/utils";
 import { NotificationProvider } from "./common/context/NotificationContext";
-import { appConfig } from "./common/config";
+import { guiAppConfig } from "./common/queries";
+import appConfigFactory from "./common/createAppConfig";
 
-type AppConfigProps = {
-  appConfig: AppConfig[];
-};
 
 /**
  * Get list of all apps from the config
@@ -103,17 +106,35 @@ function getContentRoutes(appConfig: AppConfig[]) {
   ]);
 }
 
-const App: React.FC<AppConfigProps> = ({ appConfig }) => {
+function App() {
+  const { isError, isPending, data, error } = useQuery(guiAppConfig());
+
+  if (isError) {
+    alert(`App config fetch error: ${error}`);
+  }
+
+  const appConfig = appConfigFactory(data);
+
   const headerRoutes = getHeaderBarRoutes(appConfig);
   const contentRoutes = getContentRoutes(appConfig);
 
   return (
     <div>
+      {isPending && (
+        <CircularProgress
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            zIndex: 9999,
+          }}
+        />
+      )}
       {headerRoutes}
       {contentRoutes}
     </div>
   );
-};
+}
 
 // MUI Theme
 const theme = createTheme(themeOptions);
@@ -121,20 +142,18 @@ const theme = createTheme(themeOptions);
 // React Query client
 const queryClient = new QueryClient();
 
-const CactiLedgerBrowserApp = () => {
+export default function CactiLedgerBrowserApp() {
   return (
     <BrowserRouter>
       <ThemeProvider theme={theme}>
         <QueryClientProvider client={queryClient}>
           <NotificationProvider>
             <CssBaseline />
-            <App appConfig={appConfig} />
+            <App />
             {/* <ReactQueryDevtools initialIsOpen={false} /> */}
           </NotificationProvider>
         </QueryClientProvider>
       </ThemeProvider>
     </BrowserRouter>
   );
-};
-
-export default CactiLedgerBrowserApp;
+}
