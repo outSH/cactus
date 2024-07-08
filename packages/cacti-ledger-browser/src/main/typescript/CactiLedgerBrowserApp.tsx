@@ -28,7 +28,7 @@ type AppConfigProps = {
 function getAppList(appConfig: AppConfig[]) {
   const appList: AppListEntry[] = appConfig.map((app) => {
     return {
-      path: app.options.path,
+      path: app.path,
       name: app.appName,
     };
   });
@@ -49,12 +49,12 @@ function getHeaderBarRoutes(appConfig: AppConfig[]) {
 
   const headerRoutesConfig = appConfig.map((app) => {
     return {
-      key: app.options.path,
-      path: `${app.options.path}/*`,
+      key: app.path,
+      path: `${app.path}/*`,
       element: (
         <HeaderBar
           appList={appList}
-          path={app.options.path}
+          path={app.path}
           menuEntries={app.menuEntries}
         />
       ),
@@ -74,13 +74,13 @@ function getHeaderBarRoutes(appConfig: AppConfig[]) {
 function getContentRoutes(appConfig: AppConfig[]) {
   const appRoutes: RouteObject[] = appConfig.map((app) => {
     return {
-      key: app.options.path,
-      path: app.options.path,
+      key: app.path,
+      path: app.path,
       element: <Outlet context={app.options} />,
       children: app.routes.map((route) => {
         return {
           key: route.path,
-          path: patchAppRoutePath(app.options.path, route.path),
+          path: patchAppRoutePath(app.path, route.path),
           element: route.element,
           children: route.children,
         };

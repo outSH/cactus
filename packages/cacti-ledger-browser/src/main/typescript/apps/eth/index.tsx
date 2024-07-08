@@ -11,11 +11,11 @@ import PersistencePluginStatus from "../../components/PersistencePluginStatus/Pe
 
 const ethConfig: AppConfig<AppConfigPersistencePluginOptions> = {
   appName: "Ethereum Browser",
+  instanceName: "Ethereum",
+  description:
+    "Applicaion for browsing Ethereum ledger blocks, transactions and tokens. Requires Ethereum persistence plugin to work correctly.",
+  path: "/eth",
   options: {
-    instanceName: "Ethereum",
-    description:
-      "Applicaion for browsing Ethereum ledger blocks, transactions and tokens. Requires Ethereum persistence plugin to work correctly.",
-    path: "/eth",
     supabaseSchema: "ethereum",
     supabaseUrl: "http://localhost:8000",
     supabaseKey:

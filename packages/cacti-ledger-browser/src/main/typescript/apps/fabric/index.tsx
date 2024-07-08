@@ -11,10 +11,6 @@ import { usePersistenceAppStatus } from "../../common/hook/use-persistence-app-s
 import PersistencePluginStatus from "../../components/PersistencePluginStatus/PersistencePluginStatus";
 
 const fabricOptions: AppConfigPersistencePluginOptions = {
-  instanceName: "Fabric",
-  description:
-    "Applicaion for browsing Hyperledger Fabric ledger blocks and transactions. Requires Fabric persistence plugin to work correctly.",
-  path: "/fabric",
   supabaseSchema: "fabric",
   supabaseUrl: "http://localhost:8000",
   supabaseKey:
@@ -23,6 +19,10 @@ const fabricOptions: AppConfigPersistencePluginOptions = {
 
 const fabricConfig: AppConfig<AppConfigPersistencePluginOptions> = {
   appName: "Hyperledger Fabric Browser",
+  instanceName: "Fabric",
+  description:
+    "Applicaion for browsing Hyperledger Fabric ledger blocks and transactions. Requires Fabric persistence plugin to work correctly.",
+  path: "/fabric",
   options: fabricOptions,
   menuEntries: [
     {

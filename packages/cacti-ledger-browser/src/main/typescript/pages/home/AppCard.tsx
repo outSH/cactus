@@ -98,7 +98,7 @@ export default function AppCard({ appConfig }: AppCardProps) {
     >
       <CardActionArea
         onClick={() => {
-          navigate(appConfig.options.path);
+          navigate(appConfig.path);
         }}
       >
         <CardContent
@@ -108,15 +108,13 @@ export default function AppCard({ appConfig }: AppCardProps) {
           }}
         >
           <Typography variant="h5" component="div" color="secondary.main">
-            {appConfig.options.instanceName}
+            {appConfig.instanceName}
           </Typography>
           <Typography sx={{ mb: 1.5 }} color="text.secondary">
             {appConfig.appName}
           </Typography>
-          {appConfig.options.description && (
-            <Typography sx={{ mb: 1.5 }}>
-              {appConfig.options.description}
-            </Typography>
+          {appConfig.description && (
+            <Typography sx={{ mb: 1.5 }}>{appConfig.description}</Typography>
           )}
           <Typography>
             Initialized:{" "}

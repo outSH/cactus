@@ -23,9 +23,6 @@ export interface GetStatusResponse {
 }
 
 export interface AppConfigPersistencePluginOptions {
-  instanceName: string;
-  description: string | undefined;
-  path: string;
   supabaseSchema: string;
   supabaseUrl: string;
   supabaseKey: string;
@@ -33,6 +30,9 @@ export interface AppConfigPersistencePluginOptions {
 
 export interface AppConfig<T = any> {
   appName: string;
+  instanceName: string;
+  description: string | undefined;
+  path: string;
   options: T;
   menuEntries: AppConfigMenuEntry[];
   routes: RouteObject[];

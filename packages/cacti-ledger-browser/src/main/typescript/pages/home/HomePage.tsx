@@ -23,10 +23,7 @@ export default function HomePage({ appConfig }: HomePageProps) {
       >
         {appConfig.map((a) => {
           return (
-            <AppCard
-              key={`${a.appName}_${a.options.instanceName}`}
-              appConfig={a}
-            />
+            <AppCard key={`${a.appName}_${a.instanceName}`} appConfig={a} />
           );
         })}
       </Box>
