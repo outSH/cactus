@@ -41,7 +41,7 @@ function NewAppDialog({ open, setOpen }: any) {
           </Button>
         </DialogTitle>
         <DialogContent dividers>
-          <AddNewApp />
+          <AddNewApp handleDone={handleClose} />
         </DialogContent>
       </Dialog>
     </>
@@ -60,6 +60,7 @@ export default function AddNewAppCard() {
           display: "flex",
           flexDirection: "column",
           width: 400,
+          minHeight: 250,
           backgroundColor: theme.palette.grey[100],
         }}
       >

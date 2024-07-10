@@ -22,12 +22,12 @@ export default function HomePage({ appConfig }: HomePageProps) {
         gap={5}
         padding={5}
       >
+        <AddNewAppCard />
         {appConfig.map((a) => {
           return (
             <AppCard key={`${a.appName}_${a.instanceName}`} appConfig={a} />
           );
         })}
-        <AddNewAppCard />
       </Box>
     </Box>
   );

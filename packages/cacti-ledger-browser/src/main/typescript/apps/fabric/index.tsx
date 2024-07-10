@@ -5,22 +5,27 @@ import Blocks from "./pages/Blocks/Blocks";
 import Transactions from "./pages/Transactions/Transactions";
 import TransactionDetails from "./pages/TransactionDetails/TransactionDetails";
 import {
-  AppCategory,
   AppInstancePersistencePluginOptions,
   AppDefinition,
 } from "../../common/types/app";
 import { usePersistenceAppStatus } from "../../common/hook/use-persistence-app-status";
 import PersistencePluginStatus from "../../components/PersistencePluginStatus/PersistencePluginStatus";
 import { GuiAppConfig } from "../../common/supabase-types";
+import { AppCategory } from "../../common/app-category";
 
 const fabricBrowserAppDefinition: AppDefinition = {
-  appName: "Fabric Browser",
+  appName: "Hyperledger Fabric Browser",
   category: AppCategory.LedgerBrowser,
   defaultInstanceName: "My Fabric Browser",
   defaultDescription:
     "Applicaion for browsing Hyperledger Fabric ledger blocks and transactions. Requires Fabric persistence plugin to work correctly.",
   defaultPath: "/fabric",
-  defaultOptions: "foo",
+  defaultOptions: {
+    supabaseUrl: "http://localhost:8000",
+    supabaseKey:
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJhbm9uIiwKICAgICJpc3MiOiAic3VwYWJhc2UtZGVtbyIsCiAgICAiaWF0IjogMTY0MTc2OTIwMCwKICAgICJleHAiOiAxNzk5NTM1NjAwCn0.dc_X5iR_VP_qT0zsiyj_I_OZ2T9FtRU2BBNWN8Bu4GE",
+    supabaseSchema: "fabric",
+  },
 
   createAppInstance(app: GuiAppConfig) {
     const supabaseOptions =

@@ -43,12 +43,6 @@ export interface AppInstance<T = unknown> {
 
 export type CreateAppInstanceFactoryType = (app: GuiAppConfig) => AppInstance;
 
-export enum AppCategory {
-  LedgerBrowser = "ledgerBrowser",
-  Connector = "connector",
-  SampleApp = "sampleApp",
-}
-
 export interface AppDefinition {
   appName: string;
   category: string;

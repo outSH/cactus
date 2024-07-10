@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { queryOptions } from "@tanstack/react-query";
+import { QueryClient, queryOptions } from "@tanstack/react-query";
 import { GuiAppConfig, PluginStatus } from "./supabase-types";
 
 const supabaseQueryKey = "supabase";
@@ -60,4 +60,32 @@ export function guiAppConfig() {
       return data as GuiAppConfig[];
     },
   });
+}
+
+export function invalidateGuiAppConfig(queryClient: QueryClient) {
+  queryClient.invalidateQueries({
+    queryKey: [supabaseQueryKey, "gui_app_config"],
+  });
+}
+
+export type AddGuiAppConfigType = {
+  app_id: string;
+  instance_name: string;
+  description: string;
+  path: string;
+  options: unknown;
+};
+
+export async function addGuiAppConfig(appData: AddGuiAppConfigType) {
+  const { data, error } = await supabase
+    .from("gui_app_config")
+    .insert([appData]);
+
+  if (error) {
+    throw new Error(`Could not insert GUI App configuration: ${error.message}`);
+  }
+
+  console.log("RESPONSE:", data);
+
+  return data;
 }
