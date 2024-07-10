@@ -12,7 +12,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 
-import { AppConfig, AppStatus } from "../../common/types/app";
+import { AppInstance, AppStatus } from "../../common/types/app";
 
 type StatusTextProps = {
   status: AppStatus;
@@ -74,7 +74,7 @@ function StatusDialogButton({ statusComponent }: StatusDialogButtonProps) {
 }
 
 type AppCardProps = {
-  appConfig: AppConfig;
+  appConfig: AppInstance;
 };
 
 /**

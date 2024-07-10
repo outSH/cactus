@@ -1,8 +1,8 @@
 import { useOutletContext } from "react-router-dom";
-import { AppConfigPersistencePluginOptions } from "../../common/types/app";
+import { AppInstancePersistencePluginOptions } from "../../common/types/app";
 
 export function useFabricAppConfig() {
-  return useOutletContext<AppConfigPersistencePluginOptions>();
+  return useOutletContext<AppInstancePersistencePluginOptions>();
 }
 
 export function useFabricSupabaseConfig() {

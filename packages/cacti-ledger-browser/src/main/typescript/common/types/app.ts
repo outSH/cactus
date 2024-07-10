@@ -7,7 +7,7 @@ export interface AppListEntry {
   name: string;
 }
 
-export interface AppConfigMenuEntry {
+export interface AppInstanceMenuEntry {
   title: string;
   url: string;
 }
@@ -23,22 +23,38 @@ export interface GetStatusResponse {
   status: AppStatus;
 }
 
-export interface AppConfigPersistencePluginOptions {
+export interface AppInstancePersistencePluginOptions {
   supabaseSchema: string;
   supabaseUrl: string;
   supabaseKey: string;
 }
 
-export interface AppConfig<T = unknown> {
+export interface AppInstance<T = unknown> {
   appName: string;
   instanceName: string;
   description: string | undefined;
   path: string;
   options: T;
-  menuEntries: AppConfigMenuEntry[];
+  menuEntries: AppInstanceMenuEntry[];
   routes: RouteObject[];
   useAppStatus: () => GetStatusResponse;
   StatusComponent: React.ReactElement;
 }
 
-export type CreateAppConfigFactoryType = (app: GuiAppConfig) => AppConfig;
+export type CreateAppInstanceFactoryType = (app: GuiAppConfig) => AppInstance;
+
+export enum AppCategory {
+  LedgerBrowser = "ledgerBrowser",
+  Connector = "connector",
+  SampleApp = "sampleApp",
+}
+
+export interface AppDefinition {
+  appName: string;
+  category: string;
+  defaultInstanceName: string;
+  defaultDescription: string;
+  defaultPath: string;
+  defaultOptions: unknown;
+  createAppInstance: CreateAppInstanceFactoryType;
+}

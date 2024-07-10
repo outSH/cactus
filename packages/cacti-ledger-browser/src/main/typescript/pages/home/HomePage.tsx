@@ -1,12 +1,12 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
-import { AppConfig } from "../../common/types/app";
+import { AppInstance } from "../../common/types/app";
 import AppCard from "./AppCard";
 import AddNewAppCard from "./AddNewAppCard";
 
 type HomePageProps = {
-  appConfig: AppConfig[];
+  appConfig: AppInstance[];
 };
 
 export default function HomePage({ appConfig }: HomePageProps) {

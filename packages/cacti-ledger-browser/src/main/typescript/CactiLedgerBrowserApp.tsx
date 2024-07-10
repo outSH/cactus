@@ -18,17 +18,16 @@ import { themeOptions } from "./theme";
 import ContentLayout from "./components/Layout/ContentLayout";
 import HeaderBar from "./components/Layout/HeaderBar";
 import HomePage from "./pages/home/HomePage";
-import { AppConfig, AppListEntry } from "./common/types/app";
+import { AppInstance, AppListEntry } from "./common/types/app";
 import { patchAppRoutePath } from "./common/utils";
 import { NotificationProvider } from "./common/context/NotificationContext";
 import { guiAppConfig } from "./common/queries";
-import appConfigFactory from "./common/createAppConfig";
-
+import createApplications from "./common/createApplications";
 
 /**
  * Get list of all apps from the config
  */
-function getAppList(appConfig: AppConfig[]) {
+function getAppList(appConfig: AppInstance[]) {
   const appList: AppListEntry[] = appConfig.map((app) => {
     return {
       path: app.path,
@@ -47,7 +46,7 @@ function getAppList(appConfig: AppConfig[]) {
 /**
  * Create header bar for each app based on app menuEntries field in config.
  */
-function getHeaderBarRoutes(appConfig: AppConfig[]) {
+function getHeaderBarRoutes(appConfig: AppInstance[]) {
   const appList = getAppList(appConfig);
 
   const headerRoutesConfig = appConfig.map((app) => {
@@ -74,7 +73,7 @@ function getHeaderBarRoutes(appConfig: AppConfig[]) {
 /**
  * Create content routes
  */
-function getContentRoutes(appConfig: AppConfig[]) {
+function getContentRoutes(appConfig: AppInstance[]) {
   const appRoutes: RouteObject[] = appConfig.map((app) => {
     return {
       key: app.path,
@@ -113,7 +112,7 @@ function App() {
     alert(`App config fetch error: ${error}`);
   }
 
-  const appConfig = appConfigFactory(data);
+  const appConfig = createApplications(data);
 
   const headerRoutes = getHeaderBarRoutes(appConfig);
   const contentRoutes = getContentRoutes(appConfig);

@@ -5,74 +5,83 @@ import Blocks from "./pages/Blocks/Blocks";
 import Transactions from "./pages/Transactions/Transactions";
 import TransactionDetails from "./pages/TransactionDetails/TransactionDetails";
 import {
-  AppConfigPersistencePluginOptions,
-  CreateAppConfigFactoryType,
+  AppCategory,
+  AppInstancePersistencePluginOptions,
+  AppDefinition,
 } from "../../common/types/app";
 import { usePersistenceAppStatus } from "../../common/hook/use-persistence-app-status";
 import PersistencePluginStatus from "../../components/PersistencePluginStatus/PersistencePluginStatus";
 import { GuiAppConfig } from "../../common/supabase-types";
 
-const createFabricAppConfig: CreateAppConfigFactoryType = (
-  app: GuiAppConfig,
-) => {
-  const supabaseOptions =
-    app.options as any as AppConfigPersistencePluginOptions;
+const fabricBrowserAppDefinition: AppDefinition = {
+  appName: "Fabric Browser",
+  category: AppCategory.LedgerBrowser,
+  defaultInstanceName: "My Fabric Browser",
+  defaultDescription:
+    "Applicaion for browsing Hyperledger Fabric ledger blocks and transactions. Requires Fabric persistence plugin to work correctly.",
+  defaultPath: "/fabric",
+  defaultOptions: "foo",
 
-  if (
-    !supabaseOptions ||
-    !supabaseOptions.supabaseUrl ||
-    !supabaseOptions.supabaseKey ||
-    !supabaseOptions.supabaseSchema
-  ) {
-    throw new Error(
-      `Invalid fabric app specific options in the database: ${JSON.stringify(supabaseOptions)}`,
-    );
-  }
+  createAppInstance(app: GuiAppConfig) {
+    const supabaseOptions =
+      app.options as any as AppInstancePersistencePluginOptions;
 
-  return {
-    appName: "Hyperledger Fabric Browser",
-    instanceName: app.instance_name,
-    description: app.description,
-    path: app.path,
-    options: supabaseOptions,
-    menuEntries: [
-      {
-        title: "Dashboard",
-        url: "/",
-      },
-    ],
-    routes: [
-      {
-        element: <Dashboard />,
-      },
-      {
-        path: "blocks",
-        element: <Blocks />,
-      },
-      {
-        path: "transactions",
-        element: <Transactions />,
-      },
-      {
-        path: "transaction",
-        element: <Outlet context={supabaseOptions} />,
-        children: [
-          {
-            path: ":hash",
-            element: (
-              <div>
-                <TransactionDetails />
-              </div>
-            ),
-          },
-        ],
-      },
-    ],
-    useAppStatus: () => usePersistenceAppStatus("PluginPersistenceFabric"),
-    StatusComponent: (
-      <PersistencePluginStatus pluginName="PluginPersistenceFabric" />
-    ),
-  };
+    if (
+      !supabaseOptions ||
+      !supabaseOptions.supabaseUrl ||
+      !supabaseOptions.supabaseKey ||
+      !supabaseOptions.supabaseSchema
+    ) {
+      throw new Error(
+        `Invalid fabric app specific options in the database: ${JSON.stringify(supabaseOptions)}`,
+      );
+    }
+
+    return {
+      appName: "Hyperledger Fabric Browser",
+      instanceName: app.instance_name,
+      description: app.description,
+      path: app.path,
+      options: supabaseOptions,
+      menuEntries: [
+        {
+          title: "Dashboard",
+          url: "/",
+        },
+      ],
+      routes: [
+        {
+          element: <Dashboard />,
+        },
+        {
+          path: "blocks",
+          element: <Blocks />,
+        },
+        {
+          path: "transactions",
+          element: <Transactions />,
+        },
+        {
+          path: "transaction",
+          element: <Outlet context={supabaseOptions} />,
+          children: [
+            {
+              path: ":hash",
+              element: (
+                <div>
+                  <TransactionDetails />
+                </div>
+              ),
+            },
+          ],
+        },
+      ],
+      useAppStatus: () => usePersistenceAppStatus("PluginPersistenceFabric"),
+      StatusComponent: (
+        <PersistencePluginStatus pluginName="PluginPersistenceFabric" />
+      ),
+    };
+  },
 };
 
-export default createFabricAppConfig;
+export default fabricBrowserAppDefinition;
