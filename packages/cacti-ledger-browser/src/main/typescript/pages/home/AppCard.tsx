@@ -13,6 +13,7 @@ import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 
 import { AppInstance, AppStatus } from "../../common/types/app";
+import ConfigureApp from "../configure-app/ConfigureApp";
 
 type StatusTextProps = {
   status: AppStatus;
@@ -68,6 +69,34 @@ function StatusDialogButton({ statusComponent }: StatusDialogButtonProps) {
       >
         <DialogTitle color="primary">App Status</DialogTitle>
         <DialogContent>{statusComponent}</DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+type ConfigureDialogButtonProps = {
+  appInstanceId: string;
+};
+
+function ConfigureDialogButton({ appInstanceId }: ConfigureDialogButtonProps) {
+  const [openDialog, setOpenDialog] = React.useState(false);
+
+  return (
+    <>
+      <Button onClick={() => setOpenDialog(true)}>Configure</Button>
+      <Dialog
+        fullWidth
+        maxWidth="xl"
+        onClose={() => setOpenDialog(false)}
+        open={openDialog}
+      >
+        <DialogTitle color="primary">Configure Application</DialogTitle>
+        <DialogContent>
+          <ConfigureApp
+            appInstanceId={appInstanceId}
+            handleDone={() => setOpenDialog(false)}
+          />
+        </DialogContent>
       </Dialog>
     </>
   );
@@ -142,6 +171,7 @@ export default function AppCard({ appConfig }: AppCardProps) {
           borderColor: theme.palette.primary.main,
         }}
       >
+        <ConfigureDialogButton appInstanceId={appConfig.id} />
         <StatusDialogButton statusComponent={appConfig.StatusComponent} />
       </CardActions>
     </Card>

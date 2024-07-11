@@ -18,7 +18,7 @@ const fabricBrowserAppDefinition: AppDefinition = {
   category: AppCategory.LedgerBrowser,
   defaultInstanceName: "My Fabric Browser",
   defaultDescription:
-    "Applicaion for browsing Hyperledger Fabric ledger blocks and transactions. Requires Fabric persistence plugin to work correctly.",
+    "Application for browsing Hyperledger Fabric ledger blocks and transactions. Requires Fabric persistence plugin to work correctly.",
   defaultPath: "/fabric",
   defaultOptions: {
     supabaseUrl: "http://localhost:8000",
@@ -43,6 +43,7 @@ const fabricBrowserAppDefinition: AppDefinition = {
     }
 
     return {
+      id: app.id,
       appName: "Hyperledger Fabric Browser",
       instanceName: app.instance_name,
       description: app.description,

@@ -62,19 +62,51 @@ export function guiAppConfig() {
   });
 }
 
+/**
+ * Get single persistence plugin app instance infofrom the database.
+ */
+export function guiAppConfigById(id: string) {
+  const tableName = "gui_app_config";
+
+  return queryOptions({
+    queryKey: [supabaseQueryKey, tableName, id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from(tableName)
+        .select()
+        .eq("id", id);
+
+      if (error) {
+        throw new Error(
+          `Could not get app instance (id ${id}) configuration: ${error.message}`,
+        );
+      }
+
+      if (data.length !== 1) {
+        throw new Error(
+          `Invalid response when getting app instance with id ${id}: ${data}`,
+        );
+      }
+
+      return data.pop() as GuiAppConfig;
+    },
+  });
+}
+
 export function invalidateGuiAppConfig(queryClient: QueryClient) {
   queryClient.invalidateQueries({
     queryKey: [supabaseQueryKey, "gui_app_config"],
   });
 }
 
-export type AddGuiAppConfigType = {
-  app_id: string;
+export type UpdateGuiAppConfigType = {
   instance_name: string;
   description: string;
   path: string;
   options: unknown;
 };
+
+export type AddGuiAppConfigType = UpdateGuiAppConfigType & { app_id: string };
 
 export async function addGuiAppConfig(appData: AddGuiAppConfigType) {
   const { data, error } = await supabase
@@ -85,7 +117,23 @@ export async function addGuiAppConfig(appData: AddGuiAppConfigType) {
     throw new Error(`Could not insert GUI App configuration: ${error.message}`);
   }
 
-  console.log("RESPONSE:", data);
+  return data;
+}
+
+export async function updateGuiAppConfig(
+  id: string,
+  appData: UpdateGuiAppConfigType,
+) {
+  const { data, error } = await supabase
+    .from("gui_app_config")
+    .update([appData])
+    .eq("id", id);
+
+  if (error) {
+    throw new Error(
+      `Could not update GUI App ${id} configuration: ${error.message}`,
+    );
+  }
 
   return data;
 }

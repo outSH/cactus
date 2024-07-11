@@ -16,7 +16,7 @@ const ethBrowserAppDefinition: AppDefinition = {
   category: AppCategory.LedgerBrowser,
   defaultInstanceName: "My Eth Browser",
   defaultDescription:
-    "Applicaion for browsing Ethereum ledger blocks, transactions and tokens. Requires Ethereum persistence plugin to work correctly.",
+    "Application for browsing Ethereum ledger blocks, transactions and tokens. Requires Ethereum persistence plugin to work correctly.",
   defaultPath: "/eth",
   defaultOptions: {
     supabaseUrl: "http://localhost:8000",
@@ -41,6 +41,7 @@ const ethBrowserAppDefinition: AppDefinition = {
     }
 
     return {
+      id: app.id,
       appName: "Ethereum Browser",
       instanceName: app.instance_name,
       description: app.description,

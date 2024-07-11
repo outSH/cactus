@@ -30,6 +30,7 @@ export interface AppInstancePersistencePluginOptions {
 }
 
 export interface AppInstance<T = unknown> {
+  id: string;
   appName: string;
   instanceName: string;
   description: string | undefined;

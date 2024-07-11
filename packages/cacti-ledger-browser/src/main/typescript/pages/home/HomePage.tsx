@@ -18,15 +18,13 @@ export default function HomePage({ appConfig }: HomePageProps) {
       <Box
         display="flex"
         flexWrap="wrap"
-        justifyContent="space-around"
+        justifyContent="space-between"
         gap={5}
         padding={5}
       >
         <AddApplicationPopupCard />
         {appConfig.map((a) => {
-          return (
-            <AppCard key={`${a.appName}_${a.instanceName}`} appConfig={a} />
-          );
+          return <AppCard key={a.id} appConfig={a} />;
         })}
       </Box>
     </Box>

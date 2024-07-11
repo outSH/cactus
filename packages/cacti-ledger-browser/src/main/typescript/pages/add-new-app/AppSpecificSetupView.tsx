@@ -2,9 +2,9 @@ import * as React from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
-import TextField from "@mui/material/TextField";
 import LoadingButton from "@mui/lab/LoadingButton";
 import SaveIcon from "@mui/icons-material/Save";
+import AppOptionsForm from "../../components/AppSetupForms/AppOptionsForm";
 
 export interface AppSpecificSetupViewProps {
   appOptionsJsonString: string;
@@ -29,29 +29,12 @@ export default function AppSpecificSetupView({
   return (
     <>
       <Typography variant="h4">App Specific Setup</Typography>
-      <Box
-        component="form"
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          padding: 1,
-          marginTop: 2,
-        }}
-      >
-        <TextField
-          label="Application Options JSON"
-          name="options"
-          multiline
-          maxRows={30}
-          error={!!validationError}
-          helperText={validationError}
-          value={appOptionsJsonString}
-          onChange={(e) => {
-            setValidationError("");
-            setAppOptionsJsonString(e.target.value);
-          }}
-        />
-      </Box>
+      <AppOptionsForm
+        validationError={validationError}
+        setValidationError={setValidationError}
+        appOptionsJsonString={appOptionsJsonString}
+        setAppOptionsJsonString={setAppOptionsJsonString}
+      />
       <Box
         sx={{
           display: "flex",
