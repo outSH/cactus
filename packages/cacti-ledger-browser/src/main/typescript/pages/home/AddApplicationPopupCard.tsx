@@ -10,10 +10,14 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
+import AddNewApp from "../add-new-app/AddNewApp";
 
-import AddNewApp from "./AddNewApp";
+export interface NewAppDialogProps {
+  open: boolean;
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+}
 
-function NewAppDialog({ open, setOpen }: any) {
+function NewAppDialog({ open, setOpen }: NewAppDialogProps) {
   const handleClose = () => {
     setOpen(false);
   };
@@ -48,7 +52,7 @@ function NewAppDialog({ open, setOpen }: any) {
   );
 }
 
-export default function AddNewAppCard() {
+export default function AddApplicationPopupCard() {
   const theme = useTheme();
   const [open, setOpen] = React.useState(false);
 

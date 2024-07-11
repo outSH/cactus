@@ -3,7 +3,7 @@ import Typography from "@mui/material/Typography";
 
 import { AppInstance } from "../../common/types/app";
 import AppCard from "./AppCard";
-import AddNewAppCard from "./AddNewAppCard";
+import AddApplicationPopupCard from "./AddApplicationPopupCard";
 
 type HomePageProps = {
   appConfig: AppInstance[];
@@ -22,7 +22,7 @@ export default function HomePage({ appConfig }: HomePageProps) {
         gap={5}
         padding={5}
       >
-        <AddNewAppCard />
+        <AddApplicationPopupCard />
         {appConfig.map((a) => {
           return (
             <AppCard key={`${a.appName}_${a.instanceName}`} appConfig={a} />
