@@ -11,7 +11,7 @@ import {
   FabricTransaction,
   FabricTransactionAction,
   FabricTransactionActionEndorsement,
-} from "./fabric-supabase-types";
+} from "./supabase-types";
 import { useFabricSupabaseConfig } from "./hooks";
 
 let supabase: SupabaseClient | undefined;

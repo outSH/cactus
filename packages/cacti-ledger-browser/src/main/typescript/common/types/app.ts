@@ -53,3 +53,12 @@ export interface AppDefinition {
   defaultOptions: unknown;
   createAppInstance: CreateAppInstanceFactoryType;
 }
+
+export type UpdateGuiAppConfigType = {
+  instance_name: string;
+  description: string;
+  path: string;
+  options: unknown;
+};
+
+export type AddGuiAppConfigType = UpdateGuiAppConfigType & { app_id: string };

@@ -1,18 +1,32 @@
-import { createClient } from "@supabase/supabase-js";
+import { SupabaseClient, createClient } from "@supabase/supabase-js";
 import { QueryClient, queryOptions } from "@tanstack/react-query";
 import { GuiAppConfig, PluginStatus } from "./supabase-types";
+import { AddGuiAppConfigType, UpdateGuiAppConfigType } from "./types/app";
 
-const supabaseQueryKey = "supabase";
-const supabaseUrl = "http://localhost:8000";
-const supabaseKey =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJhbm9uIiwKICAgICJpc3MiOiAic3VwYWJhc2UtZGVtbyIsCiAgICAiaWF0IjogMTY0MTc2OTIwMCwKICAgICJleHAiOiAxNzk5NTM1NjAwCn0.dc_X5iR_VP_qT0zsiyj_I_OZ2T9FtRU2BBNWN8Bu4GE";
+let supabase: SupabaseClient | undefined;
 
-export const supabase = createClient(supabaseUrl, supabaseKey);
+/**
+ * Get or initialize (if not already done) a supabase client using environment variables.
+ */
+function getSupabaseClient(): [SupabaseClient, string] {
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const supabaseKey = import.meta.env.VITE_SUPABASE_KEY;
+  const supabaseSchema = import.meta.env.VITE_SUPABASE_SCHEMA;
+
+  if (!supabase) {
+    supabase = createClient(supabaseUrl, supabaseKey, {
+      schema: supabaseSchema,
+    });
+  }
+
+  return [supabase, `supabase:${supabaseSchema}`];
+}
 
 /**
  * Get persistence plugin status from the database using it's name.
  */
 export function persistencePluginStatus(name: string) {
+  const [supabase, supabaseQueryKey] = getSupabaseClient();
   const tableName = "plugin_status";
 
   return queryOptions({
@@ -44,6 +58,7 @@ export function persistencePluginStatus(name: string) {
  * Get persistence plugin app config from the database.
  */
 export function guiAppConfig() {
+  const [supabase, supabaseQueryKey] = getSupabaseClient();
   const tableName = "gui_app_config";
 
   return queryOptions({
@@ -66,6 +81,7 @@ export function guiAppConfig() {
  * Get single persistence plugin app instance infofrom the database.
  */
 export function guiAppConfigById(id: string) {
+  const [supabase, supabaseQueryKey] = getSupabaseClient();
   const tableName = "gui_app_config";
 
   return queryOptions({
@@ -93,22 +109,22 @@ export function guiAppConfigById(id: string) {
   });
 }
 
+/**
+ * Invalidate all queries from gui_app_config.
+ * Call after each mutation that affects this table.
+ */
 export function invalidateGuiAppConfig(queryClient: QueryClient) {
+  const [, supabaseQueryKey] = getSupabaseClient();
   queryClient.invalidateQueries({
     queryKey: [supabaseQueryKey, "gui_app_config"],
   });
 }
 
-export type UpdateGuiAppConfigType = {
-  instance_name: string;
-  description: string;
-  path: string;
-  options: unknown;
-};
-
-export type AddGuiAppConfigType = UpdateGuiAppConfigType & { app_id: string };
-
+/**
+ * Add new GUI app configuration to the database.
+ */
 export async function addGuiAppConfig(appData: AddGuiAppConfigType) {
+  const [supabase] = getSupabaseClient();
   const { data, error } = await supabase
     .from("gui_app_config")
     .insert([appData]);
@@ -120,10 +136,14 @@ export async function addGuiAppConfig(appData: AddGuiAppConfigType) {
   return data;
 }
 
+/**
+ * Update GUI app configuration in the database.
+ */
 export async function updateGuiAppConfig(
   id: string,
   appData: UpdateGuiAppConfigType,
 ) {
+  const [supabase] = getSupabaseClient();
   const { data, error } = await supabase
     .from("gui_app_config")
     .update([appData])
@@ -133,6 +153,23 @@ export async function updateGuiAppConfig(
     throw new Error(
       `Could not update GUI App ${id} configuration: ${error.message}`,
     );
+  }
+
+  return data;
+}
+
+/**
+ * Delete GUI app configuration from the database.
+ */
+export async function deleteGuiAppConfig(id: string) {
+  const [supabase] = getSupabaseClient();
+  const { data, error } = await supabase
+    .from("gui_app_config")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    throw new Error(`Could not delete GUI App ${id}, error: ${error.message}`);
   }
 
   return data;

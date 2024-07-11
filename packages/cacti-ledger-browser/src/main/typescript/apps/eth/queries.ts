@@ -11,7 +11,7 @@ import {
   TokenHistoryItem20,
   TokenMetadata721,
   TokenERC20,
-} from "../../common/supabase-types";
+} from "./supabase-types";
 import { useEthSupabaseConfig } from "./hooks";
 
 let supabase: SupabaseClient | undefined;
