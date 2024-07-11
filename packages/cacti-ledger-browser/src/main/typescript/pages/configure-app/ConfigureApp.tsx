@@ -14,12 +14,12 @@ import SaveIcon from "@mui/icons-material/Save";
 import DeleteIcon from "@mui/icons-material/Delete";
 
 import {
-  UpdateGuiAppConfigType,
   deleteGuiAppConfig,
   guiAppConfigById,
   invalidateGuiAppConfig,
   updateGuiAppConfig,
 } from "../../common/queries";
+import { UpdateGuiAppConfigType } from "../../common/types/app";
 import { useNotification } from "../../common/context/NotificationContext";
 import AppSetupForm from "../../components/AppSetupForms/AppSetupForm";
 import AppOptionsForm from "../../components/AppSetupForms/AppOptionsForm";
