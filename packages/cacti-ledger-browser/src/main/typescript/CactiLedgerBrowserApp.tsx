@@ -23,6 +23,7 @@ import { patchAppRoutePath } from "./common/utils";
 import { NotificationProvider } from "./common/context/NotificationContext";
 import { guiAppConfig } from "./common/queries";
 import createApplications from "./common/createApplications";
+import ConnectionFailedDialog from "./components/ConnectionFailedDialog/ConnectionFailedDialog";
 
 /**
  * Get list of all apps from the config
@@ -106,10 +107,10 @@ function getContentRoutes(appConfig: AppInstance[]) {
 }
 
 function App() {
-  const { isError, isPending, data, error } = useQuery(guiAppConfig());
+  const { isError, isPending, data } = useQuery(guiAppConfig());
 
   if (isError) {
-    alert(`App config fetch error: ${error}`);
+    return <ConnectionFailedDialog />;
   }
 
   const appConfig = createApplications(data);
