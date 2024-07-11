@@ -3,7 +3,7 @@
  * @todo Move to separate directory if this file becomes too complex.
  */
 
-import { createClient } from "@supabase/supabase-js";
+import { SupabaseClient, createClient } from "@supabase/supabase-js";
 import { queryOptions } from "@tanstack/react-query";
 import {
   Transaction,
@@ -11,17 +11,10 @@ import {
   TokenHistoryItem20,
   TokenMetadata721,
   TokenERC20,
-} from "../../common/supabase-types";
+} from "./supabase-types";
+import { useEthSupabaseConfig } from "./hooks";
 
-// TODO - Configure for an app
-const supabaseQueryKey = "supabase:ethereum";
-const supabaseUrl = "http://localhost:8000";
-const supabaseKey =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJhbm9uIiwKICAgICJpc3MiOiAic3VwYWJhc2UtZGVtbyIsCiAgICAiaWF0IjogMTY0MTc2OTIwMCwKICAgICJleHAiOiAxNzk5NTM1NjAwCn0.dc_X5iR_VP_qT0zsiyj_I_OZ2T9FtRU2BBNWN8Bu4GE";
-
-export const supabase = createClient(supabaseUrl, supabaseKey, {
-  schema: "ethereum",
-});
+let supabase: SupabaseClient | undefined;
 
 function createQueryKey(
   tableName: string,
@@ -30,12 +23,25 @@ function createQueryKey(
   return [tableName, { pagination }];
 }
 
+function useSupabaseClient(): [SupabaseClient, string] {
+  const supabaseConfig = useEthSupabaseConfig();
+
+  if (!supabase) {
+    supabase = createClient(supabaseConfig.url, supabaseConfig.key, {
+      schema: supabaseConfig.schema,
+    });
+  }
+
+  return [supabase, `supabase:${supabaseConfig.schema}`];
+}
+
 /**
  * Get all recorded ethereum transactions.
  * Returns `queryOptions` to be used as argument to `useQuery` from `react-query`.
  * Supports paging.
  */
 export function ethAllTransactionsQuery(page: number, pageSize: number) {
+  const [supabase, supabaseQueryKey] = useSupabaseClient();
   const fromIndex = page * pageSize;
   const toIndex = fromIndex + pageSize - 1;
   const tableName = "transaction";
@@ -71,6 +77,7 @@ export function ethAccountTransactionsQuery(
   pageSize: number,
   accountAddress: string,
 ) {
+  const [supabase, supabaseQueryKey] = useSupabaseClient();
   const fromIndex = page * pageSize;
   const toIndex = fromIndex + pageSize - 1;
   const tableName = "transaction";
@@ -102,6 +109,7 @@ export function ethAccountTransactionsQuery(
  * Supports paging.
  */
 export function ethAllBlocksQuery(page: number, pageSize: number) {
+  const [supabase, supabaseQueryKey] = useSupabaseClient();
   const fromIndex = page * pageSize;
   const toIndex = fromIndex + pageSize - 1;
   const tableName = "block";
@@ -134,6 +142,7 @@ export function ethERC20TokenHistory(
   tokenAddress: string,
   accountAddress: string,
 ) {
+  const [supabase, supabaseQueryKey] = useSupabaseClient();
   const tableName = "erc20_token_history_view";
   return queryOptions({
     queryKey: [supabaseQueryKey, tableName, tokenAddress, accountAddress],
@@ -167,6 +176,8 @@ export interface EthAllERC721TokensByAccountResponseType {
  * Returns `queryOptions` to be used as argument to `useQuery` from `react-query`.
  */
 export function ethAllERC721TokensByAccount(accountAddress: string) {
+  const [supabase, supabaseQueryKey] = useSupabaseClient();
+
   return queryOptions({
     queryKey: [supabaseQueryKey, "ethAllERC721TokensByAccount", accountAddress],
     queryFn: async () => {
@@ -193,6 +204,8 @@ export function ethAllERC721TokensByAccount(accountAddress: string) {
  * Returns `queryOptions` to be used as argument to `useQuery` from `react-query`.
  */
 export function ethAllERC20TokensByAccount(accountAddress: string) {
+  const [supabase, supabaseQueryKey] = useSupabaseClient();
+
   return queryOptions({
     queryKey: [supabaseQueryKey, "ethAllERC20TokensByAccount", accountAddress],
     queryFn: async () => {
