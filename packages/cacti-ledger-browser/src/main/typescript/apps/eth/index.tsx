@@ -78,6 +78,8 @@ const ethBrowserAppDefinition: AppDefinition = {
       StatusComponent: (
         <PersistencePluginStatus pluginName="PluginPersistenceEthereum" />
       ),
+      appSetupGuideURL: ethBrowserAppDefinition.appSetupGuideURL,
+      appDocumentationURL: ethBrowserAppDefinition.appDocumentationURL,
     };
   },
 };

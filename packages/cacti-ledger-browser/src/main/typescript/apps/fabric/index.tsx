@@ -86,6 +86,8 @@ const fabricBrowserAppDefinition: AppDefinition = {
       StatusComponent: (
         <PersistencePluginStatus pluginName="PluginPersistenceFabric" />
       ),
+      appSetupGuideURL: fabricBrowserAppDefinition.appSetupGuideURL,
+      appDocumentationURL: fabricBrowserAppDefinition.appDocumentationURL,
     };
   },
 };

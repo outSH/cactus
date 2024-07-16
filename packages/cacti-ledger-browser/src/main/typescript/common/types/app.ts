@@ -40,6 +40,8 @@ export interface AppInstance<T = unknown> {
   routes: RouteObject[];
   useAppStatus: () => GetStatusResponse;
   StatusComponent: React.ReactElement;
+  appSetupGuideURL?: string;
+  appDocumentationURL?: string;
 }
 
 export type CreateAppInstanceFactoryType = (app: GuiAppConfig) => AppInstance;
@@ -47,6 +49,8 @@ export type CreateAppInstanceFactoryType = (app: GuiAppConfig) => AppInstance;
 export interface AppDefinition {
   appName: string;
   category: string;
+  appSetupGuideURL?: string;
+  appDocumentationURL?: string;
   defaultInstanceName: string;
   defaultDescription: string;
   defaultPath: string;
