@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1721902644074,
+  "lastUpdate": 1721903502442,
   "repoUrl": "https://github.com/outSH/cactus",
   "entries": {
     "Benchmark": [
@@ -496,6 +496,36 @@ window.BENCHMARK_DATA = {
             "range": "±1.32%",
             "unit": "ops/sec",
             "extra": "180 samples"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "jenniferlianne@gmail.com",
+            "name": "Jennifer Bell"
+          },
+          "committer": {
+            "email": "petermetz@users.noreply.github.com",
+            "name": "Peter Somogyvari",
+            "username": "petermetz"
+          },
+          "distinct": true,
+          "id": "8917ff589c350797ccba6699e6f29d5af5416ccd",
+          "message": "chore(weaver): use specific fabric versions\n\nWhile fabric setup for weaver tests downloads\nimages specified in makefile, when the network\nis brought up the latest versions are pulled.\n\nPrimary Change:\n\n- pass fabric versions from Makefile to\n  network.sh, ensuring they are used\n\nSecondary Changes:\n\nnetwork.sh:\n- allow specifying fabric ca version\n- set exit on error bash flag to avoid continuing\n  if script is in error\n- re-write unsupported version tests to not\n  not generate error\n- add rm -f to not generate error if file does\n  not exist\n\nSigned-off-by: Jennifer Bell <jenniferlianne@gmail.com>",
+          "timestamp": "2024-07-24T16:54:48-07:00",
+          "tree_id": "db1794963f02fd2bb76b0096000e2e663350cf68",
+          "url": "https://github.com/outSH/cactus/commit/8917ff589c350797ccba6699e6f29d5af5416ccd"
+        },
+        "date": 1721903501402,
+        "tool": "benchmarkjs",
+        "benches": [
+          {
+            "name": "plugin-ledger-connector-besu_HTTP_GET_getOpenApiSpecV1",
+            "value": 693,
+            "range": "±3.28%",
+            "unit": "ops/sec",
+            "extra": "179 samples"
           }
         ]
       }
