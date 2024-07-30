@@ -4,8 +4,7 @@ An all in one supabase image that can be used as Cactus GUI backend.
 - This docker image is for `testing` and `development` only.
 - **Do NOT use in production!**
 
-## Usage
-- Password: `your-super-secret-and-long-postgres-password`
+## Running
 
 ### Docker Compose
 ``` bash
@@ -33,4 +32,30 @@ docker run --name supabase_all_in_one_gui \
   -p 8000:8000 \
   -p 5432:5432 \
   cactus-supabase-all-in-one
+```
+
+## Usage
+
+Supabase dashboard is available under http://localhost:8000/. Use the following credentials to access it:
+- **Username**: `supabase`
+- **Password**: `this_password_is_insecure_and_should_be_updated`
+
+### Postgres access
+
+Use the `psql` tool, database password is: `your-super-secret-and-long-postgres-password`
+
+```sh
+psql -h 127.0.0.1 -p 5432 -d postgres -U postgres
+```
+
+#### Connection string
+
+```sh
+postgresql://postgres:your-super-secret-and-long-postgres-password@127.0.0.1:5432/postgres
+```
+
+### API Key
+
+```sh
+docker exec -ti supabase_all_in_one_gui cat /home/supabase/docker/.env | grep SERVICE_ROLE_KEY
 ```
