@@ -277,3 +277,12 @@ VALUES
     '0x125861641FC4407148b184e53291aE5EC5ebD302',
     32
   );
+
+INSERT INTO
+  public.plugin_status
+VALUES
+  (
+    'PluginPersistenceEthereum',
+    'ManualTest',
+    true
+  );

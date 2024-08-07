@@ -59,3 +59,23 @@ Uses a localhost `supabase-all-in-one` instance with data stored in the `ethereu
   supabaseSchema: "ethereum",
 }
 ```
+
+## Test Data Setup
+
+For GUI development, you don't need to start the persistence plugin. Instead, follow these steps to fill the database with sample data.
+
+### Create database schema tables
+- Copy the content of `packages/cactus-plugin-persistence-ethereum/src/main/sql/schema.sql` into `SQL Editor` of supabase and run the query.
+- Alternatively, use `psql`:
+
+``` shell
+psql "postgresql://__CONNECTION_STRING_TO_DB__" -f packages/cactus-plugin-persistence-ethereum/src/test/sql/insert-test-data.sql
+```
+
+### Insert sample data
+- Copy the content of `packages/cactus-plugin-persistence-ethereum/src/test/sql/insert-test-data.sql` into `SQL Editor` of supabase and run the query.
+- Alternatively, use `psql`:
+
+``` shell
+psql "postgresql://__CONNECTION_STRING_TO_DB__" -f packages/cactus-plugin-persistence-ethereum/src/test/sql/insert-test-data.sql
+```

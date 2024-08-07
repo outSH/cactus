@@ -10,6 +10,5 @@ As the name suggests, persistence plugins store the ledger state in an SQL datab
 
 Browser applications are used to display this stored data. Therefore, they require a fully operational persistence plugin to function correctly. These applications are typically read-only and do not allow any changes to the ledger state.
 
-
-### Sample Architecture
-![Sample Persistence Plugin Architecture](images/sample_arch_persistence_app.png)
+### Sample Setup
+![Sample Persistence Plugin Setup](images/sample_arch_persistence_app.png)
