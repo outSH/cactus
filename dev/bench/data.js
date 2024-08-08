@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1722259294963,
+  "lastUpdate": 1723110127259,
   "repoUrl": "https://github.com/outSH/cactus",
   "entries": {
     "Benchmark": [
@@ -595,6 +595,44 @@ window.BENCHMARK_DATA = {
             "range": "±2.99%",
             "unit": "ops/sec",
             "extra": "179 samples"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "sandeepn.official@gmail.com",
+            "name": "Sandeep Nishad",
+            "username": "sandeepnRES"
+          },
+          "distinct": true,
+          "id": "17850911eb9742507020fc9774a27e37955d2673",
+          "message": "build: bump the go_modules group across 9 directories with 1 update\n\nUpdates `google.golang.org/grpc` from 1.64.0 to 1.64.1\n- [Release notes](https://github.com/grpc/grpc-go/releases)\n- [Commits](https://github.com/grpc/grpc-go/compare/v1.64.0...v1.64.1)\n\nUpdates `google.golang.org/grpc` from 1.64.0 to 1.64.1\n- [Release notes](https://github.com/grpc/grpc-go/releases)\n- [Commits](https://github.com/grpc/grpc-go/compare/v1.64.0...v1.64.1)\n\nUpdates `google.golang.org/grpc` from 1.64.0 to 1.64.1\n- [Release notes](https://github.com/grpc/grpc-go/releases)\n- [Commits](https://github.com/grpc/grpc-go/compare/v1.64.0...v1.64.1)\n\nUpdates `google.golang.org/grpc` from 1.64.0 to 1.64.1\n- [Release notes](https://github.com/grpc/grpc-go/releases)\n- [Commits](https://github.com/grpc/grpc-go/compare/v1.64.0...v1.64.1)\n\nUpdates `google.golang.org/grpc` from 1.64.0 to 1.64.1\n- [Release notes](https://github.com/grpc/grpc-go/releases)\n- [Commits](https://github.com/grpc/grpc-go/compare/v1.64.0...v1.64.1)\n\nUpdates `google.golang.org/grpc` from 1.64.0 to 1.64.1\n- [Release notes](https://github.com/grpc/grpc-go/releases)\n- [Commits](https://github.com/grpc/grpc-go/compare/v1.64.0...v1.64.1)\n\nUpdates `google.golang.org/grpc` from 1.64.0 to 1.64.1\n- [Release notes](https://github.com/grpc/grpc-go/releases)\n- [Commits](https://github.com/grpc/grpc-go/compare/v1.64.0...v1.64.1)\n\nUpdates `google.golang.org/grpc` from 1.64.0 to 1.64.1\n- [Release notes](https://github.com/grpc/grpc-go/releases)\n- [Commits](https://github.com/grpc/grpc-go/compare/v1.64.0...v1.64.1)\n\nUpdates `google.golang.org/grpc` from 1.64.0 to 1.64.1\n- [Release notes](https://github.com/grpc/grpc-go/releases)\n- [Commits](https://github.com/grpc/grpc-go/compare/v1.64.0...v1.64.1)\n\n---\nupdated-dependencies:\n- dependency-name: google.golang.org/grpc\n  dependency-type: direct:production\n  dependency-group: go_modules\n- dependency-name: google.golang.org/grpc\n  dependency-type: indirect\n  dependency-group: go_modules\n- dependency-name: google.golang.org/grpc\n  dependency-type: indirect\n  dependency-group: go_modules\n- dependency-name: google.golang.org/grpc\n  dependency-type: indirect\n  dependency-group: go_modules\n- dependency-name: google.golang.org/grpc\n  dependency-type: indirect\n  dependency-group: go_modules\n- dependency-name: google.golang.org/grpc\n  dependency-type: indirect\n  dependency-group: go_modules\n- dependency-name: google.golang.org/grpc\n  dependency-type: indirect\n  dependency-group: go_modules\n- dependency-name: google.golang.org/grpc\n  dependency-type: indirect\n  dependency-group: go_modules\n- dependency-name: google.golang.org/grpc\n  dependency-type: indirect\n  dependency-group: go_modules\n...\n\nCo-authored-by: Peter Somogyvari <peter.somogyvari@accenture.com>\n\nSigned-off-by: dependabot[bot] <support@github.com>\nSigned-off-by: Sandeep Nishad <sandeep.nishad1@ibm.com>\nSigned-off-by: Peter Somogyvari <peter.somogyvari@accenture.com>",
+          "timestamp": "2024-08-08T11:18:01+05:30",
+          "tree_id": "e7cf12a8f868497c98d7d07fcfb20828d7fd1da1",
+          "url": "https://github.com/outSH/cactus/commit/17850911eb9742507020fc9774a27e37955d2673"
+        },
+        "date": 1723110125749,
+        "tool": "benchmarkjs",
+        "benches": [
+          {
+            "name": "cmd-api-server_HTTP_GET_getOpenApiSpecV1",
+            "value": 595,
+            "range": "±1.65%",
+            "unit": "ops/sec",
+            "extra": "177 samples"
+          },
+          {
+            "name": "cmd-api-server_gRPC_GetOpenApiSpecV1",
+            "value": 365,
+            "range": "±1.26%",
+            "unit": "ops/sec",
+            "extra": "181 samples"
           }
         ]
       }
