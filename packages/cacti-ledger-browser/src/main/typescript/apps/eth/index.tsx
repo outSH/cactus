@@ -42,7 +42,7 @@ const ethBrowserAppDefinition: AppDefinition = {
 
     return {
       id: app.id,
-      appName: this.appName,
+      appName: ethBrowserAppDefinition.appName,
       instanceName: app.instance_name,
       description: app.description,
       path: app.path,

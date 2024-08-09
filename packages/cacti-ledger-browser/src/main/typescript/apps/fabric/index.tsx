@@ -44,7 +44,7 @@ const fabricBrowserAppDefinition: AppDefinition = {
 
     return {
       id: app.id,
-      appName: this.appName,
+      appName: fabricBrowserAppDefinition.appName,
       instanceName: app.instance_name,
       description: app.description,
       path: app.path,
