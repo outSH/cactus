@@ -44,7 +44,7 @@ const fabricBrowserAppDefinition: AppDefinition = {
 
     return {
       id: app.id,
-      appName: "Hyperledger Fabric Browser",
+      appName: this.appName,
       instanceName: app.instance_name,
       description: app.description,
       path: app.path,
