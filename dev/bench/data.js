@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1723452401060,
+  "lastUpdate": 1726134053004,
   "repoUrl": "https://github.com/outSH/cactus",
   "entries": {
     "Benchmark": [
@@ -700,6 +700,44 @@ window.BENCHMARK_DATA = {
             "name": "plugin-ledger-connector-besu_HTTP_GET_getOpenApiSpecV1",
             "value": 654,
             "range": "±2.80%",
+            "unit": "ops/sec",
+            "extra": "178 samples"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "petermetz@users.noreply.github.com",
+            "name": "Peter Somogyvari",
+            "username": "petermetz"
+          },
+          "distinct": true,
+          "id": "456e60db069e570781b3f50d4155de07065a006b",
+          "message": "build(deps): bump the npm_and_yarn group across 3 directories with 3 updates\n\n---\nupdated-dependencies:\n- dependency-name: \"@grpc/grpc-js\"\n  dependency-type: direct:production\n  dependency-group: npm_and_yarn\n- dependency-name: axios\n  dependency-type: direct:production\n  dependency-group: npm_and_yarn\n- dependency-name: qs\n  dependency-type: direct:development\n  dependency-group: npm_and_yarn\n- dependency-name: axios\n  dependency-type: direct:production\n  dependency-group: npm_and_yarn\n- dependency-name: \"@grpc/grpc-js\"\n  dependency-type: direct:development\n  dependency-group: npm_and_yarn\n...\n\nCo-authored-by: Peter Somogyvari <peter.somogyvari@accenture.com>\n\nSigned-off-by: dependabot[bot] <support@github.com>\nSigned-off-by: Peter Somogyvari <peter.somogyvari@accenture.com>",
+          "timestamp": "2024-09-11T09:58:13-07:00",
+          "tree_id": "2ae0d38920ee96029a875f7d62dcf786d9cc5de4",
+          "url": "https://github.com/outSH/cactus/commit/456e60db069e570781b3f50d4155de07065a006b"
+        },
+        "date": 1726134050165,
+        "tool": "benchmarkjs",
+        "benches": [
+          {
+            "name": "cmd-api-server_HTTP_GET_getOpenApiSpecV1",
+            "value": 539,
+            "range": "±1.61%",
+            "unit": "ops/sec",
+            "extra": "176 samples"
+          },
+          {
+            "name": "cmd-api-server_gRPC_GetOpenApiSpecV1",
+            "value": 630,
+            "range": "±3.07%",
             "unit": "ops/sec",
             "extra": "178 samples"
           }
