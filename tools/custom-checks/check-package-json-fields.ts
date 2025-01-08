@@ -1,18 +1,34 @@
-// TS_NODE_PROJECT=./tools/tsconfig.json node --trace-deprecation --experimental-modules --abort-on-uncaught-exception --loader ts-node/esm --experimental-specifier-resolution=node ./tools/custom-checks/check-package-json-fields.ts
+/**
+ * Validate if all the fields of package.json files are conformant to a common schema.
+ */
+
 import fs from "fs-extra";
 import path from "path";
+import Joi from "joi";
 import { fileURLToPath } from "url";
 import { globby, Options as GlobbyOptions } from "globby";
 import { RuntimeError } from "run-time-error";
 import { isStdLibRecord } from "./is-std-lib-record";
 import lernaCfg from "../../lerna.json" assert { type: "json" };
-import Joi from "joi";
 
+const CACTI_VERSION = "2.1.0";
+const CACTI_HOMEPAGE = "https://github.com/hyperledger-cacti/cacti#readme";
+const CACTI_BUGS = "https://github.com/hyperledger-cacti/cacti/issues";
+const CACTI_REPO = "git+https://github.com/hyperledger-cacti/cacti.git";
+const CACTI_MAIL_LIST = "cacti@lists.lfdecentralizedtrust.org";
+const CACTI_PROJECT_URI = "https://www.lfdecentralizedtrust.org/projects/cacti";
+const CACTI_NODE_REQ = ">=18";
+const CACTI_NPM_REQ = ">=8";
+
+/**
+ * Common schema for all cacti packages.
+ */
 const schema = Joi.object({
   name: Joi.string()
-    .pattern(new RegExp("^@hyperledger(-cacti)?/.*"))
+    .pattern(new RegExp("^@hyperledger(-cacti)?/(cacti-|cactus-).*"))
+    .lowercase()
     .required(),
-  version: Joi.string().valid("2.1.0").required(),
+  version: Joi.string().valid(CACTI_VERSION).required(),
   private: Joi.bool().valid(false),
   description: Joi.string().min(10).required(),
   keywords: Joi.array()
@@ -20,33 +36,31 @@ const schema = Joi.object({
     .has(Joi.valid("Hyperledger"))
     .has(Joi.valid("Cacti"))
     .required(),
-  homepage: Joi.string()
-    .valid("https://github.com/hyperledger-cacti/cacti#readme")
-    .required(),
+  homepage: Joi.string().valid(CACTI_HOMEPAGE).required(),
   bugs: Joi.object()
     .valid({
-      url: "https://github.com/hyperledger-cacti/cacti/issues",
+      url: CACTI_BUGS,
     })
     .required(),
   repository: Joi.object()
     .valid({
       type: "git",
-      url: "git+https://github.com/hyperledger-cacti/cacti.git",
+      url: CACTI_REPO,
     })
     .required(),
   license: Joi.string().valid("Apache-2.0").required(),
   author: Joi.object()
     .valid({
       name: "Hyperledger Cacti Contributors",
-      email: "cacti@lists.lfdecentralizedtrust.org",
-      url: "https://www.lfdecentralizedtrust.org/projects/cacti",
+      email: CACTI_MAIL_LIST,
+      url: CACTI_PROJECT_URI,
     })
     .required(),
-  files: Joi.array().items(Joi.string()), // required? dist?
+  files: Joi.array().items(Joi.string()),
   engines: Joi.object()
     .valid({
-      node: ">=18",
-      npm: ">=8",
+      node: CACTI_NODE_REQ,
+      npm: CACTI_NPM_REQ,
     })
     .required(),
   publishConfig: Joi.object({ access: Joi.string().valid("public") })
@@ -54,15 +68,27 @@ const schema = Joi.object({
     .required(),
 }).unknown();
 
+/**
+ * Common input interface for custom checks.
+ */
 export interface CheckCommonPackageFieldsArgs {
   readonly argv: string[];
   readonly env: NodeJS.ProcessEnv;
 }
 
-export default async function checkCommonPackageFields(
+/**
+ * Validate if all the fields of package.json files are conformant to a common schema.
+ *
+ * Note: this checks every package.json file that are included in the workspace
+ * globs (see lerna.json and package.json files in the **root** directory of the
+ * project)
+ *
+ * @returns `[isErrorFlag, errorMessages[]]`
+ */
+export async function checkCommonPackageFields(
   req: CheckCommonPackageFieldsArgs,
 ): Promise<[boolean, string[]]> {
-  const TAG = "[tools/check-common-package-fields.ts]";
+  const TAG = "[tools/check-package-json-fields.ts]";
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
   const SCRIPT_DIR = __dirname;
@@ -113,8 +139,10 @@ export default async function checkCommonPackageFields(
       return;
     }
 
-    // Check Hyperledger cacti dependncy versions
+    // Check Hyperledger cacti dependency versions
     // TODO - use it once all dependencies have common prefix (hyperledger-cacti, hyperledger/cacti, etc...)
+    //  It could replace check-sibling-dep-version-consistency check.
+    //  Must first agree that there's no need for depending on older release of cacti package within monorepo.
     // const loosePkgJson = pkgJson as any;
     // const packageDependencies = {
     //   ...loosePkgJson.devDependencies,
@@ -124,9 +152,9 @@ export default async function checkCommonPackageFields(
     //   ([key, value]) => key.startsWith("@hyperledger"),
     // );
     // cactiDependencies.forEach((entry) => {
-    //   if (entry[1] !== "2.1.0") {
+    //   if (entry[1] !== CACTI_VERSION) {
     //     errors.push(
-    //       `ERROR: ${pathRel} dependency version invalid for ${entry[0]}, should be: ${"2.1.0"}}`,
+    //       `ERROR: ${pathRel} dependency version invalid for ${entry[0]}, should be: ${CACTI_VERSION}}`,
     //     );
     //   }
     // });
@@ -136,7 +164,3 @@ export default async function checkCommonPackageFields(
 
   return [errors.length === 0, errors];
 }
-
-checkCommonPackageFields({ argv: 1, env: 2 } as any)
-  .then((errors) => console.log("Total:", errors[1].length, errors[1]))
-  .catch((err) => console.error(err));
