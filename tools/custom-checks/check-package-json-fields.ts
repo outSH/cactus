@@ -11,7 +11,7 @@ import { RuntimeError } from "run-time-error";
 import { isStdLibRecord } from "./is-std-lib-record";
 import lernaCfg from "../../lerna.json" assert { type: "json" };
 
-const CACTI_VERSION = "2.1.0";
+const CACTI_VERSION = lernaCfg.version;
 const CACTI_HOMEPAGE = "https://github.com/hyperledger-cacti/cacti#readme";
 const CACTI_BUGS = "https://github.com/hyperledger-cacti/cacti/issues";
 const CACTI_REPO = "git+https://github.com/hyperledger-cacti/cacti.git";
