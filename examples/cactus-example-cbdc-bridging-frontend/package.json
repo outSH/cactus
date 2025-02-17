@@ -1,7 +1,6 @@
 {
   "name": "@hyperledger/cacti-example-cbdc-bridging-frontend",
   "version": "2.1.0",
-  "private": true,
   "description": "Frontend for CBDC sample application.",
   "keywords": [
     "Hyperledger",
