@@ -73,6 +73,11 @@ export interface DiscoveryPeer {
   discovery_msp_id: string;
 }
 
+export interface DiscoveryPeerChaincodes {
+  name: string;
+  version: string;
+}
+
 export interface DiscoveryOrderer {
   id: string;
   host: string;

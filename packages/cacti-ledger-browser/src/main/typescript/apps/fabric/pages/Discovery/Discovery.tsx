@@ -15,6 +15,7 @@ import PageTitle from "../../../../components/ui/PageTitle";
 import { useNotification } from "../../../../common/context/NotificationContext";
 import { fabricDiscoveryMSPs } from "../../queries";
 import DiscoveryDetails from "./DiscoveryDetails";
+import Divider from "@mui/material/Divider/Divider";
 
 function Discovery() {
   const { showNotification } = useNotification();
@@ -35,16 +36,11 @@ function Discovery() {
       <PageTitle>Discovery</PageTitle>
 
       <Box display="flex" gap="2rem">
-        <Box flexGrow={1} maxWidth="250px">
+        <Box flexGrow={1} maxWidth="300px">
           <Typography variant="h5" marginTop="2rem">
             Select MSP
           </Typography>
-          <Box
-            sx={(theme) => ({
-              borderRight: 3,
-              borderColor: theme.palette.primary.main,
-            })}
-          >
+          <Box>
             {isPending && (
               <Box
                 paddingY="1em"
@@ -83,6 +79,9 @@ function Discovery() {
             </List>
           )}
         </Box>
+
+        <Divider orientation="vertical" flexItem />
+
         <Box flexGrow={7}>{<DiscoveryDetails msp={selectedMSP} />}</Box>
       </Box>
     </Box>
